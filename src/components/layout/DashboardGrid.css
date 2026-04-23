@@ -1,0 +1,66 @@
+/* Overrides for react-grid-layout — refined glass aesthetic */
+
+.react-grid-item.react-grid-placeholder {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: 2px dashed rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-card);
+  opacity: 1 !important;
+}
+
+.dark .react-grid-item.react-grid-placeholder {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 2px dashed rgba(255, 255, 255, 0.12);
+}
+
+/* Resize handle — hidden by default, visible in edit mode */
+.react-grid-item .react-resizable-handle-se {
+  width: 20px !important;
+  height: 20px !important;
+  bottom: 4px !important;
+  right: 4px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: 50 !important;
+  background-image: none !important;
+  padding: 0 !important;
+  border: none !important;
+  transition: opacity var(--transition-duration) ease;
+}
+
+.is-editing .react-grid-item .react-resizable-handle-se {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Accent corner indicator for resize handle */
+.is-editing .react-grid-item .react-resizable-handle-se::after {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: 4px !important;
+  background-image: none !important;
+  background-color: var(--accent) !important;
+  border: none !important;
+  padding: 0 !important;
+  opacity: 0.4 !important;
+  transition: opacity var(--transition-duration) ease, transform var(--transition-duration) ease;
+  cursor: se-resize !important;
+}
+
+.is-editing .react-grid-item .react-resizable-handle-se:hover::after {
+  opacity: 1 !important;
+  transform: scale(1.15) !important;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 20;
+  opacity: 0.9;
+}
+
+.react-grid-item {
+  transition:
+    transform var(--transition-duration) cubic-bezier(0.2, 0.8, 0.2, 1),
+    width var(--transition-duration) ease,
+    height var(--transition-duration) ease;
+}

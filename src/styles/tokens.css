@@ -1,0 +1,158 @@
+:root {
+  /* ===== Shape System ===== */
+  --radius-card: 20px;
+  --radius-btn: 10px;
+  --radius-pill: 9999px;
+
+  /* ===== Motion ===== */
+  --transition-duration: 200ms;
+  --transition-duration-slow: 300ms;
+
+  /* ===== Sequoia Light — precise macOS system material ===== */
+  --blur-widget: 40px;
+  --blur-pop: 60px;
+  --saturate-widget: 1.0;
+
+  /* Surface: tinted gray with enough opacity for card structure over wallpapers */
+  --surface: rgba(120, 120, 128, 0.48);
+  --surface-strong: rgba(120, 120, 128, 0.70);
+  --surface-hover: rgba(120, 120, 128, 0.58);
+
+  --text-primary: rgba(0, 0, 0, 0.88);
+  --text-secondary: rgba(0, 0, 0, 0.58);
+  --text-tertiary: rgba(0, 0, 0, 0.38);
+  --text-on-dark: rgba(255, 255, 255, 0.95);
+
+  --border: rgba(0, 0, 0, 0.10);
+  --accent: rgb(0, 122, 255);
+  --accent-hover: rgb(0, 113, 235);
+
+  --shadow-card:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 0.5px rgba(0, 0, 0, 0.03),
+    0 6px 24px rgba(0, 0, 0, 0.08);
+  --shadow-pop:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.40),
+    0 0 0 0.5px rgba(0, 0, 0, 0.05),
+    0 16px 48px rgba(0, 0, 0, 0.14);
+  --shadow-glow: 0 0 0 3px rgba(0, 122, 255, 0.22);
+
+  --selection-bg: rgba(0, 122, 255, 0.22);
+  --overlay: rgba(0, 0, 0, 0.06);
+
+  /* Noise texture for glass surfaces */
+  --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.018'/%3E%3C/svg%3E");
+}
+
+.dark {
+  /* ===== Sequoia Dark — neutral-cool gray ===== */
+  --surface: rgba(28, 28, 30, 0.72);
+  --surface-strong: rgba(44, 44, 50, 0.88);
+  --surface-hover: rgba(55, 55, 62, 0.92);
+
+  --text-primary: rgba(255, 255, 255, 0.94);
+  --text-secondary: rgba(255, 255, 255, 0.60);
+  --text-tertiary: rgba(255, 255, 255, 0.38);
+  --text-on-dark: rgba(255, 255, 255, 0.95);
+
+  --border: rgba(255, 255, 255, 0.07);
+  --accent: rgb(10, 132, 255);
+  --accent-hover: rgb(20, 140, 255);
+
+  --shadow-card:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.12),
+    0 0 0 0.5px rgba(255, 255, 255, 0.04),
+    0 6px 24px rgba(0, 0, 0, 0.25);
+  --shadow-pop:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.14),
+    0 0 0 0.5px rgba(255, 255, 255, 0.06),
+    0 16px 48px rgba(0, 0, 0, 0.40);
+  --shadow-glow: 0 0 0 3px rgba(10, 132, 255, 0.28);
+
+  --selection-bg: rgba(10, 132, 255, 0.25);
+  --overlay: rgba(0, 0, 0, 0.35);
+}
+
+/* ===== Liquid Glass (Tahoe) overrides ===== */
+.glass-mode {
+  --radius-card: 26px;
+  --radius-btn: 16px;
+
+  --blur-widget: 100px;
+  --blur-pop: 120px;
+  --saturate-widget: 1.35;
+
+  /* Extreme transparency — glass lets almost everything through */
+  --surface: rgba(255, 255, 255, 0.10);
+  --surface-strong: rgba(255, 255, 255, 0.20);
+  --surface-hover: rgba(255, 255, 255, 0.28);
+
+  /* Higher contrast text because background is so transparent */
+  --text-primary: rgba(0, 0, 0, 0.90);
+  --text-secondary: rgba(0, 0, 0, 0.62);
+  --text-tertiary: rgba(0, 0, 0, 0.38);
+  --text-on-dark: rgba(255, 255, 255, 0.97);
+
+  /* Subtle light-border for optical edge refraction */
+  --border: rgba(255, 255, 255, 0.20);
+  --accent: rgb(0, 122, 255);
+  --accent-hover: rgb(0, 113, 235);
+
+  /* 
+    Optical edge system for true glass feel:
+    1. Top: bright refraction highlight (light entering glass)
+    2. Bottom: subtle thickness shadow (glass has physical depth)
+    3. Outer: ultra-soft diffusion shadow
+  */
+  --shadow-card:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.02),
+    0 0 0 0.5px rgba(255, 255, 255, 0.12),
+    0 14px 40px rgba(0, 0, 0, 0.05);
+  --shadow-pop:
+    inset 0 1px 0 rgba(255, 255, 255, 0.50),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.03),
+    0 0 0 0.5px rgba(255, 255, 255, 0.15),
+    0 24px 64px rgba(0, 0, 0, 0.08);
+  --shadow-glow: 0 0 0 3px rgba(0, 122, 255, 0.18);
+
+  --selection-bg: rgba(0, 122, 255, 0.18);
+  --overlay: rgba(0, 0, 0, 0.10);
+
+  /* Stronger noise in light mode for glass texture */
+  --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+}
+
+.glass-mode.dark {
+  /* ===== Tahoe Dark — deep refractive glass ===== */
+  --surface: rgba(18, 18, 24, 0.18);
+  --surface-strong: rgba(32, 32, 40, 0.32);
+  --surface-hover: rgba(42, 42, 52, 0.42);
+
+  --text-primary: rgba(255, 255, 255, 0.96);
+  --text-secondary: rgba(255, 255, 255, 0.68);
+  --text-tertiary: rgba(255, 255, 255, 0.42);
+  --text-on-dark: rgba(255, 255, 255, 0.97);
+
+  --border: rgba(255, 255, 255, 0.05);
+  --accent: rgb(41, 151, 255);
+  --accent-hover: rgb(50, 160, 255);
+
+  --shadow-card:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.18),
+    0 0 0 0.5px rgba(255, 255, 255, 0.03),
+    0 14px 40px rgba(0, 0, 0, 0.28);
+  --shadow-pop:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.22),
+    0 0 0 0.5px rgba(255, 255, 255, 0.04),
+    0 24px 64px rgba(0, 0, 0, 0.42);
+  --shadow-glow: 0 0 0 3px rgba(41, 151, 255, 0.22);
+
+  --selection-bg: rgba(41, 151, 255, 0.22);
+  --overlay: rgba(0, 0, 0, 0.45);
+
+  /* Dark noise */
+  --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+}

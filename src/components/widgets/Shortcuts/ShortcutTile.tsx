@@ -1,0 +1,70 @@
+import { useState } from 'react'
+import { X } from 'lucide-react'
+import { useShortcutsStore } from '@/store/useShortcutsStore'
+import { getFaviconUrl, getInitial, getColorFor } from './faviconFetcher'
+import { cn } from '@/lib/cn'
+import type { Shortcut } from '@/types/widget'
+
+interface Props {
+  shortcut: Shortcut
+  editable: boolean
+}
+
+export function ShortcutTile({ shortcut, editable }: Props) {
+  const remove = useShortcutsStore((s) => s.remove)
+  const [iconFailed, setIconFailed] = useState(false)
+  const icon = shortcut.iconUrl || getFaviconUrl(shortcut.url)
+
+  return (
+    <div className="group relative flex flex-col items-center gap-2">
+      <a
+        href={editable ? undefined : shortcut.url}
+        onClick={(e) => {
+          if (editable) e.preventDefault()
+        }}
+        className={cn(
+          'relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-card bg-surface-strong shadow-card transition group-hover:-translate-y-0.5',
+          editable && 'cursor-default',
+        )}
+        aria-label={shortcut.title}
+      >
+        {icon && !iconFailed ? (
+          <img
+            src={icon}
+            alt=""
+            width={28}
+            height={28}
+            className="h-7 w-7 object-contain"
+            onError={() => setIconFailed(true)}
+          />
+        ) : (
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-sm font-semibold text-white"
+            style={{ backgroundColor: getColorFor(shortcut.title) }}
+          >
+            {getInitial(shortcut.title)}
+          </div>
+        )}
+      </a>
+      {editable && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            remove(shortcut.id)
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow transition hover:scale-110 z-20"
+          aria-label="删除"
+        >
+          <X size={12} />
+        </button>
+      )}
+      <span
+        className="max-w-[72px] truncate text-xs text-shadow-wallpaper"
+        style={{ color: 'var(--text-on-dark)' }}>
+        {shortcut.title}
+      </span>
+    </div>
+  )
+}
