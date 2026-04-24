@@ -20,9 +20,80 @@ interface LocResult extends GeocodeResult {
   isFallback: boolean
 }
 
-const DEFAULT_CITY = { name: '北京', latitude: 39.9042, longitude: 116.4074 }
+interface CacheEntry {
+  loc: LocResult
+  weather: WeatherData
+  ts: number
+}
 
-async function getLocation(): Promise<LocResult> {
+const DEFAULT_CITY = { name: '北京', latitude: 39.9042, longitude: 116.4074 }
+const CACHE_KEY = 'tab:weather-cache'
+const GEOCODE_CACHE_KEY = 'tab:geocode-cache'
+const FRESH_MS = 15 * 60 * 1000
+const REFRESH_MS = 15 * 60 * 1000
+
+const hasChromeStorage = typeof chrome !== 'undefined' && !!chrome.storage?.local
+
+async function readCache<T>(key: string): Promise<T | null> {
+  if (!hasChromeStorage) {
+    try {
+      const raw = localStorage.getItem(key)
+      return raw ? (JSON.parse(raw) as T) : null
+    } catch {
+      return null
+    }
+  }
+  const r = await chrome.storage.local.get(key)
+  return (r[key] as T | undefined) ?? null
+}
+
+async function writeCache(key: string, value: unknown): Promise<void> {
+  if (!hasChromeStorage) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value))
+    } catch {
+      // ignore
+    }
+    return
+  }
+  await chrome.storage.local.set({ [key]: value })
+}
+
+// Round lat/lng to ~1km so small movements don't bust the cache
+function geocodeKey(lat: number, lon: number): string {
+  return `${lat.toFixed(2)},${lon.toFixed(2)}`
+}
+
+async function reverseGeocode(lat: number, lon: number, signal?: AbortSignal): Promise<string> {
+  const key = geocodeKey(lat, lon)
+  const cache = (await readCache<Record<string, string>>(GEOCODE_CACHE_KEY)) ?? {}
+  if (cache[key]) return cache[key]
+
+  try {
+    // BigDataCloud client endpoint: no key, CORS-enabled, unlimited free.
+    const res = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`,
+      { signal },
+    )
+    if (res.ok) {
+      const data = await res.json()
+      const name: string =
+        data?.city ||
+        data?.locality ||
+        data?.principalSubdivision ||
+        data?.countryName ||
+        '当前位置'
+      cache[key] = name
+      await writeCache(GEOCODE_CACHE_KEY, cache)
+      return name
+    }
+  } catch {
+    console.debug('Reverse geocoding failed')
+  }
+  return '当前位置'
+}
+
+async function getLocation(signal?: AbortSignal): Promise<LocResult> {
   try {
     const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -30,25 +101,9 @@ async function getLocation(): Promise<LocResult> {
         maximumAge: 1000 * 60 * 60,
       })
     })
-
     const lat = pos.coords.latitude
     const lon = pos.coords.longitude
-    let name = '当前位置'
-
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&accept-language=zh-CN`)
-      if (res.ok) {
-        const data = await res.json()
-        if (data && data.address) {
-          const { city, town, county, state } = data.address
-          name = city || town || county || state || '当前位置'
-        }
-      }
-    } catch {
-      // keep '当前位置' as name if reverse geocoding fails
-      console.debug('Reverse geocoding failed')
-    }
-
+    const name = await reverseGeocode(lat, lon, signal)
     return { name, latitude: lat, longitude: lon, isFallback: false }
   } catch {
     console.debug('Geolocation failed, using fallback')
@@ -56,9 +111,9 @@ async function getLocation(): Promise<LocResult> {
   }
 }
 
-async function fetchWeather(loc: LocResult): Promise<WeatherData> {
+async function fetchWeather(loc: LocResult, signal?: AbortSignal): Promise<WeatherData> {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true`
-  const res = await fetch(url)
+  const res = await fetch(url, { signal })
   if (!res.ok) throw new Error(`天气服务不可用 (HTTP ${res.status})`)
   const data = await res.json()
   const cw = data.current_weather
@@ -72,38 +127,55 @@ async function fetchWeather(loc: LocResult): Promise<WeatherData> {
   }
 }
 
-const REFRESH_MS = 15 * 60 * 1000
-
 export function useWeather() {
   const [data, setData] = useState<WeatherData | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let alive = true
+    const ctrl = new AbortController()
     let cachedLoc: LocResult | null = null
 
-    const load = async () => {
+    // Stale-while-revalidate: show cached value instantly, then refresh.
+    const bootFromCache = async () => {
+      const cached = await readCache<CacheEntry>(CACHE_KEY)
+      if (cached && alive) {
+        cachedLoc = cached.loc
+        setData(cached.weather)
+        // If the cached entry is fresh enough, skip the immediate refresh.
+        if (Date.now() - cached.ts < FRESH_MS) return true
+      }
+      return false
+    }
+
+    const refresh = async () => {
       try {
-        if (!cachedLoc) cachedLoc = await getLocation()
-        const w = await fetchWeather(cachedLoc)
-        if (alive) {
-          setData(w)
-          setError(null)
-        }
+        if (!cachedLoc) cachedLoc = await getLocation(ctrl.signal)
+        const weather = await fetchWeather(cachedLoc, ctrl.signal)
+        if (!alive) return
+        setData(weather)
+        setError(null)
+        void writeCache(CACHE_KEY, { loc: cachedLoc, weather, ts: Date.now() })
       } catch (e) {
-        if (alive) setError((e as Error).message)
+        if (!alive || (e as Error).name === 'AbortError') return
+        setError((e as Error).message)
       }
     }
 
-    load()
-    const timer = setInterval(load, REFRESH_MS)
+    ;(async () => {
+      const fresh = await bootFromCache()
+      if (!fresh) await refresh()
+    })()
+
+    const timer = setInterval(refresh, REFRESH_MS)
     const onVisible = () => {
-      if (document.visibilityState === 'visible') load()
+      if (document.visibilityState === 'visible') refresh()
     }
     document.addEventListener('visibilitychange', onVisible)
 
     return () => {
       alive = false
+      ctrl.abort()
       clearInterval(timer)
       document.removeEventListener('visibilitychange', onVisible)
     }

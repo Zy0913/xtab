@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { chromeStorage, registerHydration } from './storage'
+import { chromeStorage, registerHydration, registerRemoteSync } from './storage'
 
 export interface TodoItem {
   id: string
@@ -53,3 +53,4 @@ export const useTodoStore = create<TodoState>()(
 )
 
 registerHydration(() => useTodoStore.persist.rehydrate())
+registerRemoteSync('tab:todo', () => useTodoStore.persist.rehydrate())

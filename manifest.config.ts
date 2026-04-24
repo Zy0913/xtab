@@ -23,6 +23,6 @@ export default defineManifest({
     'https://api.open-meteo.com/*',
     'https://geocoding-api.open-meteo.com/*',
     'https://www.google.com/s2/favicons*',
-    'https://nominatim.openstreetmap.org/*',
+    'https://api.bigdatacloud.net/*',
   ],
 })

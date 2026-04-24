@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { chromeStorage, registerHydration } from './storage'
+import { chromeStorage, registerHydration, registerRemoteSync } from './storage'
 import type { WidgetId, WidgetLayout } from '@/types/widget'
 
 interface LayoutState {
@@ -52,3 +52,4 @@ export const useLayoutStore = create<LayoutState>()(
 )
 
 registerHydration(() => useLayoutStore.persist.rehydrate())
+registerRemoteSync('tab:layout', () => useLayoutStore.persist.rehydrate())

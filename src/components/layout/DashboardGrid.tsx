@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { Responsive, WidthProvider, type Layout } from 'react-grid-layout'
+import { lazy, Suspense, useMemo, useState } from 'react'
+import type { Layout } from 'react-grid-layout'
 import { useLayoutStore } from '@/store/useLayoutStore'
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { cn } from '@/lib/cn'
@@ -12,12 +12,14 @@ import { WeatherWidget } from '@/components/widgets/Weather/Weather'
 import { TodoList } from '@/components/widgets/Todo/TodoList'
 import { BookmarksTree } from '@/components/widgets/Bookmarks/BookmarksTree'
 import { WIDGET_LABELS, type WidgetId, type WidgetLayout } from '@/types/widget'
-
-import 'react-grid-layout/css/styles.css'
-import 'react-resizable/css/styles.css'
 import './DashboardGrid.css'
 
-const ResponsiveGrid = WidthProvider(Responsive)
+// Defer react-grid-layout (+ its CSS) until the first render so it doesn't
+// inflate the first-paint bundle. The chunk is still fetched immediately
+// after paint, so editMode entry feels instant.
+const GridLayer = lazy(() =>
+  import('./GridLayer').then((m) => ({ default: m.GridLayer })),
+)
 
 const WIDGETS: Record<WidgetId, { title: string; render: () => JSX.Element; transparent?: boolean }> = {
   search: { title: WIDGET_LABELS.search, render: () => <SearchBar />, transparent: true },
@@ -74,38 +76,34 @@ export function DashboardGrid() {
 
   const isMobile = breakpoint === 'xs' || breakpoint === 'sm'
 
-  return (
-    <ResponsiveGrid
-      className={editMode ? 'is-editing' : ''}
-      breakpoints={{ lg: 1200, md: 900, sm: 640, xs: 0 }}
-      cols={{ lg: 12, md: 12, sm: 8, xs: 4 }}
-      rowHeight={60}
-      margin={[16, 16]}
-      containerPadding={[0, 0]}
-      layouts={{ lg: visible, md: visible, sm: visible, xs: xsLayout }}
-      onLayoutChange={handleLayoutChange}
-      onBreakpointChange={(bp) => setBreakpoint(bp)}
-      isDraggable={editMode && !isMobile}
-      isResizable={editMode && !isMobile}
-      resizeHandles={['se']}
-      draggableHandle=".widget-drag-handle"
-      compactType="vertical"
-    >
-      {visible.map((item) => {
-        const w = WIDGETS[item.i]
-        return (
-          <div key={item.i} className={item.i === 'search' ? 'z-50' : ''}>
-            <WidgetFrame editMode={editMode} transparent={w.transparent}>
-              {editMode && !isMobile && (
-                <div className="widget-drag-handle absolute inset-x-0 top-0 z-10 h-6 cursor-grab rounded-t-card bg-gradient-to-b from-black/[0.08] to-transparent active:cursor-grabbing" aria-label="拖拽移动" role="separator" />
-              )}
-              <div className={cn('relative z-[2] flex h-full w-full flex-col', !w.transparent && 'p-4')}>
-                <ErrorBoundary>{w.render()}</ErrorBoundary>
-              </div>
-            </WidgetFrame>
+  const children = visible.map((item) => {
+    const w = WIDGETS[item.i]
+    return (
+      <div key={item.i} className={item.i === 'search' ? 'z-50' : ''}>
+        <WidgetFrame editMode={editMode} transparent={w.transparent}>
+          {editMode && !isMobile && (
+            <div className="widget-drag-handle absolute inset-x-0 top-0 z-10 h-6 cursor-grab rounded-t-card bg-gradient-to-b from-black/[0.08] to-transparent active:cursor-grabbing" aria-label="拖拽移动" role="separator" />
+          )}
+          <div className={cn('relative z-[2] flex h-full w-full flex-col', !w.transparent && 'p-4')}>
+            <ErrorBoundary>{w.render()}</ErrorBoundary>
           </div>
-        )
-      })}
-    </ResponsiveGrid>
+        </WidgetFrame>
+      </div>
+    )
+  })
+
+  return (
+    <Suspense fallback={null}>
+      <GridLayer
+        visible={visible}
+        xsLayout={xsLayout}
+        editMode={editMode}
+        isMobile={isMobile}
+        onLayoutChange={handleLayoutChange}
+        onBreakpointChange={setBreakpoint}
+      >
+        {children}
+      </GridLayer>
+    </Suspense>
   )
 }

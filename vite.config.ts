@@ -17,7 +17,7 @@ export default defineConfig({
       output: {
         chunkFileNames: 'assets/[name]-[hash].js',
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-grid-layout', 'zustand'],
+          vendor: ['react', 'react-dom', 'zustand'],
         },
       },
     },

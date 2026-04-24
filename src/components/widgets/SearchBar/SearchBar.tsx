@@ -26,14 +26,7 @@ export function SearchBar() {
   }, [])
 
   useEffect(() => {
-    if (!query.trim()) {
-      // Defer setState to avoid synchronous setState in effect body
-      const t = setTimeout(() => {
-        setSuggestions([])
-        setActiveIndex(-1)
-      }, 0)
-      return () => clearTimeout(t)
-    }
+    if (!query.trim()) return
     const ctrl = new AbortController()
     const t = setTimeout(async () => {
       const items = await fetchSuggestions(engine, query, ctrl.signal)
@@ -99,7 +92,14 @@ export function SearchBar() {
           aria-autocomplete="list"
           aria-label="搜索"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            const next = e.target.value
+            setQuery(next)
+            if (!next.trim()) {
+              setSuggestions([])
+              setActiveIndex(-1)
+            }
+          }}
           onKeyDown={handleKeyDown}
           onFocus={() => setFocused(true)}
           onBlur={handleBlur}

@@ -25,6 +25,7 @@ export const chromeStorage: StateStorage = {
 }
 
 const hydrationCallbacks = new Set<() => Promise<void> | void>()
+const remoteChangeHandlers = new Map<string, () => Promise<void> | void>()
 
 export function registerHydration(cb: () => Promise<void> | void) {
   hydrationCallbacks.add(cb)
@@ -32,4 +33,23 @@ export function registerHydration(cb: () => Promise<void> | void) {
 
 export async function hydrateStores() {
   await Promise.all([...hydrationCallbacks].map((cb) => cb()))
+}
+
+/**
+ * Subscribe a store to remote chrome.storage.local changes so multiple new-tab
+ * pages stay in sync. The callback should re-hydrate the store from storage.
+ */
+export function registerRemoteSync(name: string, cb: () => Promise<void> | void) {
+  remoteChangeHandlers.set(name, cb)
+}
+
+export function initRemoteSync() {
+  if (!isExtension || !chrome.storage.onChanged) return
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return
+    for (const key of Object.keys(changes)) {
+      const handler = remoteChangeHandlers.get(key)
+      if (handler) void handler()
+    }
+  })
 }

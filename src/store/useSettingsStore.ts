@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { chromeStorage, registerHydration } from './storage'
+import { chromeStorage, registerHydration, registerRemoteSync } from './storage'
 
 export type ThemeMode = 'light' | 'dark' | 'system'
 export type GlassMode = 'sequoia' | 'tahoe'
@@ -53,3 +53,4 @@ export const useSettingsStore = create<SettingsState>()(
 )
 
 registerHydration(() => useSettingsStore.persist.rehydrate())
+registerRemoteSync('tab:settings', () => useSettingsStore.persist.rehydrate())

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { chromeStorage, registerHydration } from './storage'
+import { chromeStorage, registerHydration, registerRemoteSync } from './storage'
 import type { Shortcut } from '@/types/widget'
 
 interface ShortcutsState {
@@ -48,3 +48,4 @@ export const useShortcutsStore = create<ShortcutsState>()(
 )
 
 registerHydration(() => useShortcutsStore.persist.rehydrate())
+registerRemoteSync('tab:shortcuts', () => useShortcutsStore.persist.rehydrate())

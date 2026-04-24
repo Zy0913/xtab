@@ -45,6 +45,7 @@ Load the `dist/` folder once; subsequent rebuilds auto-refresh the new tab page.
 | `/` | Focus search |
 | `e` | Toggle edit (layout) mode |
 | `,` | Toggle settings drawer |
+| `?` | Toggle keyboard shortcut help |
 | `⌘↩ / Ctrl+↩` (in search) | Open results in a new tab |
 
 ## Project structure
