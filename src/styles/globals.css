@@ -67,20 +67,6 @@ body {
   background: rgba(255, 255, 255, 0.22);
 }
 
-/* ===== Widget Enter Animation ===== */
-@keyframes widget-enter {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.animate-widget-enter {
-  animation: widget-enter 400ms ease-out both;
-}
-
 /* ===== Reduce Motion ===== */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -100,13 +86,6 @@ body {
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
-}
-
-/* Override for widget enter animation specifically */
-.reduce-motion .animate-widget-enter {
-  animation: none !important;
-  opacity: 1 !important;
-  transform: none !important;
 }
 
 /* ===== Glass Utilities ===== */
@@ -133,21 +112,6 @@ body {
     opacity: 0.6;
     mix-blend-mode: overlay;
     z-index: 1;
-  }
-
-  /* Tahoe optical edge glow */
-  .glass-edge::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
-    pointer-events: none;
-    z-index: 2;
-  }
-
-  .dark .glass-edge::after {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 
   /* Text shadow for transparent widgets over wallpaper */

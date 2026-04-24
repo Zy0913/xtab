@@ -4,17 +4,9 @@ import { useSettingsStore } from '@/store/useSettingsStore'
 import { useShortcutsStore } from '@/store/useShortcutsStore'
 import { useTodoStore } from '@/store/useTodoStore'
 import { cn } from '@/lib/cn'
-import type { WidgetId, WidgetLayout, Shortcut } from '@/types/widget'
+import { showToast } from '@/lib/toast'
+import { WIDGET_LABELS, type WidgetId, type WidgetLayout, type Shortcut } from '@/types/widget'
 import type { TodoItem } from '@/store/useTodoStore'
-
-const WIDGET_LABELS: Record<WidgetId, string> = {
-  search: '搜索',
-  clock: '时钟',
-  shortcuts: '快捷方式',
-  weather: '天气',
-  todo: '待办',
-  bookmarks: '书签',
-}
 
 const ALL_IDS = Object.keys(WIDGET_LABELS) as WidgetId[]
 const VALID_THEMES = ['light', 'dark', 'system'] as const
@@ -129,7 +121,7 @@ export function LayoutSection() {
       if (raw.shortcuts !== undefined) useShortcutsStore.setState({ items: parseShortcuts(raw.shortcuts) })
       if (raw.todos !== undefined) useTodoStore.setState({ items: parseTodos(raw.todos) })
     } catch (err) {
-      alert(`导入失败：${err instanceof Error ? err.message : '文件格式不正确'}`)
+      showToast(`导入失败：${err instanceof Error ? err.message : '文件格式不正确'}`, 'error')
     } finally {
       e.target.value = ''
     }

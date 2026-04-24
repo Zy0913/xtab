@@ -47,7 +47,7 @@ export const PRESETS: WallpaperPreset[] = [
   },
 ]
 
-export function randomDailyUnsplash(): string {
+export function randomDailyWallpaper(): string {
   const today = new Date().toISOString().slice(0, 10)
   return `https://picsum.photos/seed/${today}/2560/1440`
 }

@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { useFocusTrap } from '@/lib/useFocusTrap'
 
 interface DialogProps {
   open: boolean
@@ -12,11 +13,18 @@ interface DialogProps {
 }
 
 export function Dialog({ open, onClose, title, children, className }: DialogProps) {
+  const trapRef = useFocusTrap(open)
+
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
   }, [open, onClose])
 
   if (!open) return null
@@ -28,6 +36,10 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
       onClick={onClose}
     >
       <div
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className={cn(
           'relative w-full max-w-md rounded-card border border-border bg-surface-strong p-5 shadow-pop backdrop-blur-glass',
           className,

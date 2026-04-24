@@ -111,9 +111,10 @@ export function extractWallpaperTint(url: string): Promise<ColorResult | null> {
 
         CACHE.set(url, result)
         resolve(result)
-      } catch {
-        resolve(null)
-      }
+    } catch {
+      console.debug('Tint extraction failed')
+      resolve(null)
+    }
     }
 
     img.onerror = () => resolve(null)

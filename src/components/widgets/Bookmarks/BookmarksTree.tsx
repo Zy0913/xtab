@@ -1,9 +1,10 @@
+import { memo } from 'react'
 import { ChevronRight, Folder, BookmarkIcon } from 'lucide-react'
 import { useBookmarks, type BookmarkNode } from './useBookmarks'
 import { useBookmarksUiStore } from '@/store/useBookmarksUiStore'
 import { cn } from '@/lib/cn'
 
-function Row({ node, depth = 0, expandedIds, toggleExpanded }: { node: BookmarkNode; depth?: number; expandedIds: string[]; toggleExpanded: (id: string) => void }) {
+const Row = memo(function Row({ node, depth = 0, expandedIds, toggleExpanded }: { node: BookmarkNode; depth?: number; expandedIds: string[]; toggleExpanded: (id: string) => void }) {
   
   const open = expandedIds.includes(node.id)
   const isFolder = !node.url
@@ -39,6 +40,8 @@ function Row({ node, depth = 0, expandedIds, toggleExpanded }: { node: BookmarkN
     <li>
       <a
         href={node.url}
+        target="_blank"
+        rel="noopener noreferrer"
         className="flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-xs text-text-primary hover:bg-surface"
         style={{ paddingLeft: `${depth * 10 + 4}px` }}
       >
@@ -47,7 +50,7 @@ function Row({ node, depth = 0, expandedIds, toggleExpanded }: { node: BookmarkN
       </a>
     </li>
   )
-}
+})
 
 export function BookmarksTree() {
   const tree = useBookmarks()

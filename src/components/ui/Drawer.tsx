@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { useFocusTrap } from '@/lib/useFocusTrap'
 
 interface Props {
   open: boolean
@@ -10,11 +11,18 @@ interface Props {
 }
 
 export function Drawer({ open, onClose, title, children }: Props) {
+  const trapRef = useFocusTrap(open)
+
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
   }, [open, onClose])
 
   return (
@@ -27,6 +35,10 @@ export function Drawer({ open, onClose, title, children }: Props) {
         onClick={onClose}
       />
       <aside
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className={cn(
           'fixed right-0 top-0 z-50 flex h-screen w-[380px] max-w-[90vw] flex-col border-l border-border bg-surface-strong shadow-pop backdrop-blur-glass transition-transform duration-300',
           open ? 'translate-x-0' : 'translate-x-full',

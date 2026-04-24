@@ -1,8 +1,11 @@
 import { useRef } from 'react'
 import { Upload, Shuffle, Check } from 'lucide-react'
 import { useSettingsStore } from '@/store/useSettingsStore'
-import { PRESETS, randomDailyUnsplash } from '@/lib/wallpapers'
+import { PRESETS, randomDailyWallpaper } from '@/lib/wallpapers'
 import { cn } from '@/lib/cn'
+import { showToast } from '@/lib/toast'
+
+const MAX_FILE_SIZE_MB = 5
 
 function fileToDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -22,15 +25,18 @@ export function WallpaperPicker() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    const MAX_SIZE_MB = 2
-    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      alert(`图片过大，请选择小于 ${MAX_SIZE_MB}MB 的文件`)
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      showToast(`图片过大，请选择小于 ${MAX_FILE_SIZE_MB}MB 的文件`, 'error')
       if (fileRef.current) fileRef.current.value = ''
       return
     }
 
-    const dataUrl = await fileToDataURL(file)
-    setWallpaper(dataUrl)
+    try {
+      const dataUrl = await fileToDataURL(file)
+      setWallpaper(dataUrl)
+    } catch {
+      console.debug('Failed to read file as data URL')
+    }
   }
 
   return (
@@ -68,7 +74,7 @@ export function WallpaperPicker() {
           <Upload size={12} /> 上传
         </button>
         <button
-          onClick={() => setWallpaper(randomDailyUnsplash())}
+          onClick={() => setWallpaper(randomDailyWallpaper())}
           className="flex flex-1 items-center justify-center gap-1.5 rounded-btn bg-surface py-2 text-xs text-text-primary hover:bg-surface-strong"
         >
           <Shuffle size={12} /> 每日随机

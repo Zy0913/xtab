@@ -16,6 +16,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         chunkFileNames: 'assets/[name]-[hash].js',
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-grid-layout', 'zustand'],
+        },
       },
     },
   },

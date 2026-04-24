@@ -1,5 +1,7 @@
 import type { SearchEngine } from '@/store/useSettingsStore'
 
+const MAX_SUGGESTIONS = 8
+
 interface EngineMeta {
   id: SearchEngine
   name: string
@@ -11,7 +13,7 @@ interface EngineMeta {
 }
 
 function openSearchParser(data: unknown): string[] {
-  if (Array.isArray(data) && Array.isArray(data[1])) return data[1].slice(0, 8)
+  if (Array.isArray(data) && Array.isArray(data[1])) return data[1].slice(0, MAX_SUGGESTIONS)
   return []
 }
 
@@ -65,7 +67,7 @@ export const ENGINES: Record<SearchEngine, EngineMeta> = {
         return ((data as Record<string, unknown>).g as Array<{ q?: unknown }>)
           .filter((item) => typeof item.q === 'string')
           .map((item) => item.q as string)
-          .slice(0, 8)
+          .slice(0, MAX_SUGGESTIONS)
       }
       return []
     },
@@ -98,6 +100,7 @@ export async function fetchSuggestions(
     const data = JSON.parse(unwrapJsonp(text))
     return meta.parseSuggest ? meta.parseSuggest(data) : openSearchParser(data)
   } catch {
+    console.debug('Suggestion fetch failed')
     return []
   }
 }

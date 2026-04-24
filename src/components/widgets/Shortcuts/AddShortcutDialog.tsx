@@ -45,8 +45,9 @@ export function AddShortcutDialog({ open, onClose }: Props) {
     >
       <div className="space-y-3">
         <div>
-          <label className="mb-1.5 block text-xs text-text-secondary">名称</label>
+          <label htmlFor="shortcut-title" className="mb-1.5 block text-xs text-text-secondary">名称</label>
           <Input
+            id="shortcut-title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="例如：GitHub"
@@ -54,8 +55,9 @@ export function AddShortcutDialog({ open, onClose }: Props) {
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-xs text-text-secondary">网址</label>
+          <label htmlFor="shortcut-url" className="mb-1.5 block text-xs text-text-secondary">网址</label>
           <Input
+            id="shortcut-url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://..."

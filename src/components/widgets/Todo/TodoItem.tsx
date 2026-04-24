@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Check, X } from 'lucide-react'
 import { useTodoStore, type TodoItem as Item } from '@/store/useTodoStore'
 import { cn } from '@/lib/cn'
@@ -6,7 +7,7 @@ interface Props {
   item: Item
 }
 
-export function TodoItem({ item }: Props) {
+export const TodoItem = memo(function TodoItem({ item }: Props) {
   const toggle = useTodoStore((s) => s.toggle)
   const remove = useTodoStore((s) => s.remove)
 
@@ -41,4 +42,4 @@ export function TodoItem({ item }: Props) {
       </button>
     </li>
   )
-}
+})

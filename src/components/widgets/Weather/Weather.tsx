@@ -1,29 +1,37 @@
 import { Cloud, CloudRain, CloudSnow, Sun, CloudFog, CloudLightning, type LucideIcon } from 'lucide-react'
 import { useWeather } from './useWeather'
 
-function iconFor(code: number): LucideIcon {
-  if (code === 0) return Sun
-  if (code <= 3) return Cloud
-  if (code <= 48) return CloudFog
-  if (code <= 67) return CloudRain
-  if (code <= 77) return CloudSnow
-  if (code <= 82) return CloudRain
-  if (code <= 99) return CloudLightning
-  return Cloud
+const ICON_MAP: Array<{ maxCode: number; Icon: LucideIcon }> = [
+  { maxCode: 0, Icon: Sun },
+  { maxCode: 3, Icon: Cloud },
+  { maxCode: 48, Icon: CloudFog },
+  { maxCode: 67, Icon: CloudRain },
+  { maxCode: 77, Icon: CloudSnow },
+  { maxCode: 82, Icon: CloudRain },
+  { maxCode: 99, Icon: CloudLightning },
+]
+
+const LABEL_MAP: Array<{ maxCode: number; label: string }> = [
+  { maxCode: 0, label: '晴' },
+  { maxCode: 3, label: '多云' },
+  { maxCode: 48, label: '雾' },
+  { maxCode: 57, label: '毛毛雨' },
+  { maxCode: 67, label: '雨' },
+  { maxCode: 77, label: '雪' },
+  { maxCode: 82, label: '阵雨' },
+  { maxCode: 86, label: '阵雪' },
+  { maxCode: 99, label: '雷暴' },
+]
+
+function lookup<T extends { maxCode: number }>(map: T[], code: number, fallback: T): T {
+  for (const entry of map) {
+    if (code <= entry.maxCode) return entry
+  }
+  return fallback
 }
 
-function labelFor(code: number): string {
-  if (code === 0) return '晴'
-  if (code <= 3) return '多云'
-  if (code <= 48) return '雾'
-  if (code <= 57) return '毛毛雨'
-  if (code <= 67) return '雨'
-  if (code <= 77) return '雪'
-  if (code <= 82) return '阵雨'
-  if (code <= 86) return '阵雪'
-  if (code <= 99) return '雷暴'
-  return '—'
-}
+const DEFAULT_ICON = ICON_MAP[ICON_MAP.length - 1]
+const DEFAULT_LABEL = { maxCode: Infinity, label: '—' }
 
 export function WeatherWidget() {
   const { data, error } = useWeather()
@@ -44,7 +52,8 @@ export function WeatherWidget() {
     )
   }
 
-  const Icon = iconFor(data.weatherCode)
+  const { Icon } = lookup(ICON_MAP, data.weatherCode, DEFAULT_ICON)
+  const { label } = lookup(LABEL_MAP, data.weatherCode, DEFAULT_LABEL)
 
   return (
     <div className="flex h-full flex-col justify-between">
@@ -61,7 +70,7 @@ export function WeatherWidget() {
         <span className="text-lg text-text-secondary">°C</span>
       </div>
       <div className="text-xs text-text-secondary">
-        {labelFor(data.weatherCode)} · 风速 {Math.round(data.windspeed)} km/h
+        {label} · 风速 {Math.round(data.windspeed)} km/h
       </div>
       {data.isFallback && (
         <div className="mt-1 text-[10px] text-text-tertiary">* 定位不可用，显示默认城市</div>

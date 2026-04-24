@@ -1,48 +1,66 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSettingsStore } from '@/store/useSettingsStore'
+
+interface WallpaperState {
+  loadedUrl: string | null
+  prevUrl: string | null
+  visible: boolean
+}
 
 export function useWallpaper() {
   const wallpaper = useSettingsStore((s) => s.wallpaper)
-  const [loadedUrl, setLoadedUrl] = useState<string | null>(null)
-  const [, setReady] = useState(false)
-  const [visible, setVisible] = useState(false)
-  const prevUrlRef = useRef<string | null>(null)
+  const [state, setState] = useState<WallpaperState>({
+    loadedUrl: null,
+    prevUrl: null,
+    visible: false,
+  })
 
   useEffect(() => {
     if (!wallpaper) {
-      setLoadedUrl(null)
-      setReady(true)
-      setVisible(true)
-      return
+      const t = setTimeout(() => {
+        setState((prev) => ({
+          loadedUrl: null,
+          prevUrl: prev.loadedUrl,
+          visible: true,
+        }))
+      }, 0)
+      return () => clearTimeout(t)
     }
 
-    if (wallpaper === loadedUrl) return
+    if (wallpaper === state.loadedUrl) return
 
-    if (loadedUrl) {
-      prevUrlRef.current = loadedUrl
-    }
-
-    setReady(false)
-    setVisible(false)
+    const t1 = setTimeout(() => {
+      setState((prev) => ({
+        ...prev,
+        prevUrl: prev.loadedUrl,
+        visible: false,
+      }))
+    }, 0)
 
     const img = new Image()
     img.onload = () => {
-      setLoadedUrl(wallpaper)
-      setReady(true)
-      // Delay setVisible slightly so opacity transition can start from 0
       requestAnimationFrame(() => {
-        setVisible(true)
+        setState((prev) => ({
+          loadedUrl: wallpaper,
+          prevUrl: prev.prevUrl,
+          visible: true,
+        }))
       })
     }
     img.onerror = () => {
-      setLoadedUrl(wallpaper)
-      setReady(true)
       requestAnimationFrame(() => {
-        setVisible(true)
+        setState((prev) => ({
+          loadedUrl: wallpaper,
+          prevUrl: prev.prevUrl,
+          visible: true,
+        }))
       })
     }
     img.src = wallpaper
-  }, [wallpaper]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { loadedUrl, prevUrl: prevUrlRef.current, visible }
+    return () => clearTimeout(t1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- wallpaper is the only intended trigger
+  }, [wallpaper])
+
+  return state
 }

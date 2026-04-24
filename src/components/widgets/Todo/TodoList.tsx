@@ -40,6 +40,7 @@ export function TodoList() {
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
           placeholder="添加一项…"
+          aria-label="添加待办事项"
           className="flex-1 bg-transparent py-1.5 text-sm text-text-primary placeholder:text-text-tertiary outline-none"
         />
         <button

@@ -18,7 +18,7 @@ export function Suggestions({ items, activeIndex, onPick, onHover }: Props) {
     >
       {items.map((text, i) => (
         <button
-          key={text}
+          key={`${i}-${text}`}
           id={`suggestion-${i}`}
           role="option"
           aria-selected={i === activeIndex}

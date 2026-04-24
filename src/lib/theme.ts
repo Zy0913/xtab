@@ -54,14 +54,14 @@ export async function initTheme() {
     applyWallpaperTint(state.wallpaperTint)
   }
 
-  useSettingsStore.subscribe((state, prev) => {
-    if (state.theme !== prev.theme) applyTheme(state.theme)
-    if (state.glassMode !== prev.glassMode) applyGlassMode(state.glassMode)
-    if (state.reduceMotion !== prev.reduceMotion) applyReduceMotion(state.reduceMotion)
-    if (state.wallpaperTint !== prev.wallpaperTint) applyWallpaperTint(state.wallpaperTint)
-    if (state.wallpaper !== prev.wallpaper) {
+  useSettingsStore.subscribe((next, prev) => {
+    if (next.theme !== prev.theme) applyTheme(next.theme)
+    if (next.glassMode !== prev.glassMode) applyGlassMode(next.glassMode)
+    if (next.reduceMotion !== prev.reduceMotion) applyReduceMotion(next.reduceMotion)
+    if (next.wallpaperTint !== prev.wallpaperTint) applyWallpaperTint(next.wallpaperTint)
+    if (next.wallpaper !== prev.wallpaper) {
       // Debounce tint extraction when wallpaper changes
-      refreshWallpaperTint()
+      refreshWallpaperTint().catch(console.debug)
     }
   })
 

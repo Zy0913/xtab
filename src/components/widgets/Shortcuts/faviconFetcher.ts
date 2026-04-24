@@ -3,6 +3,7 @@ export function getFaviconUrl(targetUrl: string, size = 64): string {
     const domain = new URL(targetUrl).hostname
     return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`
   } catch {
+    console.debug('Invalid URL for favicon')
     return ''
   }
 }

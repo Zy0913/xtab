@@ -20,7 +20,7 @@ export function Clock() {
   const dateLabel = `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日 · ${WEEKDAYS_CN[now.getDay()]}`
 
   return (
-    <div className="flex h-full flex-col items-center justify-center text-center">
+    <div className="flex h-full flex-col items-center justify-center text-center" role="timer" aria-live="off" aria-label="时钟">
       <div className="flex items-baseline gap-1.5 font-extralight tabular-nums tracking-tight text-shadow-wallpaper"
         style={{ color: 'var(--text-on-dark)' }}>
         <span className="text-8xl">{hh}</span>

@@ -20,6 +20,8 @@ interface LocResult extends GeocodeResult {
   isFallback: boolean
 }
 
+const DEFAULT_CITY = { name: '北京', latitude: 39.9042, longitude: 116.4074 }
+
 async function getLocation(): Promise<LocResult> {
   try {
     const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
@@ -44,11 +46,13 @@ async function getLocation(): Promise<LocResult> {
       }
     } catch {
       // keep '当前位置' as name if reverse geocoding fails
+      console.debug('Reverse geocoding failed')
     }
 
     return { name, latitude: lat, longitude: lon, isFallback: false }
   } catch {
-    return { name: '北京', latitude: 39.9042, longitude: 116.4074, isFallback: true }
+    console.debug('Geolocation failed, using fallback')
+    return { ...DEFAULT_CITY, isFallback: true }
   }
 }
 

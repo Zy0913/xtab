@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { X } from 'lucide-react'
 import { useShortcutsStore } from '@/store/useShortcutsStore'
 import { getFaviconUrl, getInitial, getColorFor } from './faviconFetcher'
@@ -10,7 +10,7 @@ interface Props {
   editable: boolean
 }
 
-export function ShortcutTile({ shortcut, editable }: Props) {
+export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: Props) {
   const remove = useShortcutsStore((s) => s.remove)
   const [iconFailed, setIconFailed] = useState(false)
   const icon = shortcut.iconUrl || getFaviconUrl(shortcut.url)
@@ -19,6 +19,8 @@ export function ShortcutTile({ shortcut, editable }: Props) {
     <div className="group relative flex flex-col items-center gap-2">
       <a
         href={editable ? undefined : shortcut.url}
+        target={editable ? undefined : '_blank'}
+        rel={editable ? undefined : 'noopener'}
         onClick={(e) => {
           if (editable) e.preventDefault()
         }}
@@ -67,4 +69,4 @@ export function ShortcutTile({ shortcut, editable }: Props) {
       </span>
     </div>
   )
-}
+})
