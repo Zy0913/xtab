@@ -14,7 +14,7 @@ export default defineManifest({
     48: 'icons/icon48.png',
     128: 'icons/icon128.png',
   },
-  permissions: ['storage', 'bookmarks'],
+  permissions: ['storage', 'bookmarks', 'unlimitedStorage'],
   host_permissions: [
     'https://suggestqueries.google.com/*',
     'https://api.bing.com/*',
@@ -22,7 +22,11 @@ export default defineManifest({
     'https://duckduckgo.com/ac/*',
     'https://api.open-meteo.com/*',
     'https://geocoding-api.open-meteo.com/*',
-    'https://www.google.com/s2/favicons*',
+    'https://icons.duckduckgo.com/*',
+    'https://images.unsplash.com/*',
+    'https://wallhaven.cc/*',
+    'https://w.wallhaven.cc/*',
+    'https://th.wallhaven.cc/*',
     'https://api.bigdatacloud.net/*',
   ],
 })

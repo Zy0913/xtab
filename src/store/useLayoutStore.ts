@@ -47,6 +47,8 @@ export const useLayoutStore = create<LayoutState>()(
       name: 'tab:layout',
       storage: createJSONStorage(() => chromeStorage),
       skipHydration: true,
+      version: 1,
+      migrate: (persisted) => persisted,
     },
   ),
 )

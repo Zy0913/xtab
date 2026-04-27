@@ -4,6 +4,7 @@ import App from './App'
 import { hydrateStores, initRemoteSync } from '@/store/storage'
 import { initTheme } from '@/lib/theme'
 import { ToastProvider } from '@/components/ui/Toast'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import '@/styles/globals.css'
 
 async function bootstrap() {
@@ -14,9 +15,11 @@ async function bootstrap() {
   if (!root) throw new Error('Root element #root not found')
   createRoot(root).render(
     <StrictMode>
-      <ToastProvider>
-        <App />
-      </ToastProvider>
+      <ErrorBoundary>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
+      </ErrorBoundary>
     </StrictMode>,
   )
 }

@@ -2,10 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { getFaviconUrl, getInitial, getColorFor } from './faviconFetcher'
 
 describe('getFaviconUrl', () => {
-  it('returns Google favicon URL for valid domain', () => {
+  it('returns DuckDuckGo favicon URL for valid domain', () => {
     const url = getFaviconUrl('https://github.com/user/repo')
     expect(url).toContain('github.com')
-    expect(url).toContain('google.com/s2/favicons')
+    expect(url).toContain('icons.duckduckgo.com/ip3/')
   })
 
   it('returns empty string for invalid URL', () => {
@@ -13,9 +13,9 @@ describe('getFaviconUrl', () => {
     expect(getFaviconUrl('')).toBe('')
   })
 
-  it('respects size parameter', () => {
-    const url = getFaviconUrl('https://example.com', 32)
-    expect(url).toContain('sz=32')
+  it('extracts domain correctly', () => {
+    const url = getFaviconUrl('https://example.com')
+    expect(url).toBe('https://icons.duckduckgo.com/ip3/example.com.ico')
   })
 })
 

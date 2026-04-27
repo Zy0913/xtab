@@ -48,6 +48,8 @@ export const useSettingsStore = create<SettingsState>()(
       name: 'tab:settings',
       storage: createJSONStorage(() => chromeStorage),
       skipHydration: true,
+      version: 1,
+      migrate: (persisted) => persisted,
     },
   ),
 )

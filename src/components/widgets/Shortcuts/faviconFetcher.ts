@@ -1,7 +1,7 @@
-export function getFaviconUrl(targetUrl: string, size = 64): string {
+export function getFaviconUrl(targetUrl: string): string {
   try {
     const domain = new URL(targetUrl).hostname
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`
+    return `https://icons.duckduckgo.com/ip3/${domain}.ico`
   } catch {
     console.debug('Invalid URL for favicon')
     return ''

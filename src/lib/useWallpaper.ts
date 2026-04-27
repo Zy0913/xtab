@@ -37,7 +37,7 @@ export function useWallpaper() {
 
     let cancelled = false
 
-    // Start the cross-fade: keep current url1 as prev, hide top.
+    // Start the cross-fade: clear loadedUrl so bottom layer shows old wallpaper.
     // Any URL that was previously prev (url0) leaves the DOM now — revoke it.
     setState((prev) => {
       if (prev.prevUrl && ownedObjectUrls.current.has(prev.prevUrl)) {
@@ -45,7 +45,7 @@ export function useWallpaper() {
         ownedObjectUrls.current.delete(prev.prevUrl)
       }
       return {
-        ...prev,
+        loadedUrl: null,
         prevUrl: prev.loadedUrl,
         visible: false,
       }
@@ -60,7 +60,7 @@ export function useWallpaper() {
       if (objectUrl.startsWith('blob:')) ownedObjectUrls.current.add(objectUrl)
 
       const img = new Image()
-      const commit = () => {
+      const onLoad = () => {
         if (cancelled) return
         requestAnimationFrame(() => {
           setState((prev) => ({
@@ -70,8 +70,22 @@ export function useWallpaper() {
           }))
         })
       }
-      img.onload = commit
-      img.onerror = commit
+      const onError = () => {
+        if (cancelled) return
+        if (objectUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(objectUrl)
+          ownedObjectUrls.current.delete(objectUrl)
+        }
+        requestAnimationFrame(() => {
+          setState((prev) => ({
+            loadedUrl: prev.prevUrl,
+            prevUrl: null,
+            visible: true,
+          }))
+        })
+      }
+      img.onload = onLoad
+      img.onerror = onError
       img.src = objectUrl
     })()
 

@@ -23,6 +23,8 @@ export const useBookmarksUiStore = create<BookmarksUiState>()(
       name: 'tab:bookmarks-ui',
       storage: createJSONStorage(() => chromeStorage),
       skipHydration: true,
+      version: 1,
+      migrate: (persisted) => persisted,
     },
   ),
 )

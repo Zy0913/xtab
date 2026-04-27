@@ -81,6 +81,9 @@ function parseTodos(raw: unknown): TodoItem[] {
   return raw as TodoItem[]
 }
 
+const MAX_IMPORT_SIZE = 5 * 1024 * 1024
+const SUPPORTED_VERSIONS = [1, 2]
+
 export function LayoutSection() {
   const enabled = useLayoutStore((s) => s.enabled)
   const toggleWidget = useLayoutStore((s) => s.toggleWidget)
@@ -109,17 +112,23 @@ export function LayoutSection() {
     const file = e.target.files?.[0]
     if (!file) return
     try {
+      if (file.size > MAX_IMPORT_SIZE) throw new Error('文件过大，最大支持 5MB')
       const raw = JSON.parse(await file.text())
       if (!isObj(raw)) throw new Error('文件不是合法 JSON 对象')
+      if (raw.version !== undefined && !SUPPORTED_VERSIONS.includes(raw.version as number))
+        throw new Error(`不支持的版本号: ${String(raw.version)}`)
 
-      if (raw.layouts !== undefined) useLayoutStore.setState({ layouts: parseLayouts(raw.layouts) })
-      if (raw.enabled !== undefined) useLayoutStore.setState({ enabled: parseEnabled(raw.enabled) })
-      if (raw.settings !== undefined) {
-        const parsed = parseSettings(raw.settings)
-        useSettingsStore.setState(parsed)
-      }
-      if (raw.shortcuts !== undefined) useShortcutsStore.setState({ items: parseShortcuts(raw.shortcuts) })
-      if (raw.todos !== undefined) useTodoStore.setState({ items: parseTodos(raw.todos) })
+      const layouts = raw.layouts !== undefined ? parseLayouts(raw.layouts) : undefined
+      const enabledVal = raw.enabled !== undefined ? parseEnabled(raw.enabled) : undefined
+      const settings = raw.settings !== undefined ? parseSettings(raw.settings) : undefined
+      const shortcuts = raw.shortcuts !== undefined ? parseShortcuts(raw.shortcuts) : undefined
+      const todos = raw.todos !== undefined ? parseTodos(raw.todos) : undefined
+
+      if (layouts !== undefined) useLayoutStore.setState({ layouts })
+      if (enabledVal !== undefined) useLayoutStore.setState({ enabled: enabledVal })
+      if (settings !== undefined) useSettingsStore.setState(settings)
+      if (shortcuts !== undefined) useShortcutsStore.setState({ items: shortcuts })
+      if (todos !== undefined) useTodoStore.setState({ items: todos })
     } catch (err) {
       showToast(`导入失败：${err instanceof Error ? err.message : '文件格式不正确'}`, 'error')
     } finally {

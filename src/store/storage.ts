@@ -14,6 +14,9 @@ export const chromeStorage: StateStorage = {
       return
     }
     await chrome.storage.local.set({ [name]: value })
+    if (chrome.runtime.lastError) {
+      console.error(`chrome.storage.local.set("${name}") failed:`, chrome.runtime.lastError.message)
+    }
   },
   removeItem: async (name) => {
     if (!isExtension) {
@@ -21,6 +24,9 @@ export const chromeStorage: StateStorage = {
       return
     }
     await chrome.storage.local.remove(name)
+    if (chrome.runtime.lastError) {
+      console.error(`chrome.storage.local.remove("${name}") failed:`, chrome.runtime.lastError.message)
+    }
   },
 }
 

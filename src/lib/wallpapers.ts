@@ -45,9 +45,22 @@ export const PRESETS: WallpaperPreset[] = [
     url: u('photo-1441974231531-c6227db76b6e'),
     thumb: u('photo-1441974231531-c6227db76b6e', 400),
   },
+  {
+    id: 'aurora',
+    name: '极光',
+    url: u('photo-1519681393784-d120267933ba'),
+    thumb: u('photo-1519681393784-d120267933ba', 400),
+  },
+  {
+    id: 'sunrise-hills',
+    name: '日出',
+    url: u('photo-1470071459604-3b5ec3a7fe05'),
+    thumb: u('photo-1470071459604-3b5ec3a7fe05', 400),
+  },
+  {
+    id: 'autumn',
+    name: '秋色',
+    url: u('photo-1469474968028-56623f02e42e'),
+    thumb: u('photo-1469474968028-56623f02e42e', 400),
+  },
 ]
-
-export function randomDailyWallpaper(): string {
-  const today = new Date().toISOString().slice(0, 10)
-  return `https://picsum.photos/seed/${today}/2560/1440`
-}

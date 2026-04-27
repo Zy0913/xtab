@@ -43,6 +43,8 @@ export const useShortcutsStore = create<ShortcutsState>()(
       name: 'tab:shortcuts',
       storage: createJSONStorage(() => chromeStorage),
       skipHydration: true,
+      version: 1,
+      migrate: (persisted) => persisted,
     },
   ),
 )

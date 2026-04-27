@@ -10,8 +10,24 @@ export function Clock() {
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000)
-    return () => clearInterval(t)
+    let timer: ReturnType<typeof setInterval>
+    const start = () => {
+      setNow(new Date())
+      timer = setInterval(() => setNow(new Date()), 1000)
+    }
+    const stop = () => clearInterval(timer)
+
+    const onVisibility = () => {
+      stop()
+      if (!document.hidden) start()
+    }
+
+    start()
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      stop()
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [])
 
   const hh = pad(now.getHours())

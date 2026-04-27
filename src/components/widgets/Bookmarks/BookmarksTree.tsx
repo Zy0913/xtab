@@ -4,8 +4,9 @@ import { useBookmarks, type BookmarkNode } from './useBookmarks'
 import { useBookmarksUiStore } from '@/store/useBookmarksUiStore'
 import { cn } from '@/lib/cn'
 
-const Row = memo(function Row({ node, depth = 0, expandedIds, toggleExpanded }: { node: BookmarkNode; depth?: number; expandedIds: string[]; toggleExpanded: (id: string) => void }) {
-  
+const Row = memo(function Row({ node, depth = 0 }: { node: BookmarkNode; depth?: number }) {
+  const expandedIds = useBookmarksUiStore((s) => s.expandedIds)
+  const toggleExpanded = useBookmarksUiStore((s) => s.toggleExpanded)
   const open = expandedIds.includes(node.id)
   const isFolder = !node.url
 
@@ -28,7 +29,7 @@ const Row = memo(function Row({ node, depth = 0, expandedIds, toggleExpanded }: 
         {open && (
           <ul>
             {node.children?.map((child) => (
-              <Row key={child.id} node={child} depth={depth + 1} expandedIds={expandedIds} toggleExpanded={toggleExpanded} />
+              <Row key={child.id} node={child} depth={depth + 1} />
             ))}
           </ul>
         )}
@@ -54,8 +55,6 @@ const Row = memo(function Row({ node, depth = 0, expandedIds, toggleExpanded }: 
 
 export function BookmarksTree() {
   const tree = useBookmarks()
-  const expandedIds = useBookmarksUiStore((s) => s.expandedIds)
-  const toggleExpanded = useBookmarksUiStore((s) => s.toggleExpanded)
 
   if (tree.length === 0) {
     return (
@@ -72,7 +71,7 @@ export function BookmarksTree() {
       </span>
       <ul className="-mx-1.5 flex-1 overflow-y-auto">
         {tree.map((n) => (
-          <Row key={n.id} node={n} expandedIds={expandedIds} toggleExpanded={toggleExpanded} />
+          <Row key={n.id} node={n} />
         ))}
       </ul>
     </div>
