@@ -40,7 +40,7 @@ function parseEnabled(raw: unknown): WidgetId[] {
 
 function parseSettings(raw: unknown) {
   if (!isObj(raw)) throw new Error('settings 格式错误')
-  const { theme, glassMode, searchEngine, wallpaper, wallpaperTint, reduceMotion } = raw
+  const { theme, glassMode, searchEngine, wallpaper, wallpaperTint, wallpaperDimming, reduceMotion } = raw
   if (theme !== undefined && !VALID_THEMES.includes(theme as typeof VALID_THEMES[number]))
     throw new Error(`非法 theme: ${String(theme)}`)
   if (glassMode !== undefined && !VALID_GLASS.includes(glassMode as typeof VALID_GLASS[number]))
@@ -51,14 +51,17 @@ function parseSettings(raw: unknown) {
     throw new Error('wallpaper 格式错误')
   if (wallpaperTint !== undefined && !isStr(wallpaperTint) && wallpaperTint !== null)
     throw new Error('wallpaperTint 格式错误')
+  if (wallpaperDimming !== undefined && (!isNum(wallpaperDimming) || wallpaperDimming < 0 || wallpaperDimming > 0.6))
+    throw new Error('wallpaperDimming 格式错误')
   if (reduceMotion !== undefined && !isBool(reduceMotion))
     throw new Error('reduceMotion 格式错误')
-  return { theme, glassMode, searchEngine, wallpaper, wallpaperTint, reduceMotion } as {
+  return { theme, glassMode, searchEngine, wallpaper, wallpaperTint, wallpaperDimming, reduceMotion } as {
     theme?: typeof VALID_THEMES[number]
     glassMode?: typeof VALID_GLASS[number]
     searchEngine?: typeof VALID_ENGINES[number]
     wallpaper?: string
     wallpaperTint?: string | null
+    wallpaperDimming?: number
     reduceMotion?: boolean
   }
 }
@@ -90,12 +93,12 @@ export function LayoutSection() {
   const resetLayout = useLayoutStore((s) => s.reset)
 
   const handleExport = () => {
-    const { theme, glassMode, searchEngine, wallpaper, wallpaperTint, reduceMotion } = useSettingsStore.getState()
+    const { theme, glassMode, searchEngine, wallpaper, wallpaperTint, wallpaperDimming, reduceMotion } = useSettingsStore.getState()
     const data = {
       version: 2,
       layouts: useLayoutStore.getState().layouts,
       enabled: useLayoutStore.getState().enabled,
-      settings: { theme, glassMode, searchEngine, wallpaper, wallpaperTint, reduceMotion },
+      settings: { theme, glassMode, searchEngine, wallpaper, wallpaperTint, wallpaperDimming, reduceMotion },
       shortcuts: useShortcutsStore.getState().items,
       todos: useTodoStore.getState().items,
     }

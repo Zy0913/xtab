@@ -11,6 +11,7 @@ export default function App() {
   const editMode = useSettingsStore((s) => s.editMode)
   const toggleEditMode = useSettingsStore((s) => s.toggleEditMode)
   const reduceMotion = useSettingsStore((s) => s.reduceMotion)
+  const wallpaperDimming = useSettingsStore((s) => s.wallpaperDimming)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const { loadedUrl, prevUrl, visible } = useWallpaper()
@@ -48,6 +49,24 @@ export default function App() {
         style={{
           backgroundColor: 'var(--overlay)',
           transition: `background-color ${overlayMs}ms`,
+        }}
+      />
+
+      {/* User-controlled wallpaper dimming — keeps foreground text readable */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundColor: `rgba(0, 0, 0, ${wallpaperDimming})`,
+          transition: `background-color ${overlayMs}ms`,
+        }}
+      />
+
+      {/* Top-region vignette — protects clock/widgets in the upper area */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[55vh]"
+        style={{
+          backgroundImage:
+            'linear-gradient(to bottom, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0.12) 45%, rgba(0,0,0,0) 100%)',
         }}
       />
 

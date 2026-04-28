@@ -40,6 +40,8 @@ function fileToDataURL(file: File): Promise<string> {
 export function WallpaperPicker() {
   const current = useSettingsStore((s) => s.wallpaper)
   const setWallpaper = useSettingsStore((s) => s.setWallpaper)
+  const dimming = useSettingsStore((s) => s.wallpaperDimming)
+  const setDimming = useSettingsStore((s) => s.setWallpaperDimming)
   const favoriteItems = useFavoriteWallpapersStore((s) => s.items)
   const addFavorite = useFavoriteWallpapersStore((s) => s.add)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -199,6 +201,29 @@ export function WallpaperPicker() {
         className="hidden"
         onChange={handleUpload}
       />
+
+      <div className="space-y-1 pt-1">
+        <div className="flex items-center justify-between text-[11px] text-text-secondary">
+          <span>壁纸暗化</span>
+          <span className="tabular-nums text-text-tertiary">
+            {Math.round(dimming * 100)}%
+          </span>
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={60}
+          step={5}
+          value={Math.round(dimming * 100)}
+          onChange={(e) => setDimming(Number(e.target.value) / 100)}
+          aria-label="壁纸暗化强度"
+          className="h-1 w-full cursor-pointer appearance-none rounded-full bg-surface accent-accent"
+        />
+        <p className="text-[10px] text-text-tertiary">
+          壁纸偏亮或偏花时拉高，提升时钟与组件的可读性
+        </p>
+      </div>
+
       <p className="text-[11px] text-text-tertiary">
         图片通过本地缓存加载，重复打开秒开
       </p>
