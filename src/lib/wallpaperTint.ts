@@ -8,6 +8,7 @@ interface ColorResult {
   rgba: string     // "rgba(r, g, b, a)"
   hex: string      // "#RRGGBB"
   isDark: boolean  // whether the color is dark (for contrast decisions)
+  luminance: number // relative luminance 0..1 (WCAG)
 }
 
 const SAMPLE_SIZE = 64 // Downsample to 64x64 for performance
@@ -87,7 +88,18 @@ export function extractWallpaperTint(url: string): Promise<ColorResult | null> {
           }
         }
 
-        // Pick the most frequent cluster, but prefer mid-brightness colors
+        // Calculate weighted average luminance across all clusters — this better
+        // represents the overall brightness of the wallpaper than the dominant
+        // cluster alone (which the preference function skews toward mid-tones).
+        let totalWeight = 0
+        let weightedLum = 0
+        for (const c of clusters.values()) {
+          totalWeight += c.count
+          weightedLum += c.lum * c.count
+        }
+        const avgLuminance = totalWeight > 0 ? weightedLum / totalWeight : 0.5
+
+        // Pick the most frequent cluster for the tint color (accent).
         let best: { r: number; g: number; b: number; count: number; lum: number } | null = null
         for (const c of clusters.values()) {
           // Prefer colors that aren't too dark or too bright
@@ -106,7 +118,8 @@ export function extractWallpaperTint(url: string): Promise<ColorResult | null> {
           rgb: `rgb(${best.r}, ${best.g}, ${best.b})`,
           rgba: `rgba(${best.r}, ${best.g}, ${best.b}, 0.85)`,
           hex: rgbToHex(best.r, best.g, best.b),
-          isDark: best.lum < 0.4,
+          isDark: avgLuminance < 0.4,
+          luminance: avgLuminance,
         }
 
         CACHE.set(url, result)

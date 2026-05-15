@@ -178,6 +178,75 @@
     0 24px 64px rgba(0, 0, 0, 0.42);
 }
 
+/* ===== Mid-tone wallpaper: adaptive text =====
+   When the wallpaper luminance is in the mid-range (0.35–0.55), dark text can
+   blend into the background even with a shadow. We flip to white text (same as
+   wallpaper-dark) and layer a subtle shadow underneath. */
+:root.wallpaper-mid:not(.dark) {
+  --surface: rgba(40, 40, 46, 0.45);
+  --surface-strong: rgba(48, 48, 56, 0.65);
+  --surface-hover: rgba(58, 58, 66, 0.75);
+
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.64);
+  --text-tertiary: rgba(255, 255, 255, 0.40);
+  --text-on-dark: rgba(255, 255, 255, 0.95);
+
+  --border: rgba(255, 255, 255, 0.08);
+  --overlay: rgba(0, 0, 0, 0.20);
+
+  --text-shadow-adaptive:
+    0 1px 2px rgba(0, 0, 0, 0.30),
+    0 0 0 0.5px rgba(0, 0, 0, 0.15);
+
+  --shadow-card:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.10),
+    0 0 0 0.5px rgba(255, 255, 255, 0.03),
+    0 6px 20px rgba(0, 0, 0, 0.22);
+  --shadow-pop:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.12),
+    0 0 0 0.5px rgba(255, 255, 255, 0.05),
+    0 16px 44px rgba(0, 0, 0, 0.36);
+}
+
+.glass-mode.wallpaper-mid:not(.dark) {
+  --surface: rgba(28, 28, 36, 0.18);
+  --surface-strong: rgba(40, 40, 50, 0.35);
+  --surface-hover: rgba(54, 54, 64, 0.45);
+
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.64);
+  --text-tertiary: rgba(255, 255, 255, 0.40);
+  --text-on-dark: rgba(255, 255, 255, 0.95);
+
+  --border: rgba(255, 255, 255, 0.08);
+  --overlay: rgba(0, 0, 0, 0.14);
+
+  --text-shadow-adaptive:
+    0 1px 3px rgba(0, 0, 0, 0.35),
+    0 0 0 0.5px rgba(0, 0, 0, 0.18);
+
+  --shadow-card:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.15),
+    0 0 0 0.5px rgba(255, 255, 255, 0.02),
+    0 12px 36px rgba(0, 0, 0, 0.24);
+  --shadow-pop:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.18),
+    0 0 0 0.5px rgba(255, 255, 255, 0.03),
+    0 22px 60px rgba(0, 0, 0, 0.38);
+}
+
+/* Light wallpaper — no shadow needed, but define the variable for completeness. */
+:root.wallpaper-light:not(.dark) {
+  --text-shadow-adaptive: none;
+}
+
+.glass-mode.wallpaper-light:not(.dark) {
+  --text-shadow-adaptive: none;
+}
+
 .glass-mode.dark {
   /* ===== Tahoe Dark — deep refractive glass ===== */
   --surface: rgba(18, 18, 24, 0.18);

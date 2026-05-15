@@ -88,6 +88,18 @@ body {
   scroll-behavior: auto !important;
 }
 
+/* ===== Adaptive text shadow for mid-tone wallpapers =====
+   Ensures readable contrast when wallpaper luminance falls in the 0.35–0.55 band. */
+:root.wallpaper-mid:not(.dark) body,
+:root.wallpaper-mid:not(.dark) .text-text-primary {
+  text-shadow: var(--text-shadow-adaptive);
+}
+
+.glass-mode.wallpaper-mid:not(.dark) body,
+.glass-mode.wallpaper-mid:not(.dark) .text-text-primary {
+  text-shadow: var(--text-shadow-adaptive);
+}
+
 /* ===== Glass Utilities ===== */
 @layer utilities {
   .backdrop-blur-glass {

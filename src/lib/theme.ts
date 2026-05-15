@@ -22,10 +22,21 @@ export function applyWallpaperTint(tint: string | null) {
   }
 }
 
-export function applyWallpaperDarkness(isDark: boolean | null) {
-  // null is treated as "not dark" — same as light wallpaper. We only opt into
-  // wallpaper-dark when extraction has explicitly returned true.
-  document.documentElement.classList.toggle('wallpaper-dark', isDark === true)
+export function applyWallpaperLuminance(lum: number | null) {
+  // null means "unknown" — we don't apply any class or variable.
+  // Otherwise we set a CSS custom property so styles can react to the exact value.
+  const root = document.documentElement
+  if (lum === null) {
+    root.classList.remove('wallpaper-dark', 'wallpaper-mid', 'wallpaper-light')
+    root.style.removeProperty('--wallpaper-luminance')
+    return
+  }
+  // Classify for backward-compatible CSS selectors, but also expose the raw value.
+  root.classList.remove('wallpaper-dark', 'wallpaper-mid', 'wallpaper-light')
+  if (lum < 0.35) root.classList.add('wallpaper-dark')
+  else if (lum < 0.55) root.classList.add('wallpaper-mid')
+  else root.classList.add('wallpaper-light')
+  root.style.setProperty('--wallpaper-luminance', lum.toFixed(3))
 }
 
 export function applyReduceMotion(reduce: boolean) {
@@ -37,9 +48,9 @@ export async function refreshWallpaperTint() {
   const wallpaper = store.wallpaper
   if (!wallpaper) {
     store.setWallpaperTint(null)
-    store.setWallpaperIsDark(null)
+    store.setWallpaperLuminance(null)
     applyWallpaperTint(null)
-    applyWallpaperDarkness(null)
+    applyWallpaperLuminance(null)
     return
   }
 
@@ -47,9 +58,9 @@ export async function refreshWallpaperTint() {
   if (tint) {
     const next = useSettingsStore.getState()
     next.setWallpaperTint(tint.rgb)
-    next.setWallpaperIsDark(tint.isDark)
+    next.setWallpaperLuminance(tint.luminance)
     applyWallpaperTint(tint.rgb)
-    applyWallpaperDarkness(tint.isDark)
+    applyWallpaperLuminance(tint.luminance)
   }
 }
 
@@ -61,11 +72,11 @@ export async function initTheme() {
 
   // Apply cached values immediately (no flash) while we re-extract if needed.
   applyWallpaperTint(state.wallpaperTint)
-  applyWallpaperDarkness(state.wallpaperIsDark)
+  applyWallpaperLuminance(state.wallpaperLuminance)
 
   // Re-extract when we don't have a cached signal yet.
   const needsExtract =
-    state.wallpaper && (!state.wallpaperTint || state.wallpaperIsDark === null)
+    state.wallpaper && (!state.wallpaperTint || state.wallpaperLuminance === null)
   if (needsExtract) {
     await refreshWallpaperTint()
   }
@@ -75,7 +86,7 @@ export async function initTheme() {
     if (next.glassMode !== prev.glassMode) applyGlassMode(next.glassMode)
     if (next.reduceMotion !== prev.reduceMotion) applyReduceMotion(next.reduceMotion)
     if (next.wallpaperTint !== prev.wallpaperTint) applyWallpaperTint(next.wallpaperTint)
-    if (next.wallpaperIsDark !== prev.wallpaperIsDark) applyWallpaperDarkness(next.wallpaperIsDark)
+    if (next.wallpaperLuminance !== prev.wallpaperLuminance) applyWallpaperLuminance(next.wallpaperLuminance)
     if (next.wallpaper !== prev.wallpaper) {
       // Debounce tint extraction when wallpaper changes
       refreshWallpaperTint().catch(console.debug)

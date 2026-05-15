@@ -15,8 +15,8 @@ interface SettingsState {
   searchEngine: SearchEngine
   wallpaper: string
   wallpaperTint: string | null
-  /** Whether the wallpaper's dominant tone is dark — drives auto-inverted text in light themes. */
-  wallpaperIsDark: boolean | null
+  /** Dominant luminance of the wallpaper (0..1, WCAG relative luminance). Drives adaptive text contrast. */
+  wallpaperLuminance: number | null
   /** Manual scrim above the wallpaper (0..0.6) to keep foreground text readable. */
   wallpaperDimming: number
   editMode: boolean
@@ -26,7 +26,7 @@ interface SettingsState {
   setSearchEngine: (engine: SearchEngine) => void
   setWallpaper: (wallpaper: string) => void
   setWallpaperTint: (tint: string | null) => void
-  setWallpaperIsDark: (v: boolean | null) => void
+  setWallpaperLuminance: (v: number | null) => void
   setWallpaperDimming: (v: number) => void
   toggleEditMode: () => void
   setReduceMotion: (v: boolean) => void
@@ -42,7 +42,7 @@ export const useSettingsStore = create<SettingsState>()(
       searchEngine: 'google',
       wallpaper: DEFAULT_WALLPAPER,
       wallpaperTint: null,
-      wallpaperIsDark: null,
+      wallpaperLuminance: null,
       wallpaperDimming: 0.25,
       editMode: false,
       reduceMotion: false,
@@ -51,7 +51,7 @@ export const useSettingsStore = create<SettingsState>()(
       setSearchEngine: (searchEngine) => set({ searchEngine }),
       setWallpaper: (wallpaper) => set({ wallpaper }),
       setWallpaperTint: (wallpaperTint) => set({ wallpaperTint }),
-      setWallpaperIsDark: (wallpaperIsDark) => set({ wallpaperIsDark }),
+      setWallpaperLuminance: (wallpaperLuminance) => set({ wallpaperLuminance }),
       setWallpaperDimming: (v) => set({ wallpaperDimming: clampDimming(v) }),
       toggleEditMode: () => set((s) => ({ editMode: !s.editMode })),
       setReduceMotion: (reduceMotion) => set({ reduceMotion }),
@@ -60,9 +60,9 @@ export const useSettingsStore = create<SettingsState>()(
       name: 'tab:settings',
       storage: createJSONStorage(() => chromeStorage),
       skipHydration: true,
-      version: 3,
+      version: 4,
       migrate: (persisted, fromVersion) => {
-        const data = (persisted ?? {}) as Partial<SettingsState>
+        const data = (persisted ?? {}) as Record<string, unknown>
         // v1 → v2: introduce wallpaperDimming with a sensible default.
         if (fromVersion < 2 && data.wallpaperDimming === undefined) {
           data.wallpaperDimming = 0.25
@@ -71,7 +71,16 @@ export const useSettingsStore = create<SettingsState>()(
         if (fromVersion < 3 && data.wallpaperIsDark === undefined) {
           data.wallpaperIsDark = null
         }
-        return data as SettingsState
+        // v3 → v4: replace binary wallpaperIsDark with continuous wallpaperLuminance.
+        if (fromVersion < 4) {
+          if (data.wallpaperIsDark !== undefined) {
+            // Convert: true → 0.3 (dark), false → 0.7 (light), null → null
+            data.wallpaperLuminance =
+              data.wallpaperIsDark === true ? 0.3 : data.wallpaperIsDark === false ? 0.7 : null
+            delete data.wallpaperIsDark
+          }
+        }
+        return data as unknown as SettingsState
       },
     },
   ),
