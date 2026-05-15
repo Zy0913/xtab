@@ -35,7 +35,7 @@ export function ThemeSection() {
               className={cn(
                 'flex flex-col items-center gap-1.5 rounded-btn border py-3 text-xs transition',
                 theme === value
-                  ? 'border-accent bg-accent/10 text-accent'
+                  ? 'border-accent bg-accent/20 text-text-primary'
                   : 'border-border bg-surface text-text-primary hover:bg-surface-strong',
               )}
             >
@@ -58,7 +58,7 @@ export function ThemeSection() {
               className={cn(
                 'flex flex-col items-center gap-1 rounded-btn border py-3 text-xs transition',
                 glassMode === value
-                  ? 'border-accent bg-accent/10 text-accent'
+                  ? 'border-accent bg-accent/20 text-text-primary'
                   : 'border-border bg-surface text-text-primary hover:bg-surface-strong',
               )}
             >
@@ -66,7 +66,7 @@ export function ThemeSection() {
               <span className="font-medium">{label}</span>
               <span className={cn(
                 'text-[10px]',
-                glassMode === value ? 'text-accent/80' : 'text-text-tertiary',
+                glassMode === value ? 'text-text-secondary' : 'text-text-tertiary',
               )}>
                 {desc}
               </span>

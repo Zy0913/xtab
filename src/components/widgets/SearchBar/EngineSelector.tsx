@@ -101,7 +101,7 @@ export function EngineSelector() {
               className={cn(
                 'flex w-full items-center justify-between px-2.5 py-2 text-xs transition',
                 id === engine
-                  ? 'bg-accent/10 text-accent'
+                  ? 'bg-accent/20 text-text-primary'
                   : index === activeIndex
                     ? 'bg-surface text-text-primary'
                     : 'text-text-primary hover:bg-surface',
