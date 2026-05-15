@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { useShortcutsStore } from '@/store/useShortcutsStore'
 import { useSettingsStore } from '@/store/useSettingsStore'
+import { useShortcut } from '@/lib/useShortcut'
 import { ShortcutTile } from './ShortcutTile'
 import { AddShortcutDialog } from './AddShortcutDialog'
 
@@ -9,6 +10,8 @@ export function ShortcutsGrid() {
   const items = useShortcutsStore((s) => s.items)
   const editMode = useSettingsStore((s) => s.editMode)
   const [dialogOpen, setDialogOpen] = useState(false)
+
+  useShortcut('T', () => setDialogOpen(true))
 
   return (
     <>

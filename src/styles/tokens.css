@@ -123,6 +123,61 @@
   --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
 }
 
+/* ===== Wallpaper-aware light-theme override =====
+   When the active theme is light (i.e. no .dark) but the wallpaper's dominant
+   tone is dark, flip text to white and use a darker translucent surface so cards
+   stay legible. Specificity 0,3,0 beats the 0,1,0 rules for :root and .glass-mode,
+   while :not(.dark) keeps the dark theme paths untouched. */
+:root.wallpaper-dark:not(.dark) {
+  --surface: rgba(40, 40, 46, 0.55);
+  --surface-strong: rgba(48, 48, 56, 0.78);
+  --surface-hover: rgba(58, 58, 66, 0.86);
+
+  --text-primary: rgba(255, 255, 255, 0.96);
+  --text-secondary: rgba(255, 255, 255, 0.70);
+  --text-tertiary: rgba(255, 255, 255, 0.45);
+  --text-on-dark: rgba(255, 255, 255, 0.97);
+
+  --border: rgba(255, 255, 255, 0.10);
+  --overlay: rgba(0, 0, 0, 0.30);
+
+  /* Mirror .dark shadows — light inset highlight, deeper drop on dark surface. */
+  --shadow-card:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.12),
+    0 0 0 0.5px rgba(255, 255, 255, 0.04),
+    0 6px 24px rgba(0, 0, 0, 0.25);
+  --shadow-pop:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.14),
+    0 0 0 0.5px rgba(255, 255, 255, 0.06),
+    0 16px 48px rgba(0, 0, 0, 0.40);
+}
+
+.glass-mode.wallpaper-dark:not(.dark) {
+  --surface: rgba(28, 28, 36, 0.22);
+  --surface-strong: rgba(40, 40, 50, 0.40);
+  --surface-hover: rgba(54, 54, 64, 0.50);
+
+  --text-primary: rgba(255, 255, 255, 0.96);
+  --text-secondary: rgba(255, 255, 255, 0.70);
+  --text-tertiary: rgba(255, 255, 255, 0.45);
+  --text-on-dark: rgba(255, 255, 255, 0.97);
+
+  --border: rgba(255, 255, 255, 0.10);
+  --overlay: rgba(0, 0, 0, 0.20);
+
+  /* Mirror .glass-mode.dark — refractive top highlight + interior shadow. */
+  --shadow-card:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.18),
+    0 0 0 0.5px rgba(255, 255, 255, 0.03),
+    0 14px 40px rgba(0, 0, 0, 0.28);
+  --shadow-pop:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.22),
+    0 0 0 0.5px rgba(255, 255, 255, 0.04),
+    0 24px 64px rgba(0, 0, 0, 0.42);
+}
+
 .glass-mode.dark {
   /* ===== Tahoe Dark — deep refractive glass ===== */
   --surface: rgba(18, 18, 24, 0.18);

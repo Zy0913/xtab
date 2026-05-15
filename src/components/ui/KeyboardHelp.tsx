@@ -8,6 +8,7 @@ interface Props {
 const SHORTCUTS: Array<{ keys: string[]; desc: string }> = [
   { keys: ['/'], desc: '聚焦搜索框' },
   { keys: ['e'], desc: '切换编辑布局' },
+  { keys: ['Shift', 'T'], desc: '从打开的标签页添加快捷方式' },
   { keys: [','], desc: '打开 / 关闭设置' },
   { keys: ['?'], desc: '显示此帮助面板' },
   { keys: ['Esc'], desc: '关闭弹层 / 取消输入焦点' },

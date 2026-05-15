@@ -22,22 +22,34 @@ export function applyWallpaperTint(tint: string | null) {
   }
 }
 
+export function applyWallpaperDarkness(isDark: boolean | null) {
+  // null is treated as "not dark" — same as light wallpaper. We only opt into
+  // wallpaper-dark when extraction has explicitly returned true.
+  document.documentElement.classList.toggle('wallpaper-dark', isDark === true)
+}
+
 export function applyReduceMotion(reduce: boolean) {
   document.documentElement.classList.toggle('reduce-motion', reduce)
 }
 
 export async function refreshWallpaperTint() {
-  const wallpaper = useSettingsStore.getState().wallpaper
+  const store = useSettingsStore.getState()
+  const wallpaper = store.wallpaper
   if (!wallpaper) {
-    useSettingsStore.getState().setWallpaperTint(null)
+    store.setWallpaperTint(null)
+    store.setWallpaperIsDark(null)
     applyWallpaperTint(null)
+    applyWallpaperDarkness(null)
     return
   }
 
   const tint = await extractWallpaperTint(wallpaper)
   if (tint) {
-    useSettingsStore.getState().setWallpaperTint(tint.rgb)
+    const next = useSettingsStore.getState()
+    next.setWallpaperTint(tint.rgb)
+    next.setWallpaperIsDark(tint.isDark)
     applyWallpaperTint(tint.rgb)
+    applyWallpaperDarkness(tint.isDark)
   }
 }
 
@@ -47,11 +59,15 @@ export async function initTheme() {
   applyGlassMode(state.glassMode)
   applyReduceMotion(state.reduceMotion)
 
-  // If no tint cached but wallpaper exists, extract on init
-  if (!state.wallpaperTint && state.wallpaper) {
+  // Apply cached values immediately (no flash) while we re-extract if needed.
+  applyWallpaperTint(state.wallpaperTint)
+  applyWallpaperDarkness(state.wallpaperIsDark)
+
+  // Re-extract when we don't have a cached signal yet.
+  const needsExtract =
+    state.wallpaper && (!state.wallpaperTint || state.wallpaperIsDark === null)
+  if (needsExtract) {
     await refreshWallpaperTint()
-  } else {
-    applyWallpaperTint(state.wallpaperTint)
   }
 
   useSettingsStore.subscribe((next, prev) => {
@@ -59,6 +75,7 @@ export async function initTheme() {
     if (next.glassMode !== prev.glassMode) applyGlassMode(next.glassMode)
     if (next.reduceMotion !== prev.reduceMotion) applyReduceMotion(next.reduceMotion)
     if (next.wallpaperTint !== prev.wallpaperTint) applyWallpaperTint(next.wallpaperTint)
+    if (next.wallpaperIsDark !== prev.wallpaperIsDark) applyWallpaperDarkness(next.wallpaperIsDark)
     if (next.wallpaper !== prev.wallpaper) {
       // Debounce tint extraction when wallpaper changes
       refreshWallpaperTint().catch(console.debug)

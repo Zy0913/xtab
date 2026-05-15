@@ -15,6 +15,8 @@ interface SettingsState {
   searchEngine: SearchEngine
   wallpaper: string
   wallpaperTint: string | null
+  /** Whether the wallpaper's dominant tone is dark — drives auto-inverted text in light themes. */
+  wallpaperIsDark: boolean | null
   /** Manual scrim above the wallpaper (0..0.6) to keep foreground text readable. */
   wallpaperDimming: number
   editMode: boolean
@@ -24,6 +26,7 @@ interface SettingsState {
   setSearchEngine: (engine: SearchEngine) => void
   setWallpaper: (wallpaper: string) => void
   setWallpaperTint: (tint: string | null) => void
+  setWallpaperIsDark: (v: boolean | null) => void
   setWallpaperDimming: (v: number) => void
   toggleEditMode: () => void
   setReduceMotion: (v: boolean) => void
@@ -39,6 +42,7 @@ export const useSettingsStore = create<SettingsState>()(
       searchEngine: 'google',
       wallpaper: DEFAULT_WALLPAPER,
       wallpaperTint: null,
+      wallpaperIsDark: null,
       wallpaperDimming: 0.25,
       editMode: false,
       reduceMotion: false,
@@ -47,6 +51,7 @@ export const useSettingsStore = create<SettingsState>()(
       setSearchEngine: (searchEngine) => set({ searchEngine }),
       setWallpaper: (wallpaper) => set({ wallpaper }),
       setWallpaperTint: (wallpaperTint) => set({ wallpaperTint }),
+      setWallpaperIsDark: (wallpaperIsDark) => set({ wallpaperIsDark }),
       setWallpaperDimming: (v) => set({ wallpaperDimming: clampDimming(v) }),
       toggleEditMode: () => set((s) => ({ editMode: !s.editMode })),
       setReduceMotion: (reduceMotion) => set({ reduceMotion }),
@@ -55,12 +60,16 @@ export const useSettingsStore = create<SettingsState>()(
       name: 'tab:settings',
       storage: createJSONStorage(() => chromeStorage),
       skipHydration: true,
-      version: 2,
+      version: 3,
       migrate: (persisted, fromVersion) => {
         const data = (persisted ?? {}) as Partial<SettingsState>
         // v1 → v2: introduce wallpaperDimming with a sensible default.
         if (fromVersion < 2 && data.wallpaperDimming === undefined) {
-          return { ...data, wallpaperDimming: 0.25 } as SettingsState
+          data.wallpaperDimming = 0.25
+        }
+        // v2 → v3: introduce wallpaperIsDark; null means "unknown, re-extract on init".
+        if (fromVersion < 3 && data.wallpaperIsDark === undefined) {
+          data.wallpaperIsDark = null
         }
         return data as SettingsState
       },
