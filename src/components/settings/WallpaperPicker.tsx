@@ -151,7 +151,7 @@ export function WallpaperPicker() {
             className={cn(
               'rounded-btn px-2 py-1 text-[11px] transition',
               strategy === s.key
-                ? 'bg-accent/20 text-accent ring-1 ring-accent/30'
+                ? 'bg-accent/20 text-text-primary ring-1 ring-accent/30'
                 : 'bg-surface text-text-secondary hover:text-text-primary',
             )}
           >
