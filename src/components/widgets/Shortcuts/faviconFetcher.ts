@@ -3,7 +3,7 @@ export function getFaviconUrl(targetUrl: string): string {
     const domain = new URL(targetUrl).hostname
     return `https://icons.duckduckgo.com/ip3/${domain}.ico`
   } catch {
-    console.debug('Invalid URL for favicon')
+    console.warn('Invalid URL for favicon')
     return ''
   }
 }

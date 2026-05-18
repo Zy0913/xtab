@@ -48,7 +48,7 @@ export function Drawer({ open, onClose, title, children }: Props) {
           <h2 className="text-sm font-semibold text-text-primary">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-full p-1 text-text-tertiary hover:bg-surface hover:text-text-primary transition"
+            className="rounded-full p-1 text-text-secondary hover:bg-surface hover:text-text-primary transition"
             aria-label="关闭设置"
           >
             <X size={16} />

@@ -88,7 +88,7 @@ async function reverseGeocode(lat: number, lon: number, signal?: AbortSignal): P
       return name
     }
   } catch {
-    console.debug('Reverse geocoding failed')
+    console.warn('Reverse geocoding failed')
   }
   return '当前位置'
 }
@@ -106,7 +106,7 @@ async function getLocation(signal?: AbortSignal): Promise<LocResult> {
     const name = await reverseGeocode(lat, lon, signal)
     return { name, latitude: lat, longitude: lon, isFallback: false }
   } catch {
-    console.debug('Geolocation failed, using fallback')
+    console.warn('Geolocation failed, using fallback')
     return { ...DEFAULT_CITY, isFallback: true }
   }
 }
@@ -157,8 +157,8 @@ export function useWeather() {
         setError(null)
         void writeCache(CACHE_KEY, { loc: cachedLoc, weather, ts: Date.now() })
       } catch (e) {
-        if (!alive || (e as Error).name === 'AbortError') return
-        setError((e as Error).message)
+        if (!alive || (e instanceof DOMException && e.name === 'AbortError')) return
+        setError(e instanceof Error ? e.message : '天气加载失败')
       }
     }
 

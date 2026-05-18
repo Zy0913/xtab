@@ -22,11 +22,16 @@ export function fetchRandomWallhaven(strategy: WallhavenStrategy): Promise<Wallh
         reject(new Error(response.error))
         return
       }
+      if (!response || typeof response.id !== 'string' || typeof response.url !== 'string') {
+        console.error('Wallhaven response validation failed:', response)
+        reject(new Error('Wallhaven 返回数据异常'))
+        return
+      }
       resolve({
-        id: response.id as string,
-        url: response.url as string,
-        thumb: (response.thumb ?? response.url) as string,
-        resolution: response.resolution as string | undefined,
+        id: response.id,
+        url: response.url,
+        thumb: typeof response.thumb === 'string' ? response.thumb : response.url,
+        resolution: typeof response.resolution === 'string' ? response.resolution : undefined,
         requestedStrategy: (response.requestedStrategy ?? strategy) as WallhavenStrategy,
         actualStrategy: (response.actualStrategy ?? strategy) as WallhavenStrategy,
       })

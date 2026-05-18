@@ -13,6 +13,7 @@ interface ColorResult {
 
 const SAMPLE_SIZE = 64 // Downsample to 64x64 for performance
 const CACHE = new Map<string, ColorResult>()
+const PENDING = new Map<string, Promise<ColorResult | null>>()
 
 function getLuminance(r: number, g: number, b: number): number {
   // Relative luminance per WCAG
@@ -30,7 +31,7 @@ function rgbToHex(r: number, g: number, b: number): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`
 }
 
-function quantizeColor(r: number, g: number, b: number, steps = 6): [number, number, number] {
+function quantizeColor(r: number, g: number, b: number, steps: number): [number, number, number] {
   // Reduce color space to find dominant clusters
   const quantize = (v: number) => Math.round((v / 255) * (steps - 1)) * Math.round(255 / (steps - 1))
   return [quantize(r), quantize(g), quantize(b)]
@@ -41,7 +42,15 @@ export function extractWallpaperTint(url: string): Promise<ColorResult | null> {
     return Promise.resolve(CACHE.get(url)!)
   }
 
-  return new Promise((resolve) => {
+  // Deduplicate in-flight requests for the same URL
+  const existing = PENDING.get(url)
+  if (existing) return existing
+
+  const promise = new Promise<ColorResult | null>((resolve) => {
+    const done = (value: ColorResult | null) => {
+      PENDING.delete(url)
+      resolve(value)
+    }
     const img = new Image()
     img.crossOrigin = 'anonymous'
 
@@ -52,7 +61,7 @@ export function extractWallpaperTint(url: string): Promise<ColorResult | null> {
         canvas.height = SAMPLE_SIZE
         const ctx = canvas.getContext('2d', { willReadFrequently: true })
         if (!ctx) {
-          resolve(null)
+          done(null)
           return
         }
 
@@ -110,7 +119,7 @@ export function extractWallpaperTint(url: string): Promise<ColorResult | null> {
         }
 
         if (!best) {
-          resolve(null)
+          done(null)
           return
         }
 
@@ -123,16 +132,19 @@ export function extractWallpaperTint(url: string): Promise<ColorResult | null> {
         }
 
         CACHE.set(url, result)
-        resolve(result)
-    } catch {
-      console.debug('Tint extraction failed')
-      resolve(null)
+        done(result)
+    } catch (e) {
+      console.warn('Tint extraction failed:', e)
+      done(null)
     }
     }
 
-    img.onerror = () => resolve(null)
+    img.onerror = () => done(null)
 
     // Handle data URLs and regular URLs
     img.src = url
   })
+
+  PENDING.set(url, promise)
+  return promise
 }

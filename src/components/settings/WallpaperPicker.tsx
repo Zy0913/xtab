@@ -71,7 +71,7 @@ export function WallpaperPicker() {
       const dataUrl = await fileToDataURL(file)
       setWallpaper(dataUrl)
     } catch {
-      console.debug('Failed to read file as data URL')
+      console.warn('Failed to read file as data URL')
     }
   }
 

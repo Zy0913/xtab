@@ -1,13 +1,11 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { chromeStorage, registerHydration, registerRemoteSync } from './storage'
+import { DEFAULT_WALLPAPER } from '@/lib/wallpapers'
 
 export type ThemeMode = 'light' | 'dark' | 'system'
 export type GlassMode = 'sequoia' | 'tahoe'
 export type SearchEngine = 'google' | 'bing' | 'baidu' | 'duckduckgo'
-
-const DEFAULT_WALLPAPER =
-  'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=2560&q=80'
 
 interface SettingsState {
   theme: ThemeMode

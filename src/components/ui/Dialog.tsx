@@ -47,7 +47,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          className="absolute right-3 top-3 rounded-full p-1 text-text-tertiary hover:bg-surface hover:text-text-primary transition"
+          className="absolute right-3 top-3 rounded-full p-1 text-text-secondary hover:bg-surface hover:text-text-primary transition"
           onClick={onClose}
           aria-label="关闭"
         >

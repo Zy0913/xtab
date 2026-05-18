@@ -51,7 +51,7 @@ export function SearchBar() {
     const q = text.trim()
     if (!q) return
     const url = ENGINES[engine].searchUrl(q)
-    if (newTab) window.open(url, '_blank', 'noopener')
+    if (newTab) window.open(url, '_blank', 'noopener,noreferrer')
     else window.location.href = url
   }
 

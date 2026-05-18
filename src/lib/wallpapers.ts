@@ -8,6 +8,8 @@ export interface WallpaperPreset {
 const u = (id: string, w = 2560) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=80`
 
+export const DEFAULT_WALLPAPER = u('photo-1506703719100-a0f3a48c0f86')
+
 export const PRESETS: WallpaperPreset[] = [
   {
     id: 'sonoma-light',

@@ -18,6 +18,7 @@ function normalize(raw: chrome.bookmarks.BookmarkTreeNode): BookmarkNode {
 
 export function useBookmarks() {
   const [tree, setTree] = useState<BookmarkNode[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (typeof chrome === 'undefined' || !chrome.bookmarks?.getTree) return
@@ -25,9 +26,12 @@ export function useBookmarks() {
     const load = () => {
       chrome.bookmarks.getTree((roots) => {
         if (chrome.runtime.lastError) {
-          console.error('Bookmarks error:', chrome.runtime.lastError.message)
+          const msg = chrome.runtime.lastError.message ?? '书签加载失败'
+          console.error('Bookmarks error:', msg)
+          setError(msg)
           return
         }
+        setError(null)
         const normalized = roots.flatMap((r) => r.children?.map(normalize) ?? [])
         setTree(normalized)
       })
@@ -45,5 +49,5 @@ export function useBookmarks() {
     return () => relevant.forEach((ev) => ev.removeListener(load))
   }, [])
 
-  return tree
+  return { tree, error }
 }

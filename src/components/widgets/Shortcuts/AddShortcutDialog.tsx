@@ -43,7 +43,7 @@ export function AddShortcutDialog({ open, onClose, initialMode = 'tabs' }: Props
 
   return (
     <Dialog open={open} onClose={handleClose} title="添加快捷方式">
-      <div className="mb-4 inline-flex rounded-btn border border-border bg-surface p-0.5 text-xs">
+      <div className="mb-4 inline-flex rounded-btn border border-border bg-surface p-0.5 text-xs" role="tablist" aria-label="添加快捷方式来源">
         <ModeTab active={mode === 'tabs'} onClick={() => setMode('tabs')}>
           从打开的标签页
         </ModeTab>
@@ -98,6 +98,8 @@ function ModeTab({
   return (
     <button
       type="button"
+      role="tab"
+      aria-selected={active}
       onClick={onClick}
       className={cn(
         'rounded-[6px] px-3 py-1 transition',

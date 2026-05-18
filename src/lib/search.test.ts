@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ENGINES, fetchSuggestions } from './search'
+import { ENGINES, fetchSuggestions, unwrapJsonp, openSearchParser } from './search'
 import type { SearchEngine } from '@/store/useSettingsStore'
 
 describe('ENGINES', () => {
@@ -38,5 +38,61 @@ describe('fetchSuggestions', () => {
     // All current engines have suggestUrl, but test the guard
     const result = await fetchSuggestions('google' as SearchEngine, 'test', AbortSignal.abort())
     expect(result).toEqual([])
+  })
+})
+
+describe('openSearchParser', () => {
+  it('returns suggestions from array data', () => {
+    expect(openSearchParser(['query', ['s1', 's2', 's3']])).toEqual(['s1', 's2', 's3'])
+  })
+
+  it('returns empty array for invalid data', () => {
+    expect(openSearchParser(null)).toEqual([])
+    expect(openSearchParser({})).toEqual([])
+    expect(openSearchParser('string')).toEqual([])
+  })
+
+  it('returns empty array when second element is not an array', () => {
+    expect(openSearchParser(['query', 'not-an-array'])).toEqual([])
+  })
+})
+
+describe('unwrapJsonp', () => {
+  it('extracts JSON from simple wrapper', () => {
+    expect(unwrapJsonp('callback({"a":1})')).toBe('{"a":1}')
+  })
+
+  it('extracts JSON from baidu-style wrapper', () => {
+    expect(unwrapJsonp('window.baidu.sug({q:"test",g:[1,2]})')).toBe('{q:"test",g:[1,2]}')
+  })
+
+  it('returns original text when no brackets found', () => {
+    expect(unwrapJsonp('plain text')).toBe('plain text')
+  })
+
+  it('handles JSON array payload', () => {
+    expect(unwrapJsonp('cb([1,2,3])')).toBe('[1,2,3]')
+  })
+})
+
+describe('baidu parseSuggest', () => {
+  it('extracts suggestions from baidu format', () => {
+    const parser = ENGINES.baidu.parseSuggest!
+    expect(parser({
+      g: [{ q: 'test1' }, { q: 'test2' }, { q: 'test3' }],
+    })).toEqual(['test1', 'test2', 'test3'])
+  })
+
+  it('returns empty array for missing g property', () => {
+    const parser = ENGINES.baidu.parseSuggest!
+    expect(parser({})).toEqual([])
+    expect(parser(null)).toEqual([])
+  })
+
+  it('filters out items without string q', () => {
+    const parser = ENGINES.baidu.parseSuggest!
+    expect(parser({
+      g: [{ q: 'valid' }, { notQ: 1 }, { q: 123 }],
+    })).toEqual(['valid'])
   })
 })

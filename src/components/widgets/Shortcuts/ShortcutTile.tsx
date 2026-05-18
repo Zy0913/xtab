@@ -15,15 +15,15 @@ export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: P
   const [iconFailed, setIconFailed] = useState(false)
   const icon = shortcut.iconUrl || getFaviconUrl(shortcut.url)
 
+  const TileTag = editable ? 'div' : 'a'
+  const linkProps = editable
+    ? {}
+    : { href: shortcut.url, target: '_blank', rel: 'noopener noreferrer' }
+
   return (
     <div className="group relative flex flex-col items-center gap-2">
-      <a
-        href={editable ? undefined : shortcut.url}
-        target={editable ? undefined : '_blank'}
-        rel={editable ? undefined : 'noopener'}
-        onClick={(e) => {
-          if (editable) e.preventDefault()
-        }}
+      <TileTag
+        {...linkProps}
         className={cn(
           'relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-card bg-surface-strong shadow-card transition group-hover:-translate-y-0.5',
           editable && 'cursor-default',
@@ -47,7 +47,7 @@ export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: P
             {getInitial(shortcut.title)}
           </div>
         )}
-      </a>
+      </TileTag>
       {editable && (
         <button
           onClick={(e) => {

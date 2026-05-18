@@ -12,7 +12,7 @@ interface EngineMeta {
   host: string
 }
 
-function openSearchParser(data: unknown): string[] {
+export function openSearchParser(data: unknown): string[] {
   if (Array.isArray(data) && Array.isArray(data[1])) return data[1].slice(0, MAX_SUGGESTIONS)
   return []
 }
@@ -20,7 +20,7 @@ function openSearchParser(data: unknown): string[] {
 // Strip JSONP wrappers like `cb({...})` or `window.baidu.sug({...})` so the
 // payload can be fed to JSON.parse. Returns the original text when no wrapper
 // is detected.
-function unwrapJsonp(text: string): string {
+export function unwrapJsonp(text: string): string {
   const trimmed = text.trim()
   const firstBrace = trimmed.indexOf('{')
   const firstBracket = trimmed.indexOf('[')
@@ -99,8 +99,9 @@ export async function fetchSuggestions(
     const text = await res.text()
     const data = JSON.parse(unwrapJsonp(text))
     return meta.parseSuggest ? meta.parseSuggest(data) : openSearchParser(data)
-  } catch {
-    console.debug('Suggestion fetch failed')
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'AbortError') return []
+    console.error('Suggestion fetch failed:', e instanceof Error ? e.message : e)
     return []
   }
 }

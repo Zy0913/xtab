@@ -1,8 +1,14 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 type Handler = (event: KeyboardEvent) => void
 
 export function useShortcut(key: string, handler: Handler) {
+  const handlerRef = useRef(handler)
+
+  useEffect(() => {
+    handlerRef.current = handler
+  })
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== key) return
@@ -20,9 +26,9 @@ export function useShortcut(key: string, handler: Handler) {
       )
         return
       e.preventDefault()
-      handler(e)
+      handlerRef.current(e)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [key, handler])
+  }, [key])
 }

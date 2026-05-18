@@ -89,7 +89,7 @@ export async function initTheme() {
     if (next.wallpaperLuminance !== prev.wallpaperLuminance) applyWallpaperLuminance(next.wallpaperLuminance)
     if (next.wallpaper !== prev.wallpaper) {
       // Debounce tint extraction when wallpaper changes
-      refreshWallpaperTint().catch(console.debug)
+      refreshWallpaperTint().catch((e) => console.warn('Tint extraction failed:', e))
     }
   })
 

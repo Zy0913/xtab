@@ -82,7 +82,7 @@ export function DashboardGrid() {
       <div key={item.i} className={item.i === 'search' ? 'z-50' : ''}>
         <WidgetFrame editMode={editMode} transparent={w.transparent}>
           {editMode && !isMobile && (
-            <div className="widget-drag-handle absolute inset-x-0 top-0 z-10 h-6 cursor-grab rounded-t-card bg-gradient-to-b from-black/[0.08] to-transparent active:cursor-grabbing" aria-label="拖拽移动" role="separator" />
+            <div className="widget-drag-handle absolute inset-x-0 top-0 z-10 h-6 cursor-grab rounded-t-card bg-gradient-to-b from-black/[0.08] to-transparent active:cursor-grabbing" aria-label="拖拽移动" />
           )}
           <div className={cn('relative z-[2] flex h-full w-full flex-col', !w.transparent && 'p-4')}>
             <ErrorBoundary>{w.render()}</ErrorBoundary>

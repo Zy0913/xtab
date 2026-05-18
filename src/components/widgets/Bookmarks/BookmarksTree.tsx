@@ -54,7 +54,15 @@ const Row = memo(function Row({ node, depth = 0 }: { node: BookmarkNode; depth?:
 })
 
 export function BookmarksTree() {
-  const tree = useBookmarks()
+  const { tree, error } = useBookmarks()
+
+  if (error) {
+    return (
+      <div className="flex h-full items-center justify-center text-xs text-text-tertiary">
+        书签加载失败，请检查权限设置
+      </div>
+    )
+  }
 
   if (tree.length === 0) {
     return (
