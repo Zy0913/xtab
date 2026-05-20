@@ -3,6 +3,8 @@
  * Uses canvas-based color quantization with brightness-aware selection.
  */
 
+import { warn } from '@/lib/logger'
+
 interface ColorResult {
   rgb: string      // "rgb(r, g, b)"
   rgba: string     // "rgba(r, g, b, a)"
@@ -134,7 +136,7 @@ export function extractWallpaperTint(url: string): Promise<ColorResult | null> {
         CACHE.set(url, result)
         done(result)
     } catch (e) {
-      console.warn('Tint extraction failed:', e)
+      warn('Tint extraction failed:', e)
       done(null)
     }
     }

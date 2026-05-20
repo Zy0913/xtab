@@ -5,6 +5,7 @@ import { hydrateStores, initRemoteSync } from '@/store/storage'
 import { initTheme } from '@/lib/theme'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+import { error } from '@/lib/logger'
 import '@/styles/globals.css'
 
 async function bootstrap() {
@@ -24,4 +25,4 @@ async function bootstrap() {
   )
 }
 
-bootstrap().catch(console.error)
+bootstrap().catch(error)

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { warn } from '@/lib/logger'
 
 interface GeocodeResult {
   name: string
@@ -88,7 +89,7 @@ async function reverseGeocode(lat: number, lon: number, signal?: AbortSignal): P
       return name
     }
   } catch {
-    console.warn('Reverse geocoding failed')
+    warn('Reverse geocoding failed')
   }
   return '当前位置'
 }
@@ -106,7 +107,7 @@ async function getLocation(signal?: AbortSignal): Promise<LocResult> {
     const name = await reverseGeocode(lat, lon, signal)
     return { name, latitude: lat, longitude: lon, isFallback: false }
   } catch {
-    console.warn('Geolocation failed, using fallback')
+    warn('Geolocation failed, using fallback')
     return { ...DEFAULT_CITY, isFallback: true }
   }
 }

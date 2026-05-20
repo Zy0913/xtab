@@ -1,4 +1,5 @@
 import type { StateStorage } from 'zustand/middleware'
+import { error } from '@/lib/logger'
 
 const isExtension = typeof chrome !== 'undefined' && !!chrome.storage?.local
 
@@ -25,7 +26,7 @@ export const chromeStorage: StateStorage = {
     }
     await chrome.storage.local.remove(name)
     if (chrome.runtime.lastError) {
-      console.error(`chrome.storage.local.remove("${name}") failed:`, chrome.runtime.lastError.message)
+      error(`chrome.storage.local.remove("${name}") failed:`, chrome.runtime.lastError.message)
     }
   },
 }

@@ -1,5 +1,6 @@
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { extractWallpaperTint } from '@/lib/wallpaperTint'
+import { warn } from '@/lib/logger'
 
 export function applyTheme(theme: 'light' | 'dark' | 'system') {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -89,7 +90,7 @@ export async function initTheme() {
     if (next.wallpaperLuminance !== prev.wallpaperLuminance) applyWallpaperLuminance(next.wallpaperLuminance)
     if (next.wallpaper !== prev.wallpaper) {
       // Debounce tint extraction when wallpaper changes
-      refreshWallpaperTint().catch((e) => console.warn('Tint extraction failed:', e))
+      refreshWallpaperTint().catch((e) => warn('Tint extraction failed:', e))
     }
   })
 

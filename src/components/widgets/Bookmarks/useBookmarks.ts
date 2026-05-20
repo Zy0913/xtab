@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { error as logError } from '@/lib/logger'
 
 export interface BookmarkNode {
   id: string
@@ -27,7 +28,7 @@ export function useBookmarks() {
       chrome.bookmarks.getTree((roots) => {
         if (chrome.runtime.lastError) {
           const msg = chrome.runtime.lastError.message ?? '书签加载失败'
-          console.error('Bookmarks error:', msg)
+          logError('Bookmarks error:', msg)
           setError(msg)
           return
         }

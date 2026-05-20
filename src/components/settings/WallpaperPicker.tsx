@@ -10,6 +10,7 @@ import {
 } from '@/lib/wallhaven'
 import { cn } from '@/lib/cn'
 import { showToast } from '@/lib/toast'
+import { warn, error as logError } from '@/lib/logger'
 import { WallpaperFavorites } from './WallpaperFavorites'
 
 const MAX_FILE_SIZE_MB = 5
@@ -71,7 +72,7 @@ export function WallpaperPicker() {
       const dataUrl = await fileToDataURL(file)
       setWallpaper(dataUrl)
     } catch {
-      console.warn('Failed to read file as data URL')
+      warn('Failed to read file as data URL')
     }
   }
 
@@ -92,7 +93,7 @@ export function WallpaperPicker() {
         )
       }
     } catch (err) {
-      console.error('Random wallpaper failed:', err)
+      logError('Random wallpaper failed:', err)
       const message = err instanceof Error && err.message ? err.message : '获取壁纸失败，请重试'
       showToast(message, 'error')
     } finally {

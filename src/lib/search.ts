@@ -1,4 +1,5 @@
 import type { SearchEngine } from '@/store/useSettingsStore'
+import { warn } from '@/lib/logger'
 
 const MAX_SUGGESTIONS = 8
 
@@ -101,7 +102,7 @@ export async function fetchSuggestions(
     return meta.parseSuggest ? meta.parseSuggest(data) : openSearchParser(data)
   } catch (e) {
     if (e instanceof DOMException && e.name === 'AbortError') return []
-    console.error('Suggestion fetch failed:', e instanceof Error ? e.message : e)
+    warn('Suggestion fetch failed:', e instanceof Error ? e.message : e)
     return []
   }
 }

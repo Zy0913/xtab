@@ -1,3 +1,5 @@
+import { error } from '@/lib/logger'
+
 export type WallhavenStrategy = '1d' | '1w' | '1M' | '1y'
 
 export interface WallhavenResult {
@@ -13,17 +15,17 @@ export function fetchRandomWallhaven(strategy: WallhavenStrategy): Promise<Wallh
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage({ type: 'fetch-wallhaven', strategy }, (response) => {
       if (chrome.runtime.lastError) {
-        console.error('Wallhaven message error:', chrome.runtime.lastError.message)
+        error('Wallhaven message error:', chrome.runtime.lastError.message)
         reject(new Error(chrome.runtime.lastError.message))
         return
       }
       if (response?.error) {
-        console.error('Wallhaven API error:', response.error)
+        error('Wallhaven API error:', response.error)
         reject(new Error(response.error))
         return
       }
       if (!response || typeof response.id !== 'string' || typeof response.url !== 'string') {
-        console.error('Wallhaven response validation failed:', response)
+        error('Wallhaven response validation failed:', response)
         reject(new Error('Wallhaven 返回数据异常'))
         return
       }

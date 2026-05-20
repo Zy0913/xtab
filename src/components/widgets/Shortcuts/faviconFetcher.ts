@@ -1,9 +1,11 @@
+import { warn } from '@/lib/logger'
+
 export function getFaviconUrl(targetUrl: string): string {
   try {
     const domain = new URL(targetUrl).hostname
     return `https://icons.duckduckgo.com/ip3/${domain}.ico`
   } catch {
-    console.warn('Invalid URL for favicon')
+    warn('Invalid URL for favicon')
     return ''
   }
 }

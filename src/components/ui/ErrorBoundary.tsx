@@ -1,5 +1,6 @@
 import { Component, type ReactNode, type ErrorInfo } from 'react'
 import { RefreshCw } from 'lucide-react'
+import { error as logError } from '@/lib/logger'
 
 interface Props {
   children: ReactNode
@@ -19,7 +20,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('Widget error:', error, info.componentStack)
+    logError('Widget error:', error, info.componentStack)
   }
 
   handleRetry = () => {
