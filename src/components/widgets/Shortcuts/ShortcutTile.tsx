@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, memo } from 'react'
+import { useState, useMemo, memo } from 'react'
 import { X } from 'lucide-react'
 import { useShortcutsStore } from '@/store/useShortcutsStore'
 import { getFaviconSources, getInitial, getColorFor } from './faviconFetcher'
@@ -20,10 +20,6 @@ export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: P
     list.push(...getFaviconSources(shortcut.url))
     return list
   }, [shortcut.iconUrl, shortcut.url])
-
-  useEffect(() => {
-    setSourceIndex(0)
-  }, [sources])
 
   const TileTag = editable ? 'div' : 'a'
   const linkProps = editable

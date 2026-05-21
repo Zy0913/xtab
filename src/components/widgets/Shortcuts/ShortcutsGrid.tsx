@@ -17,7 +17,7 @@ export function ShortcutsGrid() {
     <>
       <div className="grid grid-cols-4 gap-4 sm:grid-cols-6 md:grid-cols-8">
         {items.map((shortcut) => (
-          <ShortcutTile key={shortcut.id} shortcut={shortcut} editable={editMode} />
+          <ShortcutTile key={`${shortcut.id}-${shortcut.url}-${shortcut.iconUrl || ''}`} shortcut={shortcut} editable={editMode} />
         ))}
         <div className="flex flex-col items-center gap-2">
           <button

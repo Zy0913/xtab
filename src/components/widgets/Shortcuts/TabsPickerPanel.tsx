@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { Search, RefreshCw, Check } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -241,7 +241,7 @@ function TabRow({ tab, existing, checked, onToggle }: TabRowProps) {
         >
           {(checked || existing) && <Check size={11} strokeWidth={3} />}
         </span>
-        <TabFavicon tab={tab} />
+        <TabFavicon key={`${tab.id}-${tab.url}-${tab.favIconUrl || ''}`} tab={tab} />
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-sm text-text-primary">{tab.title}</span>
           <span className="truncate text-[11px] text-text-tertiary">{host}</span>
@@ -263,10 +263,6 @@ function TabFavicon({ tab }: { tab: OpenTab }) {
     list.push(...getFaviconSources(tab.url))
     return list
   }, [tab.favIconUrl, tab.url])
-
-  useEffect(() => {
-    setSourceIndex(0)
-  }, [sources])
 
   if (sourceIndex < sources.length) {
     return (
