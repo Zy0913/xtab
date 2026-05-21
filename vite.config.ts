@@ -16,8 +16,17 @@ export default defineConfig({
     rollupOptions: {
       output: {
         chunkFileNames: 'assets/[name]-[hash].js',
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'zustand'],
+        manualChunks: (id) => {
+          // Keep React/Zustand in their own vendor chunk so the newtab entry
+          // payload doesn't churn whenever app code changes.
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/zustand/') ||
+            id.includes('node_modules/scheduler/')
+          ) {
+            return 'vendor'
+          }
         },
       },
     },
