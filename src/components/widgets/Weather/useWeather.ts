@@ -151,7 +151,12 @@ export function useWeather() {
 
     const refresh = async () => {
       try {
-        if (!cachedLoc) cachedLoc = await getLocation(ctrl.signal)
+        if (!cachedLoc || cachedLoc.isFallback) {
+          const freshLoc = await getLocation(ctrl.signal)
+          if (!freshLoc.isFallback || !cachedLoc) {
+            cachedLoc = freshLoc
+          }
+        }
         const weather = await fetchWeather(cachedLoc, ctrl.signal)
         if (!alive) return
         setData(weather)

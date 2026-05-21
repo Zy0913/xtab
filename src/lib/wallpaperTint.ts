@@ -4,6 +4,7 @@
  */
 
 import { warn } from '@/lib/logger'
+import { readCachedBlob } from './wallpaperCache'
 
 interface ColorResult {
   rgb: string      // "rgb(r, g, b)"
@@ -48,104 +49,113 @@ export function extractWallpaperTint(url: string): Promise<ColorResult | null> {
   const existing = PENDING.get(url)
   if (existing) return existing
 
-  const promise = new Promise<ColorResult | null>((resolve) => {
-    const done = (value: ColorResult | null) => {
-      PENDING.delete(url)
-      resolve(value)
-    }
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
+  const promise = (async () => {
+    // Check IndexedDB cache first
+    const cachedBlob = await readCachedBlob(url)
+    const objectUrl = cachedBlob ? URL.createObjectURL(cachedBlob) : url
 
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas')
-        canvas.width = SAMPLE_SIZE
-        canvas.height = SAMPLE_SIZE
-        const ctx = canvas.getContext('2d', { willReadFrequently: true })
-        if (!ctx) {
-          done(null)
-          return
+    return new Promise<ColorResult | null>((resolve) => {
+      const done = (value: ColorResult | null) => {
+        if (objectUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(objectUrl)
         }
+        PENDING.delete(url)
+        resolve(value)
+      }
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
 
-        ctx.drawImage(img, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE)
-        const imageData = ctx.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE)
-        const pixels = imageData.data
-
-        // Count color clusters
-        const clusters = new Map<string, { r: number; g: number; b: number; count: number; lum: number }>()
-
-        for (let i = 0; i < pixels.length; i += 4) {
-          const r = pixels[i]
-          const g = pixels[i + 1]
-          const b = pixels[i + 2]
-          const a = pixels[i + 3]
-
-          if (a < 128) continue // Skip transparent
-
-          const [qr, qg, qb] = quantizeColor(r, g, b, 8)
-          const key = `${qr},${qg},${qb}`
-          const lum = getLuminance(qr, qg, qb)
-
-          if (clusters.has(key)) {
-            const c = clusters.get(key)!
-            c.count++
-            // Weight by saturation (avoid gray)
-            const max = Math.max(qr, qg, qb)
-            const min = Math.min(qr, qg, qb)
-            const sat = max === 0 ? 0 : (max - min) / max
-            if (sat > 0.15) c.count += 2 // Boost colorful pixels
-          } else {
-            clusters.set(key, { r: qr, g: qg, b: qb, count: 1, lum })
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas')
+          canvas.width = SAMPLE_SIZE
+          canvas.height = SAMPLE_SIZE
+          const ctx = canvas.getContext('2d', { willReadFrequently: true })
+          if (!ctx) {
+            done(null)
+            return
           }
-        }
 
-        // Calculate weighted average luminance across all clusters — this better
-        // represents the overall brightness of the wallpaper than the dominant
-        // cluster alone (which the preference function skews toward mid-tones).
-        let totalWeight = 0
-        let weightedLum = 0
-        for (const c of clusters.values()) {
-          totalWeight += c.count
-          weightedLum += c.lum * c.count
-        }
-        const avgLuminance = totalWeight > 0 ? weightedLum / totalWeight : 0.5
+          ctx.drawImage(img, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE)
+          const imageData = ctx.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE)
+          const pixels = imageData.data
 
-        // Pick the most frequent cluster for the tint color (accent).
-        let best: { r: number; g: number; b: number; count: number; lum: number } | null = null
-        for (const c of clusters.values()) {
-          // Prefer colors that aren't too dark or too bright
-          const preference = c.count * (1 - Math.abs(c.lum - 0.45) * 0.8)
-          if (!best || preference > best.count * (1 - Math.abs(best.lum - 0.45) * 0.8)) {
-            best = c
+          // Count color clusters
+          const clusters = new Map<string, { r: number; g: number; b: number; count: number; lum: number }>()
+
+          for (let i = 0; i < pixels.length; i += 4) {
+            const r = pixels[i]
+            const g = pixels[i + 1]
+            const b = pixels[i + 2]
+            const a = pixels[i + 3]
+
+            if (a < 128) continue // Skip transparent
+
+            const [qr, qg, qb] = quantizeColor(r, g, b, 8)
+            const key = `${qr},${qg},${qb}`
+            const lum = getLuminance(qr, qg, qb)
+
+            if (clusters.has(key)) {
+              const c = clusters.get(key)!
+              c.count++
+              // Weight by saturation (avoid gray)
+              const max = Math.max(qr, qg, qb)
+              const min = Math.min(qr, qg, qb)
+              const sat = max === 0 ? 0 : (max - min) / max
+              if (sat > 0.15) c.count += 2 // Boost colorful pixels
+            } else {
+              clusters.set(key, { r: qr, g: qg, b: qb, count: 1, lum })
+            }
           }
-        }
 
-        if (!best) {
+          // Calculate weighted average luminance across all clusters — this better
+          // represents the overall brightness of the wallpaper than the dominant
+          // cluster alone (which the preference function skews toward mid-tones).
+          let totalWeight = 0
+          let weightedLum = 0
+          for (const c of clusters.values()) {
+            totalWeight += c.count
+            weightedLum += c.lum * c.count
+          }
+          const avgLuminance = totalWeight > 0 ? weightedLum / totalWeight : 0.5
+
+          // Pick the most frequent cluster for the tint color (accent).
+          let best: { r: number; g: number; b: number; count: number; lum: number } | null = null
+          for (const c of clusters.values()) {
+            // Prefer colors that aren't too dark or too bright
+            const preference = c.count * (1 - Math.abs(c.lum - 0.45) * 0.8)
+            if (!best || preference > best.count * (1 - Math.abs(best.lum - 0.45) * 0.8)) {
+              best = c
+            }
+          }
+
+          if (!best) {
+            done(null)
+            return
+          }
+
+          const result: ColorResult = {
+            rgb: `rgb(${best.r}, ${best.g}, ${best.b})`,
+            rgba: `rgba(${best.r}, ${best.g}, ${best.b}, 0.85)`,
+            hex: rgbToHex(best.r, best.g, best.b),
+            isDark: avgLuminance < 0.4,
+            luminance: avgLuminance,
+          }
+
+          CACHE.set(url, result)
+          done(result)
+        } catch (e) {
+          warn('Tint extraction failed:', e)
           done(null)
-          return
         }
+      }
 
-        const result: ColorResult = {
-          rgb: `rgb(${best.r}, ${best.g}, ${best.b})`,
-          rgba: `rgba(${best.r}, ${best.g}, ${best.b}, 0.85)`,
-          hex: rgbToHex(best.r, best.g, best.b),
-          isDark: avgLuminance < 0.4,
-          luminance: avgLuminance,
-        }
+      img.onerror = () => done(null)
 
-        CACHE.set(url, result)
-        done(result)
-    } catch (e) {
-      warn('Tint extraction failed:', e)
-      done(null)
-    }
-    }
-
-    img.onerror = () => done(null)
-
-    // Handle data URLs and regular URLs
-    img.src = url
-  })
+      // Handle data URLs and regular URLs
+      img.src = objectUrl
+    })
+  })()
 
   PENDING.set(url, promise)
   return promise

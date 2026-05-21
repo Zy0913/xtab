@@ -51,13 +51,20 @@ function parseSettings(raw: unknown) {
     throw new Error('wallpaper 格式错误')
   if (wallpaperTint !== undefined && !isStr(wallpaperTint) && wallpaperTint !== null)
     throw new Error('wallpaperTint 格式错误')
-  if (wallpaperLuminance !== undefined && !isNum(wallpaperLuminance) && wallpaperLuminance !== null)
+
+  // Downward compatibility: migrate wallpaperIsDark to wallpaperLuminance (v3 -> v4)
+  let finalLuminance = wallpaperLuminance
+  if (finalLuminance === undefined && raw.wallpaperIsDark !== undefined) {
+    finalLuminance = raw.wallpaperIsDark === true ? 0.3 : 0.7
+  }
+
+  if (finalLuminance !== undefined && !isNum(finalLuminance) && finalLuminance !== null)
     throw new Error('wallpaperLuminance 格式错误')
   if (wallpaperDimming !== undefined && (!isNum(wallpaperDimming) || wallpaperDimming < 0 || wallpaperDimming > 0.6))
     throw new Error('wallpaperDimming 格式错误')
   if (reduceMotion !== undefined && !isBool(reduceMotion))
     throw new Error('reduceMotion 格式错误')
-  return { theme, glassMode, searchEngine, wallpaper, wallpaperTint, wallpaperLuminance, wallpaperDimming, reduceMotion } as {
+  return { theme, glassMode, searchEngine, wallpaper, wallpaperTint, wallpaperLuminance: finalLuminance, wallpaperDimming, reduceMotion } as {
     theme?: typeof VALID_THEMES[number]
     glassMode?: typeof VALID_GLASS[number]
     searchEngine?: typeof VALID_ENGINES[number]
@@ -88,7 +95,7 @@ function parseTodos(raw: unknown): TodoItem[] {
 }
 
 const MAX_IMPORT_SIZE = 5 * 1024 * 1024
-const SUPPORTED_VERSIONS = [1, 2, 3]
+const SUPPORTED_VERSIONS = [1, 2, 3, 4]
 
 export function LayoutSection() {
   const enabled = useLayoutStore((s) => s.enabled)
@@ -98,7 +105,7 @@ export function LayoutSection() {
   const handleExport = () => {
     const { theme, glassMode, searchEngine, wallpaper, wallpaperTint, wallpaperLuminance, wallpaperDimming, reduceMotion } = useSettingsStore.getState()
     const data = {
-      version: 3,
+      version: 4,
       layouts: useLayoutStore.getState().layouts,
       enabled: useLayoutStore.getState().enabled,
       settings: { theme, glassMode, searchEngine, wallpaper, wallpaperTint, wallpaperLuminance, wallpaperDimming, reduceMotion },
