@@ -10,6 +10,21 @@ export function getFaviconUrl(targetUrl: string): string {
   }
 }
 
+export function getFaviconSources(url: string): string[] {
+  try {
+    const parsed = new URL(url)
+    const domain = parsed.hostname
+    return [
+      `chrome://favicon2/?size=32&pageUrl=${encodeURIComponent(url)}`,
+      `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+      `https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
+    ]
+  } catch {
+    warn('Invalid URL for favicon sources')
+    return []
+  }
+}
+
 export function getInitial(title: string): string {
   return title.trim().charAt(0).toUpperCase() || '·'
 }

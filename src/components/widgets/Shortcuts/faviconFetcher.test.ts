@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getFaviconUrl, getInitial, getColorFor } from './faviconFetcher'
+import { getFaviconUrl, getFaviconSources, getInitial, getColorFor } from './faviconFetcher'
 
 describe('getFaviconUrl', () => {
   it('returns DuckDuckGo favicon URL for valid domain', () => {
@@ -49,5 +49,33 @@ describe('getColorFor', () => {
   it('returns a valid hex color', () => {
     const color = getColorFor('test')
     expect(color).toMatch(/^#[0-9A-F]{6}$/)
+  })
+})
+
+describe('getFaviconSources', () => {
+  it('returns three sources for a valid URL', () => {
+    const sources = getFaviconSources('https://github.com/user/repo')
+    expect(sources).toHaveLength(3)
+  })
+
+  it('chrome://favicon2 URL contains encoded full URL', () => {
+    const sources = getFaviconSources('https://example.com/page')
+    expect(sources[0]).toContain('chrome://favicon2/?size=32&pageUrl=')
+    expect(sources[0]).toContain(encodeURIComponent('https://example.com/page'))
+  })
+
+  it('DuckDuckGo URL uses ip3 subdomain and .ico suffix', () => {
+    const sources = getFaviconSources('https://github.com/user/repo')
+    expect(sources[1]).toBe('https://icons.duckduckgo.com/ip3/github.com.ico')
+  })
+
+  it('Google URL uses s2 path and sz=32 parameter', () => {
+    const sources = getFaviconSources('https://github.com/user/repo')
+    expect(sources[2]).toBe('https://www.google.com/s2/favicons?domain=github.com&sz=32')
+  })
+
+  it('returns empty array for invalid URL', () => {
+    expect(getFaviconSources('not-a-url')).toEqual([])
+    expect(getFaviconSources('')).toEqual([])
   })
 })

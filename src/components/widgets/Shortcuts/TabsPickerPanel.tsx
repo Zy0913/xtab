@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Search, RefreshCw, Check } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -11,7 +11,7 @@ import {
   normalizeUrlKey,
   type OpenTab,
 } from './useOpenTabs'
-import { getFaviconUrl, getInitial, getColorFor } from './faviconFetcher'
+import { getFaviconSources, getInitial, getColorFor } from './faviconFetcher'
 
 interface Props {
   active: boolean
@@ -255,17 +255,28 @@ function TabRow({ tab, existing, checked, onToggle }: TabRowProps) {
 }
 
 function TabFavicon({ tab }: { tab: OpenTab }) {
-  const [failed, setFailed] = useState(false)
-  const src = tab.favIconUrl || getFaviconUrl(tab.url)
-  if (src && !failed) {
+  const [sourceIndex, setSourceIndex] = useState(0)
+
+  const sources = useMemo(() => {
+    const list: string[] = []
+    if (tab.favIconUrl) list.push(tab.favIconUrl)
+    list.push(...getFaviconSources(tab.url))
+    return list
+  }, [tab.favIconUrl, tab.url])
+
+  useEffect(() => {
+    setSourceIndex(0)
+  }, [sources])
+
+  if (sourceIndex < sources.length) {
     return (
       <img
-        src={src}
+        src={sources[sourceIndex]}
         alt=""
         width={16}
         height={16}
         className="h-4 w-4 shrink-0 object-contain"
-        onError={() => setFailed(true)}
+        onError={() => setSourceIndex((i) => i + 1)}
       />
     )
   }

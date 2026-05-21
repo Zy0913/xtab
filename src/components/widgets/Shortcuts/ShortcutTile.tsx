@@ -1,7 +1,7 @@
-import { useState, memo } from 'react'
+import { useState, useMemo, useEffect, memo } from 'react'
 import { X } from 'lucide-react'
 import { useShortcutsStore } from '@/store/useShortcutsStore'
-import { getFaviconUrl, getInitial, getColorFor } from './faviconFetcher'
+import { getFaviconSources, getInitial, getColorFor } from './faviconFetcher'
 import { cn } from '@/lib/cn'
 import type { Shortcut } from '@/types/widget'
 
@@ -12,8 +12,18 @@ interface Props {
 
 export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: Props) {
   const remove = useShortcutsStore((s) => s.remove)
-  const [iconFailed, setIconFailed] = useState(false)
-  const icon = shortcut.iconUrl || getFaviconUrl(shortcut.url)
+  const [sourceIndex, setSourceIndex] = useState(0)
+
+  const sources = useMemo(() => {
+    const list: string[] = []
+    if (shortcut.iconUrl) list.push(shortcut.iconUrl)
+    list.push(...getFaviconSources(shortcut.url))
+    return list
+  }, [shortcut.iconUrl, shortcut.url])
+
+  useEffect(() => {
+    setSourceIndex(0)
+  }, [sources])
 
   const TileTag = editable ? 'div' : 'a'
   const linkProps = editable
@@ -30,14 +40,14 @@ export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: P
         )}
         aria-label={shortcut.title}
       >
-        {icon && !iconFailed ? (
+        {sourceIndex < sources.length ? (
           <img
-            src={icon}
+            src={sources[sourceIndex]}
             alt=""
             width={28}
             height={28}
             className="h-7 w-7 object-contain"
-            onError={() => setIconFailed(true)}
+            onError={() => setSourceIndex((i) => i + 1)}
           />
         ) : (
           <div

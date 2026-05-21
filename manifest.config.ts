@@ -27,6 +27,7 @@ export default defineManifest({
     'https://api.open-meteo.com/*',
     'https://geocoding-api.open-meteo.com/*',
     'https://icons.duckduckgo.com/*',
+    'https://www.google.com/*',
     'https://images.unsplash.com/*',
     'https://wallhaven.cc/*',
     'https://w.wallhaven.cc/*',
