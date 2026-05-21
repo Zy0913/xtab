@@ -82,6 +82,18 @@ export async function initTheme() {
     await refreshWallpaperTint()
   }
 
+  // Debounce tint extraction so rapid wallpaper swaps (e.g., clicking through
+  // presets) don't fire a burst of canvas decodes.
+  const TINT_DEBOUNCE_MS = 150
+  let tintTimer: ReturnType<typeof setTimeout> | null = null
+  const scheduleTint = () => {
+    if (tintTimer) clearTimeout(tintTimer)
+    tintTimer = setTimeout(() => {
+      tintTimer = null
+      refreshWallpaperTint().catch((e) => warn('Tint extraction failed:', e))
+    }, TINT_DEBOUNCE_MS)
+  }
+
   useSettingsStore.subscribe((next, prev) => {
     if (next.theme !== prev.theme) applyTheme(next.theme)
     if (next.glassMode !== prev.glassMode) applyGlassMode(next.glassMode)
@@ -89,8 +101,7 @@ export async function initTheme() {
     if (next.wallpaperTint !== prev.wallpaperTint) applyWallpaperTint(next.wallpaperTint)
     if (next.wallpaperLuminance !== prev.wallpaperLuminance) applyWallpaperLuminance(next.wallpaperLuminance)
     if (next.wallpaper !== prev.wallpaper) {
-      // Debounce tint extraction when wallpaper changes
-      refreshWallpaperTint().catch((e) => warn('Tint extraction failed:', e))
+      scheduleTint()
     }
   })
 

@@ -9,12 +9,16 @@ export default defineManifest({
   chrome_url_overrides: {
     newtab: 'src/newtab/index.html',
   },
+  background: {
+    service_worker: 'src/background/index.ts',
+    type: 'module',
+  },
   icons: {
     16: 'icons/icon16.png',
     48: 'icons/icon48.png',
     128: 'icons/icon128.png',
   },
-  permissions: ['storage', 'bookmarks', 'unlimitedStorage', 'tabs'],
+  permissions: ['storage', 'bookmarks', 'unlimitedStorage', 'tabs', 'geolocation'],
   host_permissions: [
     'https://suggestqueries.google.com/*',
     'https://api.bing.com/*',

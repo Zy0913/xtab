@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Search as SearchIcon } from 'lucide-react'
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { ENGINES, fetchSuggestions } from '@/lib/search'
+import { useShortcut } from '@/lib/useShortcut'
 import { EngineSelector } from './EngineSelector'
 import { Suggestions } from './Suggestions'
 
@@ -14,16 +15,7 @@ export function SearchBar() {
   const inputRef = useRef<HTMLInputElement>(null)
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT') {
-        e.preventDefault()
-        inputRef.current?.focus()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  useShortcut('/', () => inputRef.current?.focus())
 
   useEffect(() => {
     if (!query.trim()) return
