@@ -14,11 +14,19 @@ export function getFaviconSources(url: string): string[] {
   try {
     const parsed = new URL(url)
     const domain = parsed.hostname
-    return [
-      `chrome://favicon2/?size=32&pageUrl=${encodeURIComponent(url)}`,
+    
+    const list: string[] = []
+    
+    if (typeof chrome !== 'undefined' && chrome.runtime?.id) {
+      list.push(`chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=32`)
+    }
+
+    list.push(
       `https://icons.duckduckgo.com/ip3/${domain}.ico`,
-      `https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
-    ]
+      `https://www.google.com/s2/favicons?domain=${domain}&sz=32`
+    )
+
+    return list
   } catch {
     warn('Invalid URL for favicon sources')
     return []

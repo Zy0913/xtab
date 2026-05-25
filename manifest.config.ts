@@ -18,7 +18,7 @@ export default defineManifest({
     48: 'icons/icon48.png',
     128: 'icons/icon128.png',
   },
-  permissions: ['storage', 'bookmarks', 'unlimitedStorage', 'tabs', 'geolocation'],
+  permissions: ['storage', 'bookmarks', 'unlimitedStorage', 'tabs', 'geolocation', 'favicon'],
   host_permissions: [
     'https://suggestqueries.google.com/*',
     'https://api.bing.com/*',

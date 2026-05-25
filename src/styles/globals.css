@@ -51,20 +51,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.12);
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.20);
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* ===== Reduce Motion ===== */
@@ -143,4 +135,23 @@ body {
       0 4px 28px rgba(0, 0, 0, 0.24),
       0 0 1px rgba(0, 0, 0, 0.55);
   }
+}
+
+/* ===== Micro-animations ===== */
+@keyframes spring-in {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-spring-in {
+  animation: spring-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }

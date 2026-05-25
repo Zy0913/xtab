@@ -53,25 +53,30 @@ describe('getColorFor', () => {
 })
 
 describe('getFaviconSources', () => {
-  it('returns three sources for a valid URL', () => {
+  it('returns two sources for a valid URL when not in extension context', () => {
     const sources = getFaviconSources('https://github.com/user/repo')
-    expect(sources).toHaveLength(3)
+    expect(sources).toHaveLength(2)
+    expect(sources[0]).toBe('https://icons.duckduckgo.com/ip3/github.com.ico')
+    expect(sources[1]).toBe('https://www.google.com/s2/favicons?domain=github.com&sz=32')
   })
 
-  it('chrome://favicon2 URL contains encoded full URL', () => {
-    const sources = getFaviconSources('https://example.com/page')
-    expect(sources[0]).toContain('chrome://favicon2/?size=32&pageUrl=')
-    expect(sources[0]).toContain(encodeURIComponent('https://example.com/page'))
-  })
+  it('returns three sources including chrome-extension favicon URL when in extension context', () => {
+    const originalChrome = globalThis.chrome
+    globalThis.chrome = {
+      runtime: {
+        id: 'test-extension-id'
+      }
+    } as typeof chrome
 
-  it('DuckDuckGo URL uses ip3 subdomain and .ico suffix', () => {
-    const sources = getFaviconSources('https://github.com/user/repo')
-    expect(sources[1]).toBe('https://icons.duckduckgo.com/ip3/github.com.ico')
-  })
-
-  it('Google URL uses s2 path and sz=32 parameter', () => {
-    const sources = getFaviconSources('https://github.com/user/repo')
-    expect(sources[2]).toBe('https://www.google.com/s2/favicons?domain=github.com&sz=32')
+    try {
+      const sources = getFaviconSources('https://github.com/user/repo')
+      expect(sources).toHaveLength(3)
+      expect(sources[0]).toBe('chrome-extension://test-extension-id/_favicon/?pageUrl=https%3A%2F%2Fgithub.com%2Fuser%2Frepo&size=32')
+      expect(sources[1]).toBe('https://icons.duckduckgo.com/ip3/github.com.ico')
+      expect(sources[2]).toBe('https://www.google.com/s2/favicons?domain=github.com&sz=32')
+    } finally {
+      globalThis.chrome = originalChrome
+    }
   })
 
   it('returns empty array for invalid URL', () => {

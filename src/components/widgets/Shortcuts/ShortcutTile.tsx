@@ -70,7 +70,7 @@ export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: P
       )}
       <span
         className="max-w-[72px] truncate text-xs text-shadow-wallpaper"
-        style={{ color: 'var(--text-on-dark)' }}>
+        style={{ color: 'var(--text-primary)' }}>
         {shortcut.title}
       </span>
     </div>

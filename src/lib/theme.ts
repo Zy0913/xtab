@@ -6,6 +6,11 @@ export function applyTheme(theme: 'light' | 'dark' | 'system') {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
   const isDark = theme === 'dark' || (theme === 'system' && prefersDark)
   document.documentElement.classList.toggle('dark', isDark)
+  
+  const tint = useSettingsStore.getState().wallpaperTint
+  if (tint) {
+    applyWallpaperTint(tint)
+  }
 }
 
 export function applyGlassMode(mode: 'sequoia' | 'tahoe') {
@@ -17,9 +22,16 @@ export function applyWallpaperTint(tint: string | null) {
   if (tint) {
     root.style.setProperty('--wallpaper-tint', tint)
     root.style.setProperty('--accent', tint)
+    const isDark = root.classList.contains('dark')
+    if (isDark) {
+      root.style.setProperty('--accent-hover', `color-mix(in srgb, ${tint} 85%, white)`)
+    } else {
+      root.style.setProperty('--accent-hover', `color-mix(in srgb, ${tint} 85%, black)`)
+    }
   } else {
     root.style.removeProperty('--wallpaper-tint')
     root.style.removeProperty('--accent')
+    root.style.removeProperty('--accent-hover')
   }
 }
 

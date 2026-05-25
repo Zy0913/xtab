@@ -16,14 +16,14 @@ export const TodoItem = memo(function TodoItem({ item }: Props) {
       <button
         onClick={() => toggle(item.id)}
         className={cn(
-          'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition',
+          'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition active:scale-90',
           item.done
             ? 'border-accent bg-accent text-white'
             : 'border-border hover:border-accent',
         )}
         aria-label={item.done ? '标记为未完成' : '标记为已完成'}
       >
-        {item.done && <Check size={10} />}
+        {item.done && <Check size={10} className="animate-spring-in" />}
       </button>
       <span
         className={cn(

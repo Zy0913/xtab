@@ -24,6 +24,7 @@ export function WidgetFrame({
         editMode && 'ring-[1.5px] ring-accent/20 ring-offset-[1px] ring-offset-transparent',
         className,
       )}
+      style={{ containerType: 'inline-size' }}
     >
       {children}
     </div>

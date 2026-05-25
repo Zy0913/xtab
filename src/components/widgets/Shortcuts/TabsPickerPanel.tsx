@@ -259,8 +259,16 @@ function TabFavicon({ tab }: { tab: OpenTab }) {
 
   const sources = useMemo(() => {
     const list: string[] = []
-    if (tab.favIconUrl) list.push(tab.favIconUrl)
+    // Prioritize data URIs (e.g. dev server dynamic favicons)
+    if (tab.favIconUrl?.startsWith('data:')) {
+      list.push(tab.favIconUrl)
+    }
+    // Add extension favicon API (bypasses CORP/CORS) and public API fallbacks
     list.push(...getFaviconSources(tab.url))
+    // Add original HTTP URL favicon as a last resort
+    if (tab.favIconUrl && !tab.favIconUrl.startsWith('data:')) {
+      list.push(tab.favIconUrl)
+    }
     return list
   }, [tab.favIconUrl, tab.url])
 

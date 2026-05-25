@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, CheckCircle } from 'lucide-react'
 import { useTodoStore } from '@/store/useTodoStore'
 import { TodoItem } from './TodoItem'
 
@@ -55,8 +55,12 @@ export function TodoList() {
 
       <ul className="-mx-1 mt-2 flex-1 space-y-1 overflow-y-auto pr-1">
         {items.length === 0 && (
-          <li className="pt-4 text-center text-xs text-text-tertiary">
-            空空如也
+          <li className="flex h-full flex-col items-center justify-center py-6 text-center">
+            <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-full bg-surface-strong/30 text-text-tertiary">
+              <CheckCircle size={18} className="stroke-[1.5]" />
+            </div>
+            <p className="text-xs font-medium text-text-secondary">没有待办事项</p>
+            <p className="mt-0.5 text-[11px] text-text-tertiary">在输入框输入，轻松开启一天工作</p>
           </li>
         )}
         {items.map((it) => (

@@ -15,7 +15,7 @@ export function ShortcutsGrid() {
 
   return (
     <>
-      <div className="grid grid-cols-4 gap-4 sm:grid-cols-6 md:grid-cols-8">
+      <div className="shortcut-grid">
         {items.map((shortcut) => (
           <ShortcutTile key={`${shortcut.id}-${shortcut.url}-${shortcut.iconUrl || ''}`} shortcut={shortcut} editable={editMode} />
         ))}

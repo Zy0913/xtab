@@ -8,6 +8,12 @@ interface GeocodeResult {
   country?: string
 }
 
+interface HourlyForecast {
+  time: string
+  temperature: number
+  weatherCode: number
+}
+
 interface WeatherData {
   location: string
   temperature: number
@@ -15,6 +21,9 @@ interface WeatherData {
   weatherCode: number
   isDay: boolean
   isFallback: boolean
+  tempMax: number
+  tempMin: number
+  hourly: HourlyForecast[]
 }
 
 interface LocResult extends GeocodeResult {
@@ -113,11 +122,40 @@ async function getLocation(signal?: AbortSignal): Promise<LocResult> {
 }
 
 async function fetchWeather(loc: LocResult, signal?: AbortSignal): Promise<WeatherData> {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true`
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true&hourly=temperature_2m,weathercode&daily=temperature_2m_max,temperature_2m_min&timezone=auto`
   const res = await fetch(url, { signal })
   if (!res.ok) throw new Error(`天气服务不可用 (HTTP ${res.status})`)
   const data = await res.json()
   const cw = data.current_weather
+
+  // Extract daily max and min temperature
+  const tempMax = data.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(data.daily.temperature_2m_max[0]) : Math.round(cw.temperature)
+  const tempMin = data.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(data.daily.temperature_2m_min[0]) : Math.round(cw.temperature)
+
+  // Extract hourly forecasts
+  const hourlyList: HourlyForecast[] = []
+  if (data.hourly?.time && data.hourly?.temperature_2m && data.hourly?.weathercode) {
+    let currentIndex = data.hourly.time.indexOf(cw.time)
+    if (currentIndex === -1) {
+      // Fallback: match by date hour prefix (e.g. "2026-05-22T16")
+      const hourPrefix = cw.time.substring(0, 13)
+      currentIndex = data.hourly.time.findIndex((t: string) => t.startsWith(hourPrefix))
+    }
+    if (currentIndex === -1) {
+      currentIndex = 0
+    }
+    for (let i = 0; i < 6; i++) {
+      const idx = currentIndex + i
+      if (idx < data.hourly.time.length) {
+        hourlyList.push({
+          time: data.hourly.time[idx],
+          temperature: Math.round(data.hourly.temperature_2m[idx]),
+          weatherCode: data.hourly.weathercode[idx],
+        })
+      }
+    }
+  }
+
   return {
     location: loc.name,
     temperature: Math.round(cw.temperature),
@@ -125,6 +163,9 @@ async function fetchWeather(loc: LocResult, signal?: AbortSignal): Promise<Weath
     weatherCode: cw.weathercode,
     isDay: cw.is_day === 1,
     isFallback: loc.isFallback,
+    tempMax,
+    tempMin,
+    hourly: hourlyList,
   }
 }
 

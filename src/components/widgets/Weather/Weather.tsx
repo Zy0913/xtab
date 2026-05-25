@@ -36,18 +36,24 @@ const DEFAULT_LABEL = { maxCode: Infinity, label: '—' }
 export function WeatherWidget() {
   const { data, error } = useWeather()
 
+  const cardClassName = "flex h-full w-full flex-col justify-between rounded-card p-4 shadow-card backdrop-blur-glass glass-noise border text-white select-none transition-all duration-500"
+
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-text-tertiary" role="alert" aria-live="assertive">
-        无法获取天气
+      <div className={`${cardClassName} bg-slate-900/40 border-white/5 items-center justify-center`}>
+        <div className="text-sm text-white/50" role="alert" aria-live="assertive">
+          无法获取天气
+        </div>
       </div>
     )
   }
 
   if (!data) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-text-tertiary" role="status" aria-live="polite">
-        加载中…
+      <div className={`${cardClassName} bg-slate-900/40 border-white/5 items-center justify-center`}>
+        <div className="text-sm text-white/50 animate-pulse" role="status" aria-live="polite">
+          加载中…
+        </div>
       </div>
     )
   }
@@ -55,26 +61,101 @@ export function WeatherWidget() {
   const { Icon } = lookup(ICON_MAP, data.weatherCode, DEFAULT_ICON)
   const { label } = lookup(LABEL_MAP, data.weatherCode, DEFAULT_LABEL)
 
+  // Gracefully handle partial/old cached entries
+  const tempMax = data.tempMax !== undefined ? data.tempMax : data.temperature
+  const tempMin = data.tempMin !== undefined ? data.tempMin : data.temperature
+  const hourly = data.hourly || []
+
+  // Dynamic weather-themed premium gradients matching macOS styling
+  const getGradientClass = (code: number, isDay: boolean) => {
+    if (!isDay) {
+      return 'bg-gradient-to-br from-slate-900/80 via-slate-950/85 to-indigo-950/65 border-white/5'
+    }
+    // Clear/Sunny (code 0)
+    if (code === 0) {
+      return 'bg-gradient-to-br from-sky-400/50 via-blue-500/35 to-indigo-950/45 border-white/10'
+    }
+    // Clouds (code 1-3)
+    if (code <= 3) {
+      return 'bg-gradient-to-br from-slate-500/45 via-blue-900/30 to-slate-900/50 border-white/10'
+    }
+    // Rain/Fog/Snow/Lightning (code >3)
+    return 'bg-gradient-to-br from-slate-700/50 via-slate-800/40 to-slate-950/60 border-white/5'
+  }
+
+  const gradientClass = getGradientClass(data.weatherCode, data.isDay)
+
   return (
-    <div className="flex h-full flex-col justify-between">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-medium uppercase tracking-wide text-text-tertiary">
-          天气 · {data.location}{data.isFallback && ' *'}
-        </span>
-        <Icon size={16} className="text-text-tertiary" />
+    <div className={`${cardClassName} ${gradientClass}`}>
+      {/* Header section: Location + Navigation arrow (filled up-right), weather icon */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5 text-[13px] font-semibold tracking-wide text-white">
+          <span>{data.location}</span>
+          <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current text-white/80" aria-hidden="true">
+            <path d="M21 3L3 10.53L11.47 12.53L13.47 21L21 3Z" />
+          </svg>
+          {data.isFallback && (
+            <span className="text-[10px] text-white/40 cursor-help" title="定位不可用，显示默认城市">
+              *
+            </span>
+          )}
+        </div>
+        <Icon size={26} className="text-white drop-shadow-sm" />
       </div>
-      <div className="flex items-baseline gap-1">
-        <span className="text-4xl font-light tabular-nums text-text-primary">
-          {data.temperature}
-        </span>
-        <span className="text-lg text-text-secondary">°C</span>
+
+      {/* Middle section: Temperature + stacked High/Low and weather description */}
+      <div className="my-1 flex items-center justify-between">
+        <div className="flex items-start">
+          <span className="text-[52px] font-light leading-none tracking-tight tabular-nums text-white">
+            {data.temperature}
+          </span>
+          <span className="text-2xl font-light leading-none -mt-0.5 text-white/90">°</span>
+        </div>
+        <div className="flex flex-col items-end text-right">
+          <span className="text-[13px] font-semibold text-white">{label}</span>
+          <div className="mt-1 flex items-center gap-2 text-[11px] text-white/80">
+            <div className="flex items-center gap-0.5">
+              <span className="flex flex-col text-[8px] leading-[1] text-white/50 font-medium">
+                <span>最</span>
+                <span>高</span>
+              </span>
+              <span className="tabular-nums font-semibold">{tempMax}°</span>
+            </div>
+            <div className="flex items-center gap-0.5">
+              <span className="flex flex-col text-[8px] leading-[1] text-white/50 font-medium">
+                <span>最</span>
+                <span>低</span>
+              </span>
+              <span className="tabular-nums font-semibold">{tempMin}°</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="text-xs text-text-secondary">
-        {label} · 风速 {Math.round(data.windspeed)} km/h
+
+      {/* Divider */}
+      <div className="border-t border-white/10" />
+
+      {/* Bottom section: Hourly forecast */}
+      <div className="mt-1 flex items-center justify-between gap-1 overflow-x-auto scrollbar-none">
+        {hourly.slice(0, 6).map((item, index) => {
+          const itemIconInfo = lookup(ICON_MAP, item.weatherCode, DEFAULT_ICON)
+          const ItemIcon = itemIconInfo.Icon
+
+          let hourLabel = '现在'
+          if (index > 0) {
+            const hour = parseInt(item.time.split('T')[1]?.split(':')[0] || '0', 10)
+            hourLabel = `${hour}时`
+          }
+
+          return (
+            <div key={item.time} className="flex flex-col items-center justify-between gap-1.5 flex-1 min-w-[32px]">
+              <span className="text-[10px] text-white/60 font-medium whitespace-nowrap">{hourLabel}</span>
+              <ItemIcon size={16} className="text-white/80" />
+              <span className="text-[11px] font-semibold text-white tabular-nums">{item.temperature}°</span>
+            </div>
+          )
+        })}
       </div>
-      {data.isFallback && (
-        <div className="mt-1 text-[10px] text-text-tertiary">* 定位不可用，显示默认城市</div>
-      )}
     </div>
   )
 }

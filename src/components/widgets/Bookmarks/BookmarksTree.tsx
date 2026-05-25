@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { ChevronRight, Folder, BookmarkIcon } from 'lucide-react'
+import { ChevronRight, Folder, BookmarkIcon, BookOpen } from 'lucide-react'
 import { useBookmarks, type BookmarkNode } from './useBookmarks'
 import { useBookmarksUiStore } from '@/store/useBookmarksUiStore'
 import { cn } from '@/lib/cn'
@@ -58,16 +58,38 @@ export function BookmarksTree() {
 
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center text-xs text-text-tertiary">
-        书签加载失败，请检查权限设置
+      <div className="flex h-full flex-col">
+        <span className="mb-2 text-xs font-medium uppercase tracking-wide text-text-tertiary">
+          书签
+        </span>
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
+          <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-full bg-surface-strong/30 text-text-tertiary">
+            <BookOpen size={18} className="stroke-[1.5]" />
+          </div>
+          <p className="text-xs font-medium text-text-secondary">书签加载失败</p>
+          <p className="mt-0.5 px-4 text-[11px] text-text-tertiary">
+            请确保已授予书签访问权限
+          </p>
+        </div>
       </div>
     )
   }
 
   if (tree.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center text-xs text-text-tertiary">
-        （开发环境无书签数据）
+      <div className="flex h-full flex-col">
+        <span className="mb-2 text-xs font-medium uppercase tracking-wide text-text-tertiary">
+          书签
+        </span>
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
+          <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-full bg-surface-strong/30 text-text-tertiary">
+            <BookOpen size={18} className="stroke-[1.5]" />
+          </div>
+          <p className="text-xs font-medium text-text-secondary">无书签数据</p>
+          <p className="mt-0.5 px-4 text-[11px] text-text-tertiary">
+            无法读取 Chrome 书签，请检查扩展程序权限设置
+          </p>
+        </div>
       </div>
     )
   }

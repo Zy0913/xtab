@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/cn'
@@ -14,6 +14,31 @@ interface DialogProps {
 
 export function Dialog({ open, onClose, title, children, className }: DialogProps) {
   const trapRef = useFocusTrap(open)
+  const [shouldRender, setShouldRender] = useState(open)
+  const [animateIn, setAnimateIn] = useState(open)
+
+  // Sync state with open prop during rendering to avoid synchronous useEffect updates
+  if (open && !shouldRender) {
+    setShouldRender(true)
+  }
+  if (!open && animateIn) {
+    setAnimateIn(false)
+  }
+
+  useEffect(() => {
+    if (open) {
+      // Allow a brief frame delay to trigger transition after mounting
+      const timer = requestAnimationFrame(() => {
+        setAnimateIn(true)
+      })
+      return () => cancelAnimationFrame(timer)
+    } else {
+      const timer = setTimeout(() => {
+        setShouldRender(false)
+      }, 200)
+      return () => clearTimeout(timer)
+    }
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -27,11 +52,14 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
     }
   }, [open, onClose])
 
-  if (!open) return null
+  if (!shouldRender) return null
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md transition-all"
+      className={cn(
+        'fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md transition-all duration-200 ease-out',
+        animateIn ? 'opacity-100 backdrop-blur-sm' : 'opacity-0 backdrop-blur-none',
+      )}
       style={{ backgroundColor: 'var(--overlay)' }}
       onClick={onClose}
     >
@@ -41,7 +69,8 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'relative w-full max-w-md rounded-card border border-border bg-surface-strong p-5 shadow-pop backdrop-blur-glass',
+          'relative w-full max-w-md rounded-card border border-border bg-surface-strong p-5 shadow-pop backdrop-blur-glass transition-all duration-200 ease-out',
+          animateIn ? 'opacity-100 scale-100' : 'opacity-0 scale-95',
           className,
         )}
         onClick={(e) => e.stopPropagation()}
