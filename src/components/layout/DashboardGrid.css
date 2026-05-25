@@ -84,13 +84,13 @@
   }
 }
 
-@container (min-width: 640px) {
+@container (min-width: 1120px) {
   .shortcut-grid {
     grid-template-columns: repeat(10, minmax(0, 1fr));
   }
 }
 
-@container (min-width: 960px) {
+@container (min-width: 1350px) {
   .shortcut-grid {
     grid-template-columns: repeat(12, minmax(0, 1fr));
   }

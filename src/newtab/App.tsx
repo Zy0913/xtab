@@ -99,7 +99,7 @@ export default function App() {
         </button>
       </header>
 
-      <main className="relative z-10 mx-auto min-h-screen max-w-6xl xl:max-w-7xl 2xl:max-w-[100rem] px-6 xl:px-8 2xl:px-12 pt-20 pb-6">
+      <main className="relative z-10 mx-auto min-h-screen max-w-6xl 2xl:max-w-7xl px-6 2xl:px-8 pt-20 pb-6">
         <DashboardGrid />
       </main>
 
