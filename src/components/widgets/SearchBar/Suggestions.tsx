@@ -14,7 +14,7 @@ export function Suggestions({ items, activeIndex, onPick, onHover }: Props) {
       id="search-suggestions"
       role="listbox"
       aria-label="搜索建议"
-      className="absolute left-1/2 top-full z-10 mt-2 w-full max-w-2xl -translate-x-1/2 overflow-hidden rounded-card border border-border bg-surface-strong p-1 shadow-pop backdrop-blur-glass"
+      className="absolute left-1/2 top-full z-10 mt-2 w-full max-w-2xl xl:max-w-3xl 2xl:max-w-4xl -translate-x-1/2 overflow-hidden rounded-card border border-border bg-surface-strong p-1 shadow-pop backdrop-blur-glass"
     >
       {items.map((text, i) => (
         <button

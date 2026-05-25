@@ -69,7 +69,7 @@ export function SearchBar() {
 
   return (
     <div className="relative w-full">
-      <div className="mx-auto flex h-14 max-w-2xl items-center gap-2.5 border border-border bg-surface px-5 shadow-card backdrop-blur-glass transition-all focus-within:ring-2 focus-within:ring-accent/30 hover:shadow-pop"
+      <div className="mx-auto flex h-14 max-w-2xl xl:max-w-3xl 2xl:max-w-4xl items-center gap-2.5 border border-border bg-surface px-5 shadow-card backdrop-blur-glass transition-all focus-within:ring-2 focus-within:ring-accent/30 hover:shadow-pop"
         style={{ borderRadius: 'var(--radius-pill)' }}>
         <EngineSelector />
         <div className="h-5 w-px bg-border" />

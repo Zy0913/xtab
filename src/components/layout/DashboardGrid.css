@@ -64,3 +64,34 @@
     width var(--transition-duration) ease,
     height var(--transition-duration) ease;
 }
+
+/* Shortcuts grid container query responsive layout */
+.shortcut-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@container (min-width: 320px) {
+  .shortcut-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 480px) {
+  .shortcut-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 640px) {
+  .shortcut-grid {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 960px) {
+  .shortcut-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+}
