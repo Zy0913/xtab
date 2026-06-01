@@ -49,7 +49,9 @@ describe('ShortcutTile', () => {
     useShortcutsStore.setState({
       items: [{ id: 'a', title: 'A', url: 'https://a.com' }],
     })
-    render(<ShortcutTile shortcut={{ id: 'a', title: 'A', url: 'https://a.com' }} editable={true} />)
+    render(
+      <ShortcutTile shortcut={{ id: 'a', title: 'A', url: 'https://a.com' }} editable={true} />,
+    )
     fireEvent.click(screen.getByLabelText('删除'))
     expect(useShortcutsStore.getState().items).toHaveLength(0)
   })
@@ -62,7 +64,12 @@ describe('ShortcutTile', () => {
   })
 
   it('renders with custom iconUrl', () => {
-    const s: Shortcut = { id: 'with-icon', title: 'Custom', url: 'https://example.com', iconUrl: 'https://example.com/icon.png' }
+    const s: Shortcut = {
+      id: 'with-icon',
+      title: 'Custom',
+      url: 'https://example.com',
+      iconUrl: 'https://example.com/icon.png',
+    }
     render(<ShortcutTile shortcut={s} editable={false} />)
     const img = document.querySelector('img')
     expect(img).toHaveAttribute('src', 'https://example.com/icon.png')

@@ -7,7 +7,7 @@ describe('Drawer', () => {
     render(
       <Drawer open={false} onClose={() => {}} title="Test">
         Content
-      </Drawer>
+      </Drawer>,
     )
     const aside = screen.getByRole('dialog')
     expect(aside.className).toContain('translate-x-full')
@@ -17,7 +17,7 @@ describe('Drawer', () => {
     render(
       <Drawer open={true} onClose={() => {}} title="Settings">
         Drawer content
-      </Drawer>
+      </Drawer>,
     )
     const aside = screen.getByRole('dialog')
     expect(aside.className).toContain('translate-x-0')
@@ -28,7 +28,7 @@ describe('Drawer', () => {
     render(
       <Drawer open={true} onClose={() => {}} title="My Title">
         Content
-      </Drawer>
+      </Drawer>,
     )
     expect(screen.getByText('My Title')).toBeInTheDocument()
   })
@@ -38,7 +38,7 @@ describe('Drawer', () => {
     const { container } = render(
       <Drawer open={true} onClose={onClose} title="Test">
         Content
-      </Drawer>
+      </Drawer>,
     )
     // The overlay is the first fixed div (backdrop)
     const overlay = container.querySelector('.fixed.inset-0')!
@@ -51,7 +51,7 @@ describe('Drawer', () => {
     render(
       <Drawer open={true} onClose={onClose} title="Test">
         Content
-      </Drawer>
+      </Drawer>,
     )
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(1)

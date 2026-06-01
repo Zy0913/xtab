@@ -26,17 +26,13 @@ export const useShortcutsStore = create<ShortcutsState>()(
       items: DEFAULTS,
       add: (shortcut) =>
         set((s) => ({
-          items: [
-            ...s.items,
-            { ...shortcut, id: crypto.randomUUID() },
-          ],
+          items: [...s.items, { ...shortcut, id: crypto.randomUUID() }],
         })),
       update: (id, patch) =>
         set((s) => ({
           items: s.items.map((it) => (it.id === id ? { ...it, ...patch } : it)),
         })),
-      remove: (id) =>
-        set((s) => ({ items: s.items.filter((it) => it.id !== id) })),
+      remove: (id) => set((s) => ({ items: s.items.filter((it) => it.id !== id) })),
       reorder: (items) => set({ items }),
     }),
     {

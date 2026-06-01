@@ -20,7 +20,11 @@ export function TodoList() {
   return (
     <div className="flex h-full flex-col">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-medium uppercase tracking-wide text-text-tertiary" aria-live="polite" aria-atomic="true">
+        <span
+          className="text-xs font-medium uppercase tracking-wide text-text-tertiary"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           待办 · {items.filter((i) => !i.done).length}
         </span>
         {hasDone && (
@@ -41,7 +45,7 @@ export function TodoList() {
           onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
           placeholder="添加一项…"
           aria-label="添加待办事项"
-          className="flex-1 bg-transparent py-1.5 text-sm text-text-primary placeholder:text-text-tertiary outline-none"
+          className="flex-1 bg-transparent py-1.5 text-sm text-text-primary outline-none placeholder:text-text-tertiary"
         />
         <button
           onClick={handleAdd}
@@ -56,7 +60,7 @@ export function TodoList() {
       <ul className="-mx-1 mt-2 flex-1 space-y-1 overflow-y-auto pr-1">
         {items.length === 0 && (
           <li className="flex h-full flex-col items-center justify-center py-6 text-center">
-            <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-full bg-surface-strong/30 text-text-tertiary">
+            <div className="bg-surface-strong/30 mb-2.5 flex h-10 w-10 items-center justify-center rounded-full text-text-tertiary">
               <CheckCircle size={18} className="stroke-[1.5]" />
             </div>
             <p className="text-xs font-medium text-text-secondary">没有待办事项</p>

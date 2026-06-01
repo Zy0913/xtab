@@ -6,7 +6,7 @@ export function applyTheme(theme: 'light' | 'dark' | 'system') {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
   const isDark = theme === 'dark' || (theme === 'system' && prefersDark)
   document.documentElement.classList.toggle('dark', isDark)
-  
+
   const tint = useSettingsStore.getState().wallpaperTint
   if (tint) {
     applyWallpaperTint(tint)
@@ -111,7 +111,8 @@ export async function initTheme() {
     if (next.glassMode !== prev.glassMode) applyGlassMode(next.glassMode)
     if (next.reduceMotion !== prev.reduceMotion) applyReduceMotion(next.reduceMotion)
     if (next.wallpaperTint !== prev.wallpaperTint) applyWallpaperTint(next.wallpaperTint)
-    if (next.wallpaperLuminance !== prev.wallpaperLuminance) applyWallpaperLuminance(next.wallpaperLuminance)
+    if (next.wallpaperLuminance !== prev.wallpaperLuminance)
+      applyWallpaperLuminance(next.wallpaperLuminance)
     if (next.wallpaper !== prev.wallpaper) {
       scheduleTint()
     }

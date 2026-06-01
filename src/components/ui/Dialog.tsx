@@ -69,25 +69,23 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'relative w-full max-w-md rounded-card border border-border bg-surface-strong p-5 shadow-pop backdrop-blur-glass transition-all duration-200 ease-out',
-          animateIn ? 'opacity-100 scale-100' : 'opacity-0 scale-95',
+          'backdrop-blur-glass relative w-full max-w-md rounded-card border border-border bg-surface-strong p-5 shadow-pop transition-all duration-200 ease-out',
+          animateIn ? 'scale-100 opacity-100' : 'scale-95 opacity-0',
           className,
         )}
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          className="absolute right-3 top-3 rounded-full p-1 text-text-secondary hover:bg-surface hover:text-text-primary transition"
+          className="absolute right-3 top-3 rounded-full p-1 text-text-secondary transition hover:bg-surface hover:text-text-primary"
           onClick={onClose}
           aria-label="关闭"
         >
           <X size={16} />
         </button>
-        {title && (
-          <h2 className="mb-4 text-base font-semibold text-text-primary">{title}</h2>
-        )}
+        {title && <h2 className="mb-4 text-base font-semibold text-text-primary">{title}</h2>}
         {children}
       </div>
     </div>,
-    document.getElementById('portal-root') || document.body
+    document.getElementById('portal-root') || document.body,
   )
 }

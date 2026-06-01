@@ -5,12 +5,7 @@ import { Input } from '@/components/ui/Input'
 import { useShortcutsStore } from '@/store/useShortcutsStore'
 import { showToast } from '@/lib/toast'
 import { cn } from '@/lib/cn'
-import {
-  useOpenTabs,
-  groupTabsByWindow,
-  normalizeUrlKey,
-  type OpenTab,
-} from './useOpenTabs'
+import { useOpenTabs, groupTabsByWindow, normalizeUrlKey, type OpenTab } from './useOpenTabs'
 import { getFaviconSources, getInitial, getColorFor } from './faviconFetcher'
 
 interface Props {
@@ -25,10 +20,7 @@ export function TabsPickerPanel({ active, onClose }: Props) {
 
   // Compare by canonical key so that `https://github.com` and `https://github.com/`
   // are treated as the same shortcut.
-  const existingKeys = useMemo(
-    () => new Set(items.map((it) => normalizeUrlKey(it.url))),
-    [items],
-  )
+  const existingKeys = useMemo(() => new Set(items.map((it) => normalizeUrlKey(it.url))), [items])
 
   const [query, setQuery] = useState('')
   // Selection is keyed by normalized URL — survives across refreshes. We
@@ -38,10 +30,7 @@ export function TabsPickerPanel({ active, onClose }: Props) {
 
   // Live keys = tabs currently visible in the picker. We display and submit
   // based on the intersection so closed tabs don't inflate the count.
-  const liveKeys = useMemo(
-    () => new Set(tabs.map((t) => normalizeUrlKey(t.url))),
-    [tabs],
-  )
+  const liveKeys = useMemo(() => new Set(tabs.map((t) => normalizeUrlKey(t.url))), [tabs])
   const liveSelected = useMemo(() => {
     const out = new Set<string>()
     for (const k of selected) if (liveKeys.has(k)) out.add(k)
@@ -51,22 +40,16 @@ export function TabsPickerPanel({ active, onClose }: Props) {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return tabs
-    return tabs.filter(
-      (t) => t.title.toLowerCase().includes(q) || t.url.toLowerCase().includes(q),
-    )
+    return tabs.filter((t) => t.title.toLowerCase().includes(q) || t.url.toLowerCase().includes(q))
   }, [tabs, query])
 
   const groups = useMemo(() => groupTabsByWindow(filtered), [filtered])
 
   const selectableKeys = useMemo(
-    () =>
-      filtered
-        .map((t) => normalizeUrlKey(t.url))
-        .filter((k) => !existingKeys.has(k)),
+    () => filtered.map((t) => normalizeUrlKey(t.url)).filter((k) => !existingKeys.has(k)),
     [filtered, existingKeys],
   )
-  const allSelected =
-    selectableKeys.length > 0 && selectableKeys.every((k) => selected.has(k))
+  const allSelected = selectableKeys.length > 0 && selectableKeys.every((k) => selected.has(k))
 
   const toggle = (key: string) => {
     setSelected((prev) => {
@@ -158,7 +141,7 @@ export function TabsPickerPanel({ active, onClose }: Props) {
         </button>
       </div>
 
-      <div className="max-h-[320px] overflow-y-auto rounded-btn border border-border bg-surface/40">
+      <div className="bg-surface/40 max-h-[320px] overflow-y-auto rounded-btn border border-border">
         {tabs.length === 0 ? (
           <p className="py-8 text-center text-xs text-text-tertiary">没有可添加的标签页</p>
         ) : filtered.length === 0 ? (
@@ -166,7 +149,7 @@ export function TabsPickerPanel({ active, onClose }: Props) {
         ) : (
           groups.map((g) => (
             <div key={g.windowId}>
-              <div className="sticky top-0 z-10 border-b border-border bg-surface-strong px-3 py-1.5 text-[11px] font-semibold text-text-primary backdrop-blur-glass">
+              <div className="backdrop-blur-glass sticky top-0 z-10 border-b border-border bg-surface-strong px-3 py-1.5 text-[11px] font-semibold text-text-primary">
                 {g.isCurrent ? '当前窗口' : `窗口 ${g.windowId}`} · {g.tabs.length}
               </div>
               <ul>
@@ -224,18 +207,14 @@ function TabRow({ tab, existing, checked, onToggle }: TabRowProps) {
         onClick={onToggle}
         className={cn(
           'flex w-full items-center gap-2.5 px-3 py-2 text-left transition',
-          existing
-            ? 'cursor-not-allowed opacity-50'
-            : 'hover:bg-surface',
+          existing ? 'cursor-not-allowed opacity-50' : 'hover:bg-surface',
           checked && !existing && 'bg-accent/10',
         )}
       >
         <span
           className={cn(
             'flex h-4 w-4 shrink-0 items-center justify-center rounded border transition',
-            checked || existing
-              ? 'border-accent bg-accent text-white'
-              : 'border-border bg-surface',
+            checked || existing ? 'border-accent bg-accent text-white' : 'border-border bg-surface',
           )}
           aria-hidden
         >
@@ -246,9 +225,7 @@ function TabRow({ tab, existing, checked, onToggle }: TabRowProps) {
           <span className="truncate text-sm text-text-primary">{tab.title}</span>
           <span className="truncate text-[11px] text-text-tertiary">{host}</span>
         </span>
-        {existing && (
-          <span className="shrink-0 text-[10px] text-text-tertiary">已添加</span>
-        )}
+        {existing && <span className="shrink-0 text-[10px] text-text-tertiary">已添加</span>}
       </button>
     </li>
   )

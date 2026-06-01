@@ -24,9 +24,7 @@ export function ThemeSection() {
   return (
     <section className="space-y-4">
       <div className="space-y-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
-          主题
-        </h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">主题</h3>
         <div className="grid grid-cols-3 gap-2">
           {THEME_OPTIONS.map(({ value, label, Icon }) => (
             <button
@@ -35,7 +33,7 @@ export function ThemeSection() {
               className={cn(
                 'flex flex-col items-center gap-1.5 rounded-btn border py-3 text-xs transition',
                 theme === value
-                  ? 'border-accent bg-accent/20 text-text-primary'
+                  ? 'bg-accent/20 border-accent text-text-primary'
                   : 'border-border bg-surface text-text-primary hover:bg-surface-strong',
               )}
             >
@@ -58,16 +56,18 @@ export function ThemeSection() {
               className={cn(
                 'flex flex-col items-center gap-1 rounded-btn border py-3 text-xs transition',
                 glassMode === value
-                  ? 'border-accent bg-accent/20 text-text-primary'
+                  ? 'bg-accent/20 border-accent text-text-primary'
                   : 'border-border bg-surface text-text-primary hover:bg-surface-strong',
               )}
             >
               <Icon size={18} />
               <span className="font-medium">{label}</span>
-              <span className={cn(
-                'text-[10px]',
-                glassMode === value ? 'text-text-secondary' : 'text-text-tertiary',
-              )}>
+              <span
+                className={cn(
+                  'text-[10px]',
+                  glassMode === value ? 'text-text-secondary' : 'text-text-tertiary',
+                )}
+              >
                 {desc}
               </span>
             </button>

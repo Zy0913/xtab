@@ -17,11 +17,12 @@ import './DashboardGrid.css'
 // Defer react-grid-layout (+ its CSS) until the first render so it doesn't
 // inflate the first-paint bundle. The chunk is still fetched immediately
 // after paint, so editMode entry feels instant.
-const GridLayer = lazy(() =>
-  import('./GridLayer').then((m) => ({ default: m.GridLayer })),
-)
+const GridLayer = lazy(() => import('./GridLayer').then((m) => ({ default: m.GridLayer })))
 
-const WIDGETS: Record<WidgetId, { title: string; render: () => JSX.Element; transparent?: boolean }> = {
+const WIDGETS: Record<
+  WidgetId,
+  { title: string; render: () => JSX.Element; transparent?: boolean }
+> = {
   search: { title: WIDGET_LABELS.search, render: () => <SearchBar />, transparent: true },
   clock: { title: WIDGET_LABELS.clock, render: () => <Clock />, transparent: true },
   shortcuts: { title: WIDGET_LABELS.shortcuts, render: () => <ShortcutsGrid />, transparent: true },
@@ -47,11 +48,14 @@ export function DashboardGrid() {
   const [breakpoint, setBreakpoint] = useState('lg')
 
   const visible = useMemo(
-    () => layouts.filter((l) => enabled.includes(l.i)).map((l) => {
-      if (l.i === 'search') return { ...l, minH: 1 }
-      if (l.i === 'shortcuts') return { ...l, minH: 2 }
-      return l
-    }),
+    () =>
+      layouts
+        .filter((l) => enabled.includes(l.i))
+        .map((l) => {
+          if (l.i === 'search') return { ...l, minH: 1 }
+          if (l.i === 'shortcuts') return { ...l, minH: 2 }
+          return l
+        }),
     [layouts, enabled],
   )
 
@@ -82,9 +86,14 @@ export function DashboardGrid() {
       <div key={item.i} className={item.i === 'search' ? 'z-50' : ''}>
         <WidgetFrame editMode={editMode} transparent={w.transparent}>
           {editMode && !isMobile && (
-            <div className="widget-drag-handle absolute inset-x-0 top-0 z-10 h-6 cursor-grab rounded-t-card bg-gradient-to-b from-black/[0.08] to-transparent active:cursor-grabbing" aria-label="拖拽移动" />
+            <div
+              className="widget-drag-handle absolute inset-x-0 top-0 z-10 h-6 cursor-grab rounded-t-card bg-gradient-to-b from-black/[0.08] to-transparent active:cursor-grabbing"
+              aria-label="拖拽移动"
+            />
           )}
-          <div className={cn('relative z-[2] flex h-full w-full flex-col', !w.transparent && 'p-4')}>
+          <div
+            className={cn('relative z-[2] flex h-full w-full flex-col', !w.transparent && 'p-4')}
+          >
             <ErrorBoundary>{w.render()}</ErrorBoundary>
           </div>
         </WidgetFrame>

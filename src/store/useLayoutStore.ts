@@ -20,14 +20,7 @@ const DEFAULT_LAYOUTS: WidgetLayout[] = [
   { i: 'bookmarks', x: 8, y: 7, w: 4, h: 4, minW: 3, minH: 3 },
 ]
 
-const DEFAULT_ENABLED: WidgetId[] = [
-  'clock',
-  'search',
-  'shortcuts',
-  'weather',
-  'todo',
-  'bookmarks',
-]
+const DEFAULT_ENABLED: WidgetId[] = ['clock', 'search', 'shortcuts', 'weather', 'todo', 'bookmarks']
 
 export const useLayoutStore = create<LayoutState>()(
   persist(
@@ -37,9 +30,7 @@ export const useLayoutStore = create<LayoutState>()(
       setLayouts: (layouts) => set({ layouts }),
       toggleWidget: (id) =>
         set((s) => ({
-          enabled: s.enabled.includes(id)
-            ? s.enabled.filter((w) => w !== id)
-            : [...s.enabled, id],
+          enabled: s.enabled.includes(id) ? s.enabled.filter((w) => w !== id) : [...s.enabled, id],
         })),
       reset: () => set({ layouts: DEFAULT_LAYOUTS, enabled: DEFAULT_ENABLED }),
     }),

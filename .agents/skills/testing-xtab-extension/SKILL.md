@@ -22,7 +22,7 @@ Restart Chrome with `--load-extension=/home/ubuntu/repos/xtab/dist` appended (co
 # then add the xtab dist path to --load-extension and relaunch.
 ```
 
-Open a fresh tab — the xtab page should appear. If the old tab still shows the default NTP, the extension was loaded *after* that tab was created; close it and open a new one.
+Open a fresh tab — the xtab page should appear. If the old tab still shows the default NTP, the extension was loaded _after_ that tab was created; close it and open a new one.
 
 Verify the extension actually loaded at `chrome://extensions` (Developer mode ON). The "Tab" extension's **Details** page is also where you verify the manifest's `permissions` list — Chrome translates them into human labels (e.g., `geolocation` → "Detect your physical location").
 
@@ -73,12 +73,14 @@ The critical regression check for any change to the service worker. Open setting
 ## Recording tips
 
 Maximize the window before recording:
+
 ```bash
 sudo apt-get install -y wmctrl 2>/dev/null
 wmctrl -r :ACTIVE: -b add,maximized_vert,maximized_horz
 ```
 
 Annotate boundaries with `annotate_recording`:
+
 - `setup`: when loading the extension or opening settings.
 - `test_start`: one per assertion in 'It should …' form.
 - `assertion`: `passed`/`failed`/`untested` with a one-line description of what was checked.

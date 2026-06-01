@@ -23,8 +23,8 @@ body,
 
 body {
   font-family:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
-    'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'PingFang SC',
+    'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: var(--text-primary);
@@ -125,12 +125,12 @@ body {
       0 1px 3px rgba(0, 0, 0, 0.45),
       0 2px 10px rgba(0, 0, 0, 0.32),
       0 4px 24px rgba(0, 0, 0, 0.22),
-      0 0 1px rgba(0, 0, 0, 0.50);
+      0 0 1px rgba(0, 0, 0, 0.5);
   }
 
   .glass-mode .text-shadow-wallpaper {
     text-shadow:
-      0 1px 4px rgba(0, 0, 0, 0.50),
+      0 1px 4px rgba(0, 0, 0, 0.5),
       0 2px 14px rgba(0, 0, 0, 0.36),
       0 4px 28px rgba(0, 0, 0, 0.24),
       0 0 1px rgba(0, 0, 0, 0.55);

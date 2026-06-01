@@ -35,14 +35,10 @@ export const useTodoStore = create<TodoState>()(
         })),
       toggle: (id) =>
         set((s) => ({
-          items: s.items.map((it) =>
-            it.id === id ? { ...it, done: !it.done } : it,
-          ),
+          items: s.items.map((it) => (it.id === id ? { ...it, done: !it.done } : it)),
         })),
-      remove: (id) =>
-        set((s) => ({ items: s.items.filter((it) => it.id !== id) })),
-      clearCompleted: () =>
-        set((s) => ({ items: s.items.filter((it) => !it.done) })),
+      remove: (id) => set((s) => ({ items: s.items.filter((it) => it.id !== id) })),
+      clearCompleted: () => set((s) => ({ items: s.items.filter((it) => !it.done) })),
     }),
     {
       name: 'tab:todo',

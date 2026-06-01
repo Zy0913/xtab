@@ -19,10 +19,7 @@ const Row = memo(function Row({ node, depth = 0 }: { node: BookmarkNode; depth?:
           className="flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs text-text-primary hover:bg-surface"
           style={{ paddingLeft: `${depth * 10 + 4}px` }}
         >
-          <ChevronRight
-            size={12}
-            className={cn('shrink-0 transition', open && 'rotate-90')}
-          />
+          <ChevronRight size={12} className={cn('shrink-0 transition', open && 'rotate-90')} />
           <Folder size={12} className="shrink-0 text-text-secondary" />
           <span className="truncate">{node.title || '未命名'}</span>
         </button>
@@ -63,13 +60,11 @@ export function BookmarksTree() {
           书签
         </span>
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-full bg-surface-strong/30 text-text-tertiary">
+          <div className="bg-surface-strong/30 mb-2.5 flex h-10 w-10 items-center justify-center rounded-full text-text-tertiary">
             <BookOpen size={18} className="stroke-[1.5]" />
           </div>
           <p className="text-xs font-medium text-text-secondary">书签加载失败</p>
-          <p className="mt-0.5 px-4 text-[11px] text-text-tertiary">
-            请确保已授予书签访问权限
-          </p>
+          <p className="mt-0.5 px-4 text-[11px] text-text-tertiary">请确保已授予书签访问权限</p>
         </div>
       </div>
     )
@@ -82,7 +77,7 @@ export function BookmarksTree() {
           书签
         </span>
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-full bg-surface-strong/30 text-text-tertiary">
+          <div className="bg-surface-strong/30 mb-2.5 flex h-10 w-10 items-center justify-center rounded-full text-text-tertiary">
             <BookOpen size={18} className="stroke-[1.5]" />
           </div>
           <p className="text-xs font-medium text-text-secondary">无书签数据</p>

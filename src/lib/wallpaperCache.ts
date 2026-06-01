@@ -72,7 +72,9 @@ export async function evictOthers(keepUrl: string): Promise<void> {
  * original URL as a fallback). Always kicks off a background fetch to refresh
  * the cache if the entry was missing.
  */
-export async function resolveWallpaper(url: string): Promise<{ objectUrl: string; fromCache: boolean }> {
+export async function resolveWallpaper(
+  url: string,
+): Promise<{ objectUrl: string; fromCache: boolean }> {
   // Data URLs and blob URLs can't be cached via fetch — return as-is.
   if (url.startsWith('data:') || url.startsWith('blob:')) {
     return { objectUrl: url, fromCache: false }

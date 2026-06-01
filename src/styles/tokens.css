@@ -11,11 +11,11 @@
   /* ===== Sequoia Light — precise macOS system material ===== */
   --blur-widget: 40px;
   --blur-pop: 60px;
-  --saturate-widget: 1.0;
+  --saturate-widget: 1;
 
   /* Surface: tinted gray with enough opacity for card structure over wallpapers */
   --surface: rgba(120, 120, 128, 0.48);
-  --surface-strong: rgba(120, 120, 128, 0.70);
+  --surface-strong: rgba(120, 120, 128, 0.7);
   --surface-hover: rgba(120, 120, 128, 0.58);
 
   --text-primary: rgba(0, 0, 0, 0.88);
@@ -23,19 +23,17 @@
   --text-tertiary: rgba(0, 0, 0, 0.38);
   --text-on-dark: rgba(255, 255, 255, 0.95);
 
-  --border: rgba(0, 0, 0, 0.10);
+  --border: rgba(0, 0, 0, 0.1);
   --accent: rgb(0, 122, 255);
   --accent-hover: rgb(0, 113, 235);
   --scrollbar-thumb: rgba(0, 0, 0, 0.12);
-  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.20);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.2);
 
   --shadow-card:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.35),
-    0 0 0 0.5px rgba(0, 0, 0, 0.03),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.35), 0 0 0 0.5px rgba(0, 0, 0, 0.03),
     0 6px 24px rgba(0, 0, 0, 0.08);
   --shadow-pop:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.40),
-    0 0 0 0.5px rgba(0, 0, 0, 0.05),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.4), 0 0 0 0.5px rgba(0, 0, 0, 0.05),
     0 16px 48px rgba(0, 0, 0, 0.14);
   --shadow-glow: 0 0 0 3px rgba(0, 122, 255, 0.22);
 
@@ -53,7 +51,7 @@
   --surface-hover: rgba(55, 55, 62, 0.92);
 
   --text-primary: rgba(255, 255, 255, 0.94);
-  --text-secondary: rgba(255, 255, 255, 0.60);
+  --text-secondary: rgba(255, 255, 255, 0.6);
   --text-tertiary: rgba(255, 255, 255, 0.38);
   --text-on-dark: rgba(255, 255, 255, 0.95);
 
@@ -64,13 +62,11 @@
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.22);
 
   --shadow-card:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.12),
-    0 0 0 0.5px rgba(255, 255, 255, 0.04),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.12), 0 0 0 0.5px rgba(255, 255, 255, 0.04),
     0 6px 24px rgba(0, 0, 0, 0.25);
   --shadow-pop:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.14),
-    0 0 0 0.5px rgba(255, 255, 255, 0.06),
-    0 16px 48px rgba(0, 0, 0, 0.40);
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.14), 0 0 0 0.5px rgba(255, 255, 255, 0.06),
+    0 16px 48px rgba(0, 0, 0, 0.4);
   --shadow-glow: 0 0 0 3px rgba(10, 132, 255, 0.28);
 
   --selection-bg: rgba(10, 132, 255, 0.25);
@@ -87,18 +83,18 @@
   --saturate-widget: 1.35;
 
   /* Extreme transparency — glass lets almost everything through */
-  --surface: rgba(255, 255, 255, 0.10);
-  --surface-strong: rgba(255, 255, 255, 0.20);
+  --surface: rgba(255, 255, 255, 0.1);
+  --surface-strong: rgba(255, 255, 255, 0.2);
   --surface-hover: rgba(255, 255, 255, 0.28);
 
   /* Higher contrast text because background is so transparent */
-  --text-primary: rgba(0, 0, 0, 0.90);
+  --text-primary: rgba(0, 0, 0, 0.9);
   --text-secondary: rgba(0, 0, 0, 0.62);
   --text-tertiary: rgba(0, 0, 0, 0.38);
   --text-on-dark: rgba(255, 255, 255, 0.97);
 
   /* Subtle light-border for optical edge refraction */
-  --border: rgba(255, 255, 255, 0.20);
+  --border: rgba(255, 255, 255, 0.2);
   --accent: rgb(0, 122, 255);
   --accent-hover: rgb(0, 113, 235);
 
@@ -109,19 +105,15 @@
     3. Outer: ultra-soft diffusion shadow
   */
   --shadow-card:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    inset 0 -0.5px 0 rgba(0, 0, 0, 0.02),
-    0 0 0 0.5px rgba(255, 255, 255, 0.12),
-    0 14px 40px rgba(0, 0, 0, 0.05);
+    inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -0.5px 0 rgba(0, 0, 0, 0.02),
+    0 0 0 0.5px rgba(255, 255, 255, 0.12), 0 14px 40px rgba(0, 0, 0, 0.05);
   --shadow-pop:
-    inset 0 1px 0 rgba(255, 255, 255, 0.50),
-    inset 0 -0.5px 0 rgba(0, 0, 0, 0.03),
-    0 0 0 0.5px rgba(255, 255, 255, 0.15),
-    0 24px 64px rgba(0, 0, 0, 0.08);
+    inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -0.5px 0 rgba(0, 0, 0, 0.03),
+    0 0 0 0.5px rgba(255, 255, 255, 0.15), 0 24px 64px rgba(0, 0, 0, 0.08);
   --shadow-glow: 0 0 0 3px rgba(0, 122, 255, 0.18);
 
   --selection-bg: rgba(0, 122, 255, 0.18);
-  --overlay: rgba(0, 0, 0, 0.10);
+  --overlay: rgba(0, 0, 0, 0.1);
 
   /* Stronger noise in light mode for glass texture */
   --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
@@ -138,50 +130,44 @@
   --surface-hover: rgba(58, 58, 66, 0.86);
 
   --text-primary: rgba(255, 255, 255, 0.96);
-  --text-secondary: rgba(255, 255, 255, 0.70);
+  --text-secondary: rgba(255, 255, 255, 0.7);
   --text-tertiary: rgba(255, 255, 255, 0.45);
   --text-on-dark: rgba(255, 255, 255, 0.97);
 
-  --border: rgba(255, 255, 255, 0.10);
-  --overlay: rgba(0, 0, 0, 0.30);
+  --border: rgba(255, 255, 255, 0.1);
+  --overlay: rgba(0, 0, 0, 0.3);
   --scrollbar-thumb: rgba(255, 255, 255, 0.12);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.22);
 
   /* Mirror .dark shadows — light inset highlight, deeper drop on dark surface. */
   --shadow-card:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.12),
-    0 0 0 0.5px rgba(255, 255, 255, 0.04),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.12), 0 0 0 0.5px rgba(255, 255, 255, 0.04),
     0 6px 24px rgba(0, 0, 0, 0.25);
   --shadow-pop:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.14),
-    0 0 0 0.5px rgba(255, 255, 255, 0.06),
-    0 16px 48px rgba(0, 0, 0, 0.40);
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.14), 0 0 0 0.5px rgba(255, 255, 255, 0.06),
+    0 16px 48px rgba(0, 0, 0, 0.4);
 }
 
 .glass-mode.wallpaper-dark:not(.dark) {
   --surface: rgba(28, 28, 36, 0.22);
-  --surface-strong: rgba(40, 40, 50, 0.40);
-  --surface-hover: rgba(54, 54, 64, 0.50);
+  --surface-strong: rgba(40, 40, 50, 0.4);
+  --surface-hover: rgba(54, 54, 64, 0.5);
 
   --text-primary: rgba(255, 255, 255, 0.96);
-  --text-secondary: rgba(255, 255, 255, 0.70);
+  --text-secondary: rgba(255, 255, 255, 0.7);
   --text-tertiary: rgba(255, 255, 255, 0.45);
   --text-on-dark: rgba(255, 255, 255, 0.97);
 
-  --border: rgba(255, 255, 255, 0.10);
-  --overlay: rgba(0, 0, 0, 0.20);
+  --border: rgba(255, 255, 255, 0.1);
+  --overlay: rgba(0, 0, 0, 0.2);
 
   /* Mirror .glass-mode.dark — refractive top highlight + interior shadow. */
   --shadow-card:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -0.5px 0 rgba(0, 0, 0, 0.18),
-    0 0 0 0.5px rgba(255, 255, 255, 0.03),
-    0 14px 40px rgba(0, 0, 0, 0.28);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -0.5px 0 rgba(0, 0, 0, 0.18),
+    0 0 0 0.5px rgba(255, 255, 255, 0.03), 0 14px 40px rgba(0, 0, 0, 0.28);
   --shadow-pop:
-    inset 0 1px 0 rgba(255, 255, 255, 0.10),
-    inset 0 -0.5px 0 rgba(0, 0, 0, 0.22),
-    0 0 0 0.5px rgba(255, 255, 255, 0.04),
-    0 24px 64px rgba(0, 0, 0, 0.42);
+    inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -0.5px 0 rgba(0, 0, 0, 0.22),
+    0 0 0 0.5px rgba(255, 255, 255, 0.04), 0 24px 64px rgba(0, 0, 0, 0.42);
 }
 
 /* ===== Mid-tone wallpaper: adaptive text =====
@@ -195,25 +181,21 @@
 
   --text-primary: rgba(255, 255, 255, 0.92);
   --text-secondary: rgba(255, 255, 255, 0.64);
-  --text-tertiary: rgba(255, 255, 255, 0.40);
+  --text-tertiary: rgba(255, 255, 255, 0.4);
   --text-on-dark: rgba(255, 255, 255, 0.95);
 
   --border: rgba(255, 255, 255, 0.08);
-  --overlay: rgba(0, 0, 0, 0.20);
+  --overlay: rgba(0, 0, 0, 0.2);
   --scrollbar-thumb: rgba(255, 255, 255, 0.12);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.22);
 
-  --text-shadow-adaptive:
-    0 1px 2px rgba(0, 0, 0, 0.30),
-    0 0 0 0.5px rgba(0, 0, 0, 0.15);
+  --text-shadow-adaptive: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(0, 0, 0, 0.15);
 
   --shadow-card:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.10),
-    0 0 0 0.5px rgba(255, 255, 255, 0.03),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.1), 0 0 0 0.5px rgba(255, 255, 255, 0.03),
     0 6px 20px rgba(0, 0, 0, 0.22);
   --shadow-pop:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.12),
-    0 0 0 0.5px rgba(255, 255, 255, 0.05),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.12), 0 0 0 0.5px rgba(255, 255, 255, 0.05),
     0 16px 44px rgba(0, 0, 0, 0.36);
 }
 
@@ -224,26 +206,20 @@
 
   --text-primary: rgba(255, 255, 255, 0.92);
   --text-secondary: rgba(255, 255, 255, 0.64);
-  --text-tertiary: rgba(255, 255, 255, 0.40);
+  --text-tertiary: rgba(255, 255, 255, 0.4);
   --text-on-dark: rgba(255, 255, 255, 0.95);
 
   --border: rgba(255, 255, 255, 0.08);
   --overlay: rgba(0, 0, 0, 0.14);
 
-  --text-shadow-adaptive:
-    0 1px 3px rgba(0, 0, 0, 0.35),
-    0 0 0 0.5px rgba(0, 0, 0, 0.18);
+  --text-shadow-adaptive: 0 1px 3px rgba(0, 0, 0, 0.35), 0 0 0 0.5px rgba(0, 0, 0, 0.18);
 
   --shadow-card:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -0.5px 0 rgba(0, 0, 0, 0.15),
-    0 0 0 0.5px rgba(255, 255, 255, 0.02),
-    0 12px 36px rgba(0, 0, 0, 0.24);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -0.5px 0 rgba(0, 0, 0, 0.15),
+    0 0 0 0.5px rgba(255, 255, 255, 0.02), 0 12px 36px rgba(0, 0, 0, 0.24);
   --shadow-pop:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -0.5px 0 rgba(0, 0, 0, 0.18),
-    0 0 0 0.5px rgba(255, 255, 255, 0.03),
-    0 22px 60px rgba(0, 0, 0, 0.38);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -0.5px 0 rgba(0, 0, 0, 0.18),
+    0 0 0 0.5px rgba(255, 255, 255, 0.03), 0 22px 60px rgba(0, 0, 0, 0.38);
 }
 
 /* Light wallpaper — no shadow needed, but define the variable for completeness. */
@@ -271,15 +247,11 @@
   --accent-hover: rgb(50, 160, 255);
 
   --shadow-card:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -0.5px 0 rgba(0, 0, 0, 0.18),
-    0 0 0 0.5px rgba(255, 255, 255, 0.03),
-    0 14px 40px rgba(0, 0, 0, 0.28);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -0.5px 0 rgba(0, 0, 0, 0.18),
+    0 0 0 0.5px rgba(255, 255, 255, 0.03), 0 14px 40px rgba(0, 0, 0, 0.28);
   --shadow-pop:
-    inset 0 1px 0 rgba(255, 255, 255, 0.10),
-    inset 0 -0.5px 0 rgba(0, 0, 0, 0.22),
-    0 0 0 0.5px rgba(255, 255, 255, 0.04),
-    0 24px 64px rgba(0, 0, 0, 0.42);
+    inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -0.5px 0 rgba(0, 0, 0, 0.22),
+    0 0 0 0.5px rgba(255, 255, 255, 0.04), 0 24px 64px rgba(0, 0, 0, 0.42);
   --shadow-glow: 0 0 0 3px rgba(41, 151, 255, 0.22);
 
   --selection-bg: rgba(41, 151, 255, 0.22);

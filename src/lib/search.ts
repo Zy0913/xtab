@@ -26,9 +26,11 @@ export function unwrapJsonp(text: string): string {
   const firstBrace = trimmed.indexOf('{')
   const firstBracket = trimmed.indexOf('[')
   const start =
-    firstBrace === -1 ? firstBracket
-    : firstBracket === -1 ? firstBrace
-    : Math.min(firstBrace, firstBracket)
+    firstBrace === -1
+      ? firstBracket
+      : firstBracket === -1
+        ? firstBrace
+        : Math.min(firstBrace, firstBracket)
   if (start <= 0) return trimmed
   const lastBrace = trimmed.lastIndexOf('}')
   const lastBracket = trimmed.lastIndexOf(']')
@@ -52,8 +54,7 @@ export const ENGINES: Record<SearchEngine, EngineMeta> = {
     name: 'Bing',
     placeholder: '必应搜索',
     searchUrl: (q) => `https://www.bing.com/search?q=${encodeURIComponent(q)}`,
-    suggestUrl: (q) =>
-      `https://api.bing.com/osjson.aspx?query=${encodeURIComponent(q)}`,
+    suggestUrl: (q) => `https://api.bing.com/osjson.aspx?query=${encodeURIComponent(q)}`,
     host: 'bing.com',
   },
   baidu: {
@@ -64,7 +65,11 @@ export const ENGINES: Record<SearchEngine, EngineMeta> = {
     suggestUrl: (q) =>
       `https://www.baidu.com/sugrec?prod=pc&from=pc_web&wd=${encodeURIComponent(q)}`,
     parseSuggest: (data) => {
-      if (typeof data === 'object' && data !== null && Array.isArray((data as Record<string, unknown>).g)) {
+      if (
+        typeof data === 'object' &&
+        data !== null &&
+        Array.isArray((data as Record<string, unknown>).g)
+      ) {
         return ((data as Record<string, unknown>).g as Array<{ q?: unknown }>)
           .filter((item) => typeof item.q === 'string')
           .map((item) => item.q as string)
@@ -79,8 +84,7 @@ export const ENGINES: Record<SearchEngine, EngineMeta> = {
     name: 'DuckDuckGo',
     placeholder: 'DuckDuckGo',
     searchUrl: (q) => `https://duckduckgo.com/?q=${encodeURIComponent(q)}`,
-    suggestUrl: (q) =>
-      `https://duckduckgo.com/ac/?q=${encodeURIComponent(q)}&type=list`,
+    suggestUrl: (q) => `https://duckduckgo.com/ac/?q=${encodeURIComponent(q)}&type=list`,
     host: 'duckduckgo.com',
   },
 }

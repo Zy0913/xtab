@@ -5,13 +5,7 @@ export interface Shortcut {
   iconUrl?: string
 }
 
-export type WidgetId =
-  | 'search'
-  | 'clock'
-  | 'shortcuts'
-  | 'weather'
-  | 'todo'
-  | 'bookmarks'
+export type WidgetId = 'search' | 'clock' | 'shortcuts' | 'weather' | 'todo' | 'bookmarks'
 
 export const WIDGET_LABELS: Record<WidgetId, string> = {
   search: '搜索',

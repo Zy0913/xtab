@@ -28,11 +28,14 @@ export function EngineSelector() {
     }, 120)
   }
 
-  const selectEngine = useCallback((id: SearchEngine) => {
-    setEngine(id)
-    setOpen(false)
-    setActiveIndex(-1)
-  }, [setEngine])
+  const selectEngine = useCallback(
+    (id: SearchEngine) => {
+      setEngine(id)
+      setOpen(false)
+      setActiveIndex(-1)
+    },
+    [setEngine],
+  )
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!open) {
@@ -89,7 +92,7 @@ export function EngineSelector() {
           ref={listRef}
           role="listbox"
           aria-label="搜索引擎"
-          className="absolute left-0 top-full z-20 mt-2 min-w-[140px] overflow-hidden rounded-btn bg-surface-strong p-1 shadow-pop backdrop-blur-glass"
+          className="backdrop-blur-glass absolute left-0 top-full z-20 mt-2 min-w-[140px] overflow-hidden rounded-btn bg-surface-strong p-1 shadow-pop"
         >
           {ENGINE_IDS.map((id, index) => (
             <button

@@ -7,10 +7,10 @@ import { warn } from '@/lib/logger'
 import { readCachedBlob } from './wallpaperCache'
 
 interface ColorResult {
-  rgb: string      // "rgb(r, g, b)"
-  rgba: string     // "rgba(r, g, b, a)"
-  hex: string      // "#RRGGBB"
-  isDark: boolean  // whether the color is dark (for contrast decisions)
+  rgb: string // "rgb(r, g, b)"
+  rgba: string // "rgba(r, g, b, a)"
+  hex: string // "#RRGGBB"
+  isDark: boolean // whether the color is dark (for contrast decisions)
   luminance: number // relative luminance 0..1 (WCAG)
 }
 
@@ -97,7 +97,8 @@ function rgbToHex(r: number, g: number, b: number): string {
 
 function quantizeColor(r: number, g: number, b: number, steps: number): [number, number, number] {
   // Reduce color space to find dominant clusters
-  const quantize = (v: number) => Math.round((v / 255) * (steps - 1)) * Math.round(255 / (steps - 1))
+  const quantize = (v: number) =>
+    Math.round((v / 255) * (steps - 1)) * Math.round(255 / (steps - 1))
   return [quantize(r), quantize(g), quantize(b)]
 }
 
@@ -142,7 +143,10 @@ export function extractWallpaperTint(url: string): Promise<ColorResult | null> {
           const pixels = imageData.data
 
           // Count color clusters
-          const clusters = new Map<string, { r: number; g: number; b: number; count: number; lum: number }>()
+          const clusters = new Map<
+            string,
+            { r: number; g: number; b: number; count: number; lum: number }
+          >()
 
           for (let i = 0; i < pixels.length; i += 4) {
             const r = pixels[i]

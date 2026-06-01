@@ -25,6 +25,7 @@ npm run build
 ```
 
 Then in Chrome:
+
 1. Open `chrome://extensions`
 2. Enable **Developer mode** (top right)
 3. Click **Load unpacked** and select the `dist/` folder
@@ -40,16 +41,16 @@ Load the `dist/` folder once; subsequent rebuilds auto-refresh the new tab page.
 
 ## Keyboard shortcuts
 
-| Key | Action |
-| --- | --- |
-| `/` | Focus search |
-| `e` | Toggle edit (layout) mode |
-| `Shift+T` | Add shortcut from open tabs |
-| `,` | Toggle settings drawer |
-| `?` | Toggle keyboard shortcut help |
-| `Esc` | Close dialog / blur input |
-| `↑` / `↓` | Move through search suggestions |
-| `⌘↩ / Ctrl+↩` (in search) | Open results in a new tab |
+| Key                       | Action                          |
+| ------------------------- | ------------------------------- |
+| `/`                       | Focus search                    |
+| `e`                       | Toggle edit (layout) mode       |
+| `Shift+T`                 | Add shortcut from open tabs     |
+| `,`                       | Toggle settings drawer          |
+| `?`                       | Toggle keyboard shortcut help   |
+| `Esc`                     | Close dialog / blur input       |
+| `↑` / `↓`                 | Move through search suggestions |
+| `⌘↩ / Ctrl+↩` (in search) | Open results in a new tab       |
 
 ## Project structure
 

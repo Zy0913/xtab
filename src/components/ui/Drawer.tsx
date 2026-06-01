@@ -40,7 +40,7 @@ export function Drawer({ open, onClose, title, children }: Props) {
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'fixed right-0 top-0 z-50 flex h-screen w-[380px] max-w-[90vw] flex-col border-l border-border bg-surface-strong shadow-pop backdrop-blur-glass transition-transform duration-300',
+          'backdrop-blur-glass fixed right-0 top-0 z-50 flex h-screen w-[380px] max-w-[90vw] flex-col border-l border-border bg-surface-strong shadow-pop transition-transform duration-300',
           open ? 'translate-x-0' : 'translate-x-full',
         )}
       >
@@ -48,7 +48,7 @@ export function Drawer({ open, onClose, title, children }: Props) {
           <h2 className="text-sm font-semibold text-text-primary">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-full p-1 text-text-secondary hover:bg-surface hover:text-text-primary transition"
+            className="rounded-full p-1 text-text-secondary transition hover:bg-surface hover:text-text-primary"
             aria-label="关闭设置"
           >
             <X size={16} />

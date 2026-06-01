@@ -73,7 +73,7 @@ export default function App() {
       <header className="absolute right-6 top-6 z-50 flex items-center gap-2">
         <button
           onClick={toggleEditMode}
-          className="inline-flex h-8 items-center gap-1.5 rounded-btn bg-surface px-3 text-xs text-text-primary shadow-card backdrop-blur-glass transition hover:bg-surface-strong"
+          className="backdrop-blur-glass inline-flex h-8 items-center gap-1.5 rounded-btn bg-surface px-3 text-xs text-text-primary shadow-card transition hover:bg-surface-strong"
           style={{ transitionDuration: 'var(--transition-duration)' }}
           aria-label={editMode ? '完成编辑' : '编辑布局'}
         >
@@ -82,7 +82,7 @@ export default function App() {
         </button>
         <button
           onClick={() => setHelpOpen(true)}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-btn bg-surface text-text-primary shadow-card backdrop-blur-glass transition hover:bg-surface-strong"
+          className="backdrop-blur-glass inline-flex h-8 w-8 items-center justify-center rounded-btn bg-surface text-text-primary shadow-card transition hover:bg-surface-strong"
           style={{ transitionDuration: 'var(--transition-duration)' }}
           aria-label="快捷键帮助"
           title="快捷键帮助 (?)"
@@ -91,7 +91,7 @@ export default function App() {
         </button>
         <button
           onClick={() => setSettingsOpen(true)}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-btn bg-surface text-text-primary shadow-card backdrop-blur-glass transition hover:bg-surface-strong"
+          className="backdrop-blur-glass inline-flex h-8 w-8 items-center justify-center rounded-btn bg-surface text-text-primary shadow-card transition hover:bg-surface-strong"
           style={{ transitionDuration: 'var(--transition-duration)' }}
           aria-label="打开设置"
         >
@@ -99,7 +99,7 @@ export default function App() {
         </button>
       </header>
 
-      <main className="relative z-10 mx-auto min-h-screen max-w-6xl 2xl:max-w-7xl px-6 2xl:px-8 pt-20 pb-6">
+      <main className="relative z-10 mx-auto min-h-screen max-w-6xl px-6 pb-6 pt-20 2xl:max-w-7xl 2xl:px-8">
         <DashboardGrid />
       </main>
 

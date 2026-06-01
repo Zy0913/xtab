@@ -1,4 +1,12 @@
-import { Cloud, CloudRain, CloudSnow, Sun, CloudFog, CloudLightning, type LucideIcon } from 'lucide-react'
+import {
+  Cloud,
+  CloudRain,
+  CloudSnow,
+  Sun,
+  CloudFog,
+  CloudLightning,
+  type LucideIcon,
+} from 'lucide-react'
 import { useWeather } from './useWeather'
 
 const ICON_MAP: Array<{ maxCode: number; Icon: LucideIcon }> = [
@@ -36,11 +44,14 @@ const DEFAULT_LABEL = { maxCode: Infinity, label: '—' }
 export function WeatherWidget() {
   const { data, error } = useWeather()
 
-  const cardClassName = "flex h-full w-full flex-col justify-between rounded-card p-4 shadow-card backdrop-blur-glass glass-noise border text-white select-none transition-all duration-500"
+  const cardClassName =
+    'flex h-full w-full flex-col justify-between rounded-card p-4 shadow-card backdrop-blur-glass glass-noise border text-white select-none transition-all duration-500'
 
   if (error) {
     return (
-      <div className={`${cardClassName} bg-slate-900/40 border-white/5 items-center justify-center`}>
+      <div
+        className={`${cardClassName} items-center justify-center border-white/5 bg-slate-900/40`}
+      >
         <div className="text-sm text-white/50" role="alert" aria-live="assertive">
           无法获取天气
         </div>
@@ -50,8 +61,10 @@ export function WeatherWidget() {
 
   if (!data) {
     return (
-      <div className={`${cardClassName} bg-slate-900/40 border-white/5 items-center justify-center`}>
-        <div className="text-sm text-white/50 animate-pulse" role="status" aria-live="polite">
+      <div
+        className={`${cardClassName} items-center justify-center border-white/5 bg-slate-900/40`}
+      >
+        <div className="animate-pulse text-sm text-white/50" role="status" aria-live="polite">
           加载中…
         </div>
       </div>
@@ -91,11 +104,18 @@ export function WeatherWidget() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-[13px] font-semibold tracking-wide text-white">
           <span>{data.location}</span>
-          <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current text-white/80" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            className="h-3 w-3 fill-current text-white/80"
+            aria-hidden="true"
+          >
             <path d="M21 3L3 10.53L11.47 12.53L13.47 21L21 3Z" />
           </svg>
           {data.isFallback && (
-            <span className="text-[10px] text-white/40 cursor-help" title="定位不可用，显示默认城市">
+            <span
+              className="cursor-help text-[10px] text-white/40"
+              title="定位不可用，显示默认城市"
+            >
               *
             </span>
           )}
@@ -106,27 +126,27 @@ export function WeatherWidget() {
       {/* Middle section: Temperature + stacked High/Low and weather description */}
       <div className="my-1 flex items-center justify-between">
         <div className="flex items-start">
-          <span className="text-[52px] font-light leading-none tracking-tight tabular-nums text-white">
+          <span className="text-[52px] font-light tabular-nums leading-none tracking-tight text-white">
             {data.temperature}
           </span>
-          <span className="text-2xl font-light leading-none -mt-0.5 text-white/90">°</span>
+          <span className="-mt-0.5 text-2xl font-light leading-none text-white/90">°</span>
         </div>
         <div className="flex flex-col items-end text-right">
           <span className="text-[13px] font-semibold text-white">{label}</span>
           <div className="mt-1 flex items-center gap-2 text-[11px] text-white/80">
             <div className="flex items-center gap-0.5">
-              <span className="flex flex-col text-[8px] leading-[1] text-white/50 font-medium">
+              <span className="flex flex-col text-[8px] font-medium leading-[1] text-white/50">
                 <span>最</span>
                 <span>高</span>
               </span>
-              <span className="tabular-nums font-semibold">{tempMax}°</span>
+              <span className="font-semibold tabular-nums">{tempMax}°</span>
             </div>
             <div className="flex items-center gap-0.5">
-              <span className="flex flex-col text-[8px] leading-[1] text-white/50 font-medium">
+              <span className="flex flex-col text-[8px] font-medium leading-[1] text-white/50">
                 <span>最</span>
                 <span>低</span>
               </span>
-              <span className="tabular-nums font-semibold">{tempMin}°</span>
+              <span className="font-semibold tabular-nums">{tempMin}°</span>
             </div>
           </div>
         </div>
@@ -136,7 +156,7 @@ export function WeatherWidget() {
       <div className="border-t border-white/10" />
 
       {/* Bottom section: Hourly forecast */}
-      <div className="mt-1 flex items-center justify-between gap-1 overflow-x-auto scrollbar-none">
+      <div className="scrollbar-none mt-1 flex items-center justify-between gap-1 overflow-x-auto">
         {hourly.slice(0, 6).map((item, index) => {
           const itemIconInfo = lookup(ICON_MAP, item.weatherCode, DEFAULT_ICON)
           const ItemIcon = itemIconInfo.Icon
@@ -148,10 +168,17 @@ export function WeatherWidget() {
           }
 
           return (
-            <div key={item.time} className="flex flex-col items-center justify-between gap-1.5 flex-1 min-w-[32px]">
-              <span className="text-[10px] text-white/60 font-medium whitespace-nowrap">{hourLabel}</span>
+            <div
+              key={item.time}
+              className="flex min-w-[32px] flex-1 flex-col items-center justify-between gap-1.5"
+            >
+              <span className="whitespace-nowrap text-[10px] font-medium text-white/60">
+                {hourLabel}
+              </span>
               <ItemIcon size={16} className="text-white/80" />
-              <span className="text-[11px] font-semibold text-white tabular-nums">{item.temperature}°</span>
+              <span className="text-[11px] font-semibold tabular-nums text-white">
+                {item.temperature}°
+              </span>
             </div>
           )
         })}

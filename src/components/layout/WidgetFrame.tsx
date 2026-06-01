@@ -8,20 +8,13 @@ interface Props {
   transparent?: boolean
 }
 
-export function WidgetFrame({
-  children,
-  editMode,
-  className,
-  transparent = false,
-}: Props) {
+export function WidgetFrame({ children, editMode, className, transparent = false }: Props) {
   return (
     <div
       className={cn(
         'relative flex h-full w-full flex-col overflow-visible rounded-card',
-        transparent
-          ? 'bg-transparent'
-          : 'bg-surface shadow-card backdrop-blur-glass glass-noise',
-        editMode && 'ring-[1.5px] ring-accent/20 ring-offset-[1px] ring-offset-transparent',
+        transparent ? 'bg-transparent' : 'backdrop-blur-glass glass-noise bg-surface shadow-card',
+        editMode && 'ring-accent/20 ring-[1.5px] ring-offset-[1px] ring-offset-transparent',
         className,
       )}
       style={{ containerType: 'inline-size' }}

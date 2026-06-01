@@ -78,9 +78,11 @@ describe('unwrapJsonp', () => {
 describe('baidu parseSuggest', () => {
   it('extracts suggestions from baidu format', () => {
     const parser = ENGINES.baidu.parseSuggest!
-    expect(parser({
-      g: [{ q: 'test1' }, { q: 'test2' }, { q: 'test3' }],
-    })).toEqual(['test1', 'test2', 'test3'])
+    expect(
+      parser({
+        g: [{ q: 'test1' }, { q: 'test2' }, { q: 'test3' }],
+      }),
+    ).toEqual(['test1', 'test2', 'test3'])
   })
 
   it('returns empty array for missing g property', () => {
@@ -91,8 +93,10 @@ describe('baidu parseSuggest', () => {
 
   it('filters out items without string q', () => {
     const parser = ENGINES.baidu.parseSuggest!
-    expect(parser({
-      g: [{ q: 'valid' }, { notQ: 1 }, { q: 123 }],
-    })).toEqual(['valid'])
+    expect(
+      parser({
+        g: [{ q: 'valid' }, { notQ: 1 }, { q: 123 }],
+      }),
+    ).toEqual(['valid'])
   })
 })

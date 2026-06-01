@@ -62,15 +62,16 @@ export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: P
           }}
           onMouseDown={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()}
-          className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow transition hover:scale-110 z-20"
+          className="absolute -right-1 -top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow transition hover:scale-110"
           aria-label="删除"
         >
           <X size={12} />
         </button>
       )}
       <span
-        className="max-w-[72px] truncate text-xs text-shadow-wallpaper"
-        style={{ color: 'var(--text-primary)' }}>
+        className="text-shadow-wallpaper max-w-[72px] truncate text-xs"
+        style={{ color: 'var(--text-primary)' }}
+      >
         {shortcut.title}
       </span>
     </div>

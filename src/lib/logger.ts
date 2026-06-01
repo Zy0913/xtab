@@ -18,10 +18,18 @@ function enabled(level: LogLevel): boolean {
 }
 
 export const logger = {
-  get debug() { return enabled('debug') ? console.debug.bind(console) : noop },
-  get info() { return enabled('info') ? console.info.bind(console) : noop },
-  get warn() { return enabled('warn') ? console.warn.bind(console) : noop },
-  get error() { return console.error.bind(console) },
+  get debug() {
+    return enabled('debug') ? console.debug.bind(console) : noop
+  },
+  get info() {
+    return enabled('info') ? console.info.bind(console) : noop
+  },
+  get warn() {
+    return enabled('warn') ? console.warn.bind(console) : noop
+  },
+  get error() {
+    return console.error.bind(console)
+  },
 }
 
 export const debug = logger.debug

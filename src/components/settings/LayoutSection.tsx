@@ -13,9 +13,15 @@ const VALID_THEMES = ['light', 'dark', 'system'] as const
 const VALID_ENGINES = ['google', 'bing', 'baidu', 'duckduckgo'] as const
 const VALID_GLASS = ['sequoia', 'tahoe'] as const
 
-function isStr(v: unknown): v is string { return typeof v === 'string' }
-function isNum(v: unknown): v is number { return typeof v === 'number' && isFinite(v) }
-function isBool(v: unknown): v is boolean { return typeof v === 'boolean' }
+function isStr(v: unknown): v is string {
+  return typeof v === 'string'
+}
+function isNum(v: unknown): v is number {
+  return typeof v === 'number' && isFinite(v)
+}
+function isBool(v: unknown): v is boolean {
+  return typeof v === 'boolean'
+}
 function isObj(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v)
 }
@@ -40,15 +46,26 @@ function parseEnabled(raw: unknown): WidgetId[] {
 
 function parseSettings(raw: unknown) {
   if (!isObj(raw)) throw new Error('settings 格式错误')
-  const { theme, glassMode, searchEngine, wallpaper, wallpaperTint, wallpaperLuminance, wallpaperDimming, reduceMotion } = raw
-  if (theme !== undefined && !VALID_THEMES.includes(theme as typeof VALID_THEMES[number]))
+  const {
+    theme,
+    glassMode,
+    searchEngine,
+    wallpaper,
+    wallpaperTint,
+    wallpaperLuminance,
+    wallpaperDimming,
+    reduceMotion,
+  } = raw
+  if (theme !== undefined && !VALID_THEMES.includes(theme as (typeof VALID_THEMES)[number]))
     throw new Error(`非法 theme: ${String(theme)}`)
-  if (glassMode !== undefined && !VALID_GLASS.includes(glassMode as typeof VALID_GLASS[number]))
+  if (glassMode !== undefined && !VALID_GLASS.includes(glassMode as (typeof VALID_GLASS)[number]))
     throw new Error(`非法 glassMode: ${String(glassMode)}`)
-  if (searchEngine !== undefined && !VALID_ENGINES.includes(searchEngine as typeof VALID_ENGINES[number]))
+  if (
+    searchEngine !== undefined &&
+    !VALID_ENGINES.includes(searchEngine as (typeof VALID_ENGINES)[number])
+  )
     throw new Error(`非法 searchEngine: ${String(searchEngine)}`)
-  if (wallpaper !== undefined && !isStr(wallpaper))
-    throw new Error('wallpaper 格式错误')
+  if (wallpaper !== undefined && !isStr(wallpaper)) throw new Error('wallpaper 格式错误')
   if (wallpaperTint !== undefined && !isStr(wallpaperTint) && wallpaperTint !== null)
     throw new Error('wallpaperTint 格式错误')
 
@@ -60,14 +77,25 @@ function parseSettings(raw: unknown) {
 
   if (finalLuminance !== undefined && !isNum(finalLuminance) && finalLuminance !== null)
     throw new Error('wallpaperLuminance 格式错误')
-  if (wallpaperDimming !== undefined && (!isNum(wallpaperDimming) || wallpaperDimming < 0 || wallpaperDimming > 0.6))
+  if (
+    wallpaperDimming !== undefined &&
+    (!isNum(wallpaperDimming) || wallpaperDimming < 0 || wallpaperDimming > 0.6)
+  )
     throw new Error('wallpaperDimming 格式错误')
-  if (reduceMotion !== undefined && !isBool(reduceMotion))
-    throw new Error('reduceMotion 格式错误')
-  return { theme, glassMode, searchEngine, wallpaper, wallpaperTint, wallpaperLuminance: finalLuminance, wallpaperDimming, reduceMotion } as {
-    theme?: typeof VALID_THEMES[number]
-    glassMode?: typeof VALID_GLASS[number]
-    searchEngine?: typeof VALID_ENGINES[number]
+  if (reduceMotion !== undefined && !isBool(reduceMotion)) throw new Error('reduceMotion 格式错误')
+  return {
+    theme,
+    glassMode,
+    searchEngine,
+    wallpaper,
+    wallpaperTint,
+    wallpaperLuminance: finalLuminance,
+    wallpaperDimming,
+    reduceMotion,
+  } as {
+    theme?: (typeof VALID_THEMES)[number]
+    glassMode?: (typeof VALID_GLASS)[number]
+    searchEngine?: (typeof VALID_ENGINES)[number]
     wallpaper?: string
     wallpaperTint?: string | null
     wallpaperLuminance?: number | null
@@ -88,7 +116,13 @@ function parseShortcuts(raw: unknown): Shortcut[] {
 function parseTodos(raw: unknown): TodoItem[] {
   if (!Array.isArray(raw)) throw new Error('todos 格式错误')
   for (const item of raw) {
-    if (!isObj(item) || !isStr(item.id) || !isStr(item.text) || !isBool(item.done) || !isNum(item.createdAt))
+    if (
+      !isObj(item) ||
+      !isStr(item.id) ||
+      !isStr(item.text) ||
+      !isBool(item.done) ||
+      !isNum(item.createdAt)
+    )
       throw new Error('todos 条目格式错误')
   }
   return raw as TodoItem[]
@@ -103,12 +137,30 @@ export function LayoutSection() {
   const resetLayout = useLayoutStore((s) => s.reset)
 
   const handleExport = () => {
-    const { theme, glassMode, searchEngine, wallpaper, wallpaperTint, wallpaperLuminance, wallpaperDimming, reduceMotion } = useSettingsStore.getState()
+    const {
+      theme,
+      glassMode,
+      searchEngine,
+      wallpaper,
+      wallpaperTint,
+      wallpaperLuminance,
+      wallpaperDimming,
+      reduceMotion,
+    } = useSettingsStore.getState()
     const data = {
       version: 4,
       layouts: useLayoutStore.getState().layouts,
       enabled: useLayoutStore.getState().enabled,
-      settings: { theme, glassMode, searchEngine, wallpaper, wallpaperTint, wallpaperLuminance, wallpaperDimming, reduceMotion },
+      settings: {
+        theme,
+        glassMode,
+        searchEngine,
+        wallpaper,
+        wallpaperTint,
+        wallpaperLuminance,
+        wallpaperDimming,
+        reduceMotion,
+      },
       shortcuts: useShortcutsStore.getState().items,
       todos: useTodoStore.getState().items,
     }
@@ -151,9 +203,7 @@ export function LayoutSection() {
 
   return (
     <section className="space-y-2">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
-        组件
-      </h3>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">组件</h3>
 
       <div className="space-y-1 rounded-card bg-surface p-2">
         {ALL_IDS.map((id) => {

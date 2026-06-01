@@ -52,7 +52,10 @@ function Seconds() {
   }, [])
 
   return (
-    <span className="ml-2 text-3xl font-light" style={{ color: 'var(--text-primary)', opacity: 0.45 }}>
+    <span
+      className="ml-2 text-3xl font-light"
+      style={{ color: 'var(--text-primary)', opacity: 0.45 }}
+    >
       {ss}
     </span>
   )
@@ -95,15 +98,30 @@ export function Clock() {
   }, [])
 
   return (
-    <div className="flex h-full flex-col items-center justify-center text-center" role="timer" aria-live="off" aria-label="时钟">
-      <div className="flex items-baseline gap-1.5 font-extralight tabular-nums tracking-tight text-shadow-wallpaper"
-        style={{ color: 'var(--text-primary)' }}>
+    <div
+      className="flex h-full flex-col items-center justify-center text-center"
+      role="timer"
+      aria-live="off"
+      aria-label="时钟"
+    >
+      <div
+        className="text-shadow-wallpaper flex items-baseline gap-1.5 font-extralight tabular-nums tracking-tight"
+        style={{ color: 'var(--text-primary)' }}
+      >
         <span className="text-8xl">{minute.hh}</span>
-        <span className="text-7xl animate-pulse" style={{ color: 'var(--text-primary)', opacity: 0.55 }}>:</span>
+        <span
+          className="animate-pulse text-7xl"
+          style={{ color: 'var(--text-primary)', opacity: 0.55 }}
+        >
+          :
+        </span>
         <span className="text-8xl">{minute.mm}</span>
         <Seconds />
       </div>
-      <p className="mt-3 text-sm text-shadow-wallpaper" style={{ color: 'var(--text-primary)', opacity: 0.78 }}>
+      <p
+        className="text-shadow-wallpaper mt-3 text-sm"
+        style={{ color: 'var(--text-primary)', opacity: 0.78 }}
+      >
         {minute.dateLabel}
       </p>
     </div>

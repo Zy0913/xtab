@@ -45,6 +45,4 @@ export const useFavoriteWallpapersStore = create<FavoritesState>()(
 )
 
 registerHydration(() => useFavoriteWallpapersStore.persist.rehydrate())
-registerRemoteSync('tab:favorite-wallpapers', () =>
-  useFavoriteWallpapersStore.persist.rehydrate(),
-)
+registerRemoteSync('tab:favorite-wallpapers', () => useFavoriteWallpapersStore.persist.rehydrate())

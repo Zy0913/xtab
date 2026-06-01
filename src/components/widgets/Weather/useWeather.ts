@@ -129,8 +129,14 @@ async function fetchWeather(loc: LocResult, signal?: AbortSignal): Promise<Weath
   const cw = data.current_weather
 
   // Extract daily max and min temperature
-  const tempMax = data.daily?.temperature_2m_max?.[0] !== undefined ? Math.round(data.daily.temperature_2m_max[0]) : Math.round(cw.temperature)
-  const tempMin = data.daily?.temperature_2m_min?.[0] !== undefined ? Math.round(data.daily.temperature_2m_min[0]) : Math.round(cw.temperature)
+  const tempMax =
+    data.daily?.temperature_2m_max?.[0] !== undefined
+      ? Math.round(data.daily.temperature_2m_max[0])
+      : Math.round(cw.temperature)
+  const tempMin =
+    data.daily?.temperature_2m_min?.[0] !== undefined
+      ? Math.round(data.daily.temperature_2m_min[0])
+      : Math.round(cw.temperature)
 
   // Extract hourly forecasts
   const hourlyList: HourlyForecast[] = []

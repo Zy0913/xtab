@@ -50,7 +50,6 @@ export function useWallpaper() {
         visible: false,
       }
     })
-
     ;(async () => {
       const { objectUrl } = await resolveWallpaper(wallpaper)
       if (cancelled) {

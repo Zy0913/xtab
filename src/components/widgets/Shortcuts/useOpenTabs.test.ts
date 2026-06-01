@@ -27,15 +27,11 @@ describe('normalizeUrlKey', () => {
   })
 
   it('lowercases the host but preserves path case', () => {
-    expect(normalizeUrlKey('https://GitHub.com/Anthropic')).toBe(
-      'https://github.com/Anthropic',
-    )
+    expect(normalizeUrlKey('https://GitHub.com/Anthropic')).toBe('https://github.com/Anthropic')
   })
 
   it('keeps query and hash', () => {
-    expect(normalizeUrlKey('https://x.com/path/?a=1#h')).toBe(
-      'https://x.com/path?a=1#h',
-    )
+    expect(normalizeUrlKey('https://x.com/path/?a=1#h')).toBe('https://x.com/path?a=1#h')
   })
 
   it('falls back to a stable form on invalid URL', () => {

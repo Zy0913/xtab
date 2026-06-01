@@ -69,9 +69,7 @@ export function dedupByUrl(tabs: OpenTab[]): OpenTab[] {
     const tLen = t.title?.length ?? 0
     const eLen = existing.title?.length ?? 0
     // Title length is the primary signal; current-window only breaks ties.
-    const prefer =
-      tLen > eLen ||
-      (tLen === eLen && t.isCurrentWindow && !existing.isCurrentWindow)
+    const prefer = tLen > eLen || (tLen === eLen && t.isCurrentWindow && !existing.isCurrentWindow)
     if (prefer) map.set(key, t)
   }
   return [...map.values()]

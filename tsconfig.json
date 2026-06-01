@@ -22,5 +22,11 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "manifest.config.ts", "vite.config.ts", "tailwind.config.ts", "vitest.config.ts"]
+  "include": [
+    "src",
+    "manifest.config.ts",
+    "vite.config.ts",
+    "tailwind.config.ts",
+    "vitest.config.ts"
+  ]
 }

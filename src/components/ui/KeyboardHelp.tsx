@@ -36,9 +36,7 @@ export function KeyboardHelp({ open, onClose }: Props) {
           </li>
         ))}
       </ul>
-      <p className="mt-4 text-xs text-text-tertiary">
-        输入状态下按下的字符不会触发全局快捷键。
-      </p>
+      <p className="mt-4 text-xs text-text-tertiary">输入状态下按下的字符不会触发全局快捷键。</p>
     </Dialog>
   )
 }

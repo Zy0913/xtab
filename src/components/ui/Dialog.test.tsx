@@ -16,7 +16,9 @@ setupOverlay()
 describe('Dialog', () => {
   it('renders nothing when closed', () => {
     const { container } = render(
-      <Dialog open={false} onClose={() => {}}>Content</Dialog>
+      <Dialog open={false} onClose={() => {}}>
+        Content
+      </Dialog>,
     )
     expect(container.firstChild).toBeNull()
   })
@@ -25,7 +27,7 @@ describe('Dialog', () => {
     render(
       <Dialog open={true} onClose={() => {}} title="Test Dialog">
         Dialog content
-      </Dialog>
+      </Dialog>,
     )
     expect(screen.getByText('Dialog content')).toBeInTheDocument()
     expect(screen.getByText('Test Dialog')).toBeInTheDocument()
@@ -36,7 +38,7 @@ describe('Dialog', () => {
     render(
       <Dialog open={true} onClose={onClose}>
         Content
-      </Dialog>
+      </Dialog>,
     )
     // Click the overlay (the outer fixed div)
     const dialog = document.querySelector('[role="dialog"]')
@@ -51,7 +53,7 @@ describe('Dialog', () => {
     render(
       <Dialog open={true} onClose={onClose}>
         Content
-      </Dialog>
+      </Dialog>,
     )
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(1)
@@ -62,7 +64,7 @@ describe('Dialog', () => {
     render(
       <Dialog open={true} onClose={onClose}>
         Content
-      </Dialog>
+      </Dialog>,
     )
     fireEvent.click(screen.getByText('Content'))
     expect(onClose).not.toHaveBeenCalled()
@@ -73,7 +75,7 @@ describe('Dialog', () => {
     render(
       <Dialog open={true} onClose={onClose}>
         Content
-      </Dialog>
+      </Dialog>,
     )
     const closeBtn = screen.getByLabelText('关闭')
     fireEvent.click(closeBtn)
@@ -84,7 +86,7 @@ describe('Dialog', () => {
     render(
       <Dialog open={true} onClose={() => {}}>
         No title dialog
-      </Dialog>
+      </Dialog>,
     )
     expect(screen.getByText('No title dialog')).toBeInTheDocument()
   })

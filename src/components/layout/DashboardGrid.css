@@ -43,7 +43,9 @@
   border: none !important;
   padding: 0 !important;
   opacity: 0.4 !important;
-  transition: opacity var(--transition-duration) ease, transform var(--transition-duration) ease;
+  transition:
+    opacity var(--transition-duration) ease,
+    transform var(--transition-duration) ease;
   cursor: se-resize !important;
 }
 

@@ -64,14 +64,16 @@ describe('getFaviconSources', () => {
     const originalChrome = globalThis.chrome
     globalThis.chrome = {
       runtime: {
-        id: 'test-extension-id'
-      }
+        id: 'test-extension-id',
+      },
     } as typeof chrome
 
     try {
       const sources = getFaviconSources('https://github.com/user/repo')
       expect(sources).toHaveLength(3)
-      expect(sources[0]).toBe('chrome-extension://test-extension-id/_favicon/?pageUrl=https%3A%2F%2Fgithub.com%2Fuser%2Frepo&size=32')
+      expect(sources[0]).toBe(
+        'chrome-extension://test-extension-id/_favicon/?pageUrl=https%3A%2F%2Fgithub.com%2Fuser%2Frepo&size=32',
+      )
       expect(sources[1]).toBe('https://icons.duckduckgo.com/ip3/github.com.ico')
       expect(sources[2]).toBe('https://www.google.com/s2/favicons?domain=github.com&sz=32')
     } finally {

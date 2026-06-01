@@ -69,8 +69,10 @@ export function SearchBar() {
 
   return (
     <div className="relative w-full">
-      <div className="mx-auto flex h-14 max-w-2xl 2xl:max-w-3xl items-center gap-2.5 border border-border bg-surface px-5 shadow-card backdrop-blur-glass transition-all focus-within:ring-2 focus-within:ring-accent/30 hover:shadow-pop"
-        style={{ borderRadius: 'var(--radius-pill)' }}>
+      <div
+        className="backdrop-blur-glass focus-within:ring-accent/30 mx-auto flex h-14 max-w-2xl items-center gap-2.5 border border-border bg-surface px-5 shadow-card transition-all focus-within:ring-2 hover:shadow-pop 2xl:max-w-3xl"
+        style={{ borderRadius: 'var(--radius-pill)' }}
+      >
         <EngineSelector />
         <div className="h-5 w-px bg-border" />
         <SearchIcon size={16} className="text-text-tertiary" />
@@ -96,7 +98,7 @@ export function SearchBar() {
           onFocus={() => setFocused(true)}
           onBlur={handleBlur}
           placeholder={ENGINES[engine].placeholder}
-          className="flex-1 bg-transparent text-sm text-text-primary placeholder:text-text-tertiary outline-none"
+          className="flex-1 bg-transparent text-sm text-text-primary outline-none placeholder:text-text-tertiary"
         />
         <kbd className="hidden rounded bg-surface-strong px-1.5 py-0.5 text-[10px] text-text-tertiary sm:inline">
           /

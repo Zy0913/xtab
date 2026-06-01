@@ -3,11 +3,7 @@ import { Upload, Shuffle, Check, Loader, Heart } from 'lucide-react'
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { useFavoriteWallpapersStore } from '@/store/useFavoriteWallpapersStore'
 import { PRESETS } from '@/lib/wallpapers'
-import {
-  fetchRandomWallhaven,
-  type WallhavenResult,
-  type WallhavenStrategy,
-} from '@/lib/wallhaven'
+import { fetchRandomWallhaven, type WallhavenResult, type WallhavenStrategy } from '@/lib/wallhaven'
 import { cn } from '@/lib/cn'
 import { showToast } from '@/lib/toast'
 import { warn, error as logError } from '@/lib/logger'
@@ -116,9 +112,7 @@ export function WallpaperPicker() {
 
   return (
     <section className="space-y-2">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
-        壁纸
-      </h3>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">壁纸</h3>
 
       <div className="grid grid-cols-3 gap-2">
         {PRESETS.map((p) => (
@@ -152,7 +146,7 @@ export function WallpaperPicker() {
             className={cn(
               'rounded-btn px-2 py-1 text-[11px] transition',
               strategy === s.key
-                ? 'bg-accent/20 text-text-primary ring-1 ring-accent/30'
+                ? 'bg-accent/20 ring-accent/30 text-text-primary ring-1'
                 : 'bg-surface text-text-secondary hover:text-text-primary',
             )}
           >
@@ -173,7 +167,8 @@ export function WallpaperPicker() {
           disabled={randomLoading}
           className="flex flex-1 items-center justify-center gap-1.5 rounded-btn bg-surface py-2 text-xs text-text-primary hover:bg-surface-strong disabled:opacity-50"
         >
-          {randomLoading ? <Loader size={12} className="animate-spin" /> : <Shuffle size={12} />} 随机排行榜
+          {randomLoading ? <Loader size={12} className="animate-spin" /> : <Shuffle size={12} />}{' '}
+          随机排行榜
         </button>
         <button
           onClick={handleFavorite}
@@ -206,9 +201,7 @@ export function WallpaperPicker() {
       <div className="space-y-1 pt-1">
         <div className="flex items-center justify-between text-[11px] text-text-secondary">
           <span>壁纸暗化</span>
-          <span className="tabular-nums text-text-tertiary">
-            {Math.round(dimming * 100)}%
-          </span>
+          <span className="tabular-nums text-text-tertiary">{Math.round(dimming * 100)}%</span>
         </div>
         <input
           type="range"
@@ -225,9 +218,7 @@ export function WallpaperPicker() {
         </p>
       </div>
 
-      <p className="text-[11px] text-text-tertiary">
-        图片通过本地缓存加载，重复打开秒开
-      </p>
+      <p className="text-[11px] text-text-tertiary">图片通过本地缓存加载，重复打开秒开</p>
     </section>
   )
 }

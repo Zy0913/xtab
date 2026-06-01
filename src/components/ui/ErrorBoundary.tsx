@@ -35,7 +35,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <p className="text-xs">组件加载失败</p>
           <button
             onClick={this.handleRetry}
-            className="flex items-center gap-1 rounded-btn bg-surface px-2 py-1 text-xs hover:bg-surface-strong transition"
+            className="flex items-center gap-1 rounded-btn bg-surface px-2 py-1 text-xs transition hover:bg-surface-strong"
           >
             <RefreshCw size={10} /> 重试
           </button>

@@ -43,7 +43,11 @@ export function AddShortcutDialog({ open, onClose, initialMode = 'tabs' }: Props
 
   return (
     <Dialog open={open} onClose={handleClose} title="添加快捷方式">
-      <div className="mb-4 inline-flex rounded-btn border border-border bg-surface p-0.5 text-xs" role="tablist" aria-label="添加快捷方式来源">
+      <div
+        className="mb-4 inline-flex rounded-btn border border-border bg-surface p-0.5 text-xs"
+        role="tablist"
+        aria-label="添加快捷方式来源"
+      >
         <ModeTab active={mode === 'tabs'} onClick={() => setMode('tabs')}>
           从打开的标签页
         </ModeTab>
@@ -55,7 +59,9 @@ export function AddShortcutDialog({ open, onClose, initialMode = 'tabs' }: Props
       {mode === 'manual' ? (
         <div className="space-y-3">
           <div>
-            <label htmlFor="shortcut-title" className="mb-1.5 block text-xs text-text-secondary">名称</label>
+            <label htmlFor="shortcut-title" className="mb-1.5 block text-xs text-text-secondary">
+              名称
+            </label>
             <Input
               id="shortcut-title"
               value={title}
@@ -65,7 +71,9 @@ export function AddShortcutDialog({ open, onClose, initialMode = 'tabs' }: Props
             />
           </div>
           <div>
-            <label htmlFor="shortcut-url" className="mb-1.5 block text-xs text-text-secondary">网址</label>
+            <label htmlFor="shortcut-url" className="mb-1.5 block text-xs text-text-secondary">
+              网址
+            </label>
             <Input
               id="shortcut-url"
               value={url}
@@ -75,8 +83,12 @@ export function AddShortcutDialog({ open, onClose, initialMode = 'tabs' }: Props
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="ghost" onClick={handleClose}>取消</Button>
-            <Button variant="primary" onClick={handleManualSubmit}>添加</Button>
+            <Button variant="ghost" onClick={handleClose}>
+              取消
+            </Button>
+            <Button variant="primary" onClick={handleManualSubmit}>
+              添加
+            </Button>
           </div>
         </div>
       ) : (
