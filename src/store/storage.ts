@@ -39,7 +39,12 @@ export function registerHydration(cb: () => Promise<void> | void) {
 }
 
 export async function hydrateStores() {
-  await Promise.all([...hydrationCallbacks].map((cb) => cb()))
+  const results = await Promise.allSettled([...hydrationCallbacks].map((cb) => cb()))
+  for (const r of results) {
+    if (r.status === 'rejected') {
+      error('Failed to hydrate a store:', r.reason)
+    }
+  }
 }
 
 /**
