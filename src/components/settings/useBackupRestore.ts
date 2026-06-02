@@ -11,27 +11,27 @@ import type { TodoItem } from '@/store/useTodoStore'
 // ---------------------------------------------------------------------------
 
 const ALL_IDS = Object.keys(WIDGET_LABELS) as WidgetId[]
-const MAX_IMPORT_SIZE = 5 * 1024 * 1024
-const SUPPORTED_VERSIONS = [1, 2, 3, 4]
+export const MAX_IMPORT_SIZE = 5 * 1024 * 1024
+export const SUPPORTED_VERSIONS = [1, 2, 3, 4]
 
-const VALID_THEMES = ['light', 'dark', 'system'] as const
-const VALID_ENGINES = ['google', 'bing', 'baidu', 'duckduckgo'] as const
-const VALID_GLASS = ['sequoia', 'tahoe'] as const
+export const VALID_THEMES = ['light', 'dark', 'system'] as const
+export const VALID_ENGINES = ['google', 'bing', 'baidu', 'duckduckgo'] as const
+export const VALID_GLASS = ['sequoia', 'tahoe'] as const
 
 // ---------------------------------------------------------------------------
 // Type guards
 // ---------------------------------------------------------------------------
 
-function isStr(v: unknown): v is string {
+export function isStr(v: unknown): v is string {
   return typeof v === 'string'
 }
-function isNum(v: unknown): v is number {
+export function isNum(v: unknown): v is number {
   return typeof v === 'number' && isFinite(v)
 }
-function isBool(v: unknown): v is boolean {
+export function isBool(v: unknown): v is boolean {
   return typeof v === 'boolean'
 }
-function isObj(v: unknown): v is Record<string, unknown> {
+export function isObj(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v)
 }
 
@@ -39,7 +39,7 @@ function isObj(v: unknown): v is Record<string, unknown> {
 // Parse / validation helpers
 // ---------------------------------------------------------------------------
 
-function parseLayouts(raw: unknown): WidgetLayout[] {
+export function parseLayouts(raw: unknown): WidgetLayout[] {
   if (!Array.isArray(raw)) throw new Error('layouts 格式错误')
   for (const item of raw) {
     if (!isObj(item) || !ALL_IDS.includes(item.i as WidgetId))
@@ -50,14 +50,14 @@ function parseLayouts(raw: unknown): WidgetLayout[] {
   return raw as WidgetLayout[]
 }
 
-function parseEnabled(raw: unknown): WidgetId[] {
+export function parseEnabled(raw: unknown): WidgetId[] {
   if (!Array.isArray(raw)) throw new Error('enabled 格式错误')
   for (const id of raw)
     if (!ALL_IDS.includes(id as WidgetId)) throw new Error(`非法 widget id: ${String(id)}`)
   return raw as WidgetId[]
 }
 
-function parseSettings(raw: unknown) {
+export function parseSettings(raw: unknown) {
   if (!isObj(raw)) throw new Error('settings 格式错误')
   const {
     theme,
@@ -117,7 +117,7 @@ function parseSettings(raw: unknown) {
   }
 }
 
-function parseShortcuts(raw: unknown): Shortcut[] {
+export function parseShortcuts(raw: unknown): Shortcut[] {
   if (!Array.isArray(raw)) throw new Error('shortcuts 格式错误')
   for (const item of raw) {
     if (!isObj(item) || !isStr(item.id) || !isStr(item.title) || !isStr(item.url))
@@ -126,7 +126,7 @@ function parseShortcuts(raw: unknown): Shortcut[] {
   return raw as Shortcut[]
 }
 
-function parseTodos(raw: unknown): TodoItem[] {
+export function parseTodos(raw: unknown): TodoItem[] {
   if (!Array.isArray(raw)) throw new Error('todos 格式错误')
   for (const item of raw) {
     if (

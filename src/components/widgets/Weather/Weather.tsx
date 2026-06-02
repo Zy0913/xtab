@@ -41,6 +41,19 @@ function lookup<T extends { maxCode: number }>(map: T[], code: number, fallback:
 const DEFAULT_ICON = ICON_MAP[ICON_MAP.length - 1]
 const DEFAULT_LABEL = { maxCode: Infinity, label: '—' }
 
+function getGradientClass(code: number, isDay: boolean): string {
+  if (!isDay) {
+    return 'bg-gradient-to-br from-slate-900/80 via-slate-950/85 to-indigo-950/65 border-white/5'
+  }
+  if (code === 0) {
+    return 'bg-gradient-to-br from-sky-400/50 via-blue-500/35 to-indigo-950/45 border-white/10'
+  }
+  if (code <= 3) {
+    return 'bg-gradient-to-br from-slate-500/45 via-blue-900/30 to-slate-900/50 border-white/10'
+  }
+  return 'bg-gradient-to-br from-slate-700/50 via-slate-800/40 to-slate-950/60 border-white/5'
+}
+
 export function WeatherWidget() {
   const { data, error } = useWeather()
 
@@ -78,23 +91,6 @@ export function WeatherWidget() {
   const tempMax = data.tempMax !== undefined ? data.tempMax : data.temperature
   const tempMin = data.tempMin !== undefined ? data.tempMin : data.temperature
   const hourly = data.hourly || []
-
-  // Dynamic weather-themed premium gradients matching macOS styling
-  const getGradientClass = (code: number, isDay: boolean) => {
-    if (!isDay) {
-      return 'bg-gradient-to-br from-slate-900/80 via-slate-950/85 to-indigo-950/65 border-white/5'
-    }
-    // Clear/Sunny (code 0)
-    if (code === 0) {
-      return 'bg-gradient-to-br from-sky-400/50 via-blue-500/35 to-indigo-950/45 border-white/10'
-    }
-    // Clouds (code 1-3)
-    if (code <= 3) {
-      return 'bg-gradient-to-br from-slate-500/45 via-blue-900/30 to-slate-900/50 border-white/10'
-    }
-    // Rain/Fog/Snow/Lightning (code >3)
-    return 'bg-gradient-to-br from-slate-700/50 via-slate-800/40 to-slate-950/60 border-white/5'
-  }
 
   const gradientClass = getGradientClass(data.weatherCode, data.isDay)
 

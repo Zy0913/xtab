@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { Search, RefreshCw, Check } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -126,7 +126,7 @@ interface TabRowProps {
   onToggle: () => void
 }
 
-function TabRow({ tab, existing, checked, onToggle }: TabRowProps) {
+const TabRow = memo(function TabRow({ tab, existing, checked, onToggle }: TabRowProps) {
   const host = (() => {
     try {
       return new URL(tab.url).hostname
@@ -165,7 +165,7 @@ function TabRow({ tab, existing, checked, onToggle }: TabRowProps) {
       </button>
     </li>
   )
-}
+})
 
 function TabFavicon({ tab }: { tab: OpenTab }) {
   const [sourceIndex, setSourceIndex] = useState(0)
