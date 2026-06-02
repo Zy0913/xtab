@@ -39,7 +39,6 @@ export const useFavoriteWallpapersStore = create<FavoritesState>()(
       storage: createJSONStorage(() => chromeStorage),
       skipHydration: true,
       version: 1,
-      migrate: (persisted) => persisted,
     },
   ),
 )

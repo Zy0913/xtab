@@ -39,7 +39,6 @@ export const useLayoutStore = create<LayoutState>()(
       storage: createJSONStorage(() => chromeStorage),
       skipHydration: true,
       version: 1,
-      migrate: (persisted) => persisted,
     },
   ),
 )

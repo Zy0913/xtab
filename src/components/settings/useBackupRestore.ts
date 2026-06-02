@@ -1,0 +1,220 @@
+import { useLayoutStore } from '@/store/useLayoutStore'
+import { useSettingsStore } from '@/store/useSettingsStore'
+import { useShortcutsStore } from '@/store/useShortcutsStore'
+import { useTodoStore } from '@/store/useTodoStore'
+import { showToast } from '@/lib/toast'
+import { WIDGET_LABELS, type WidgetId, type WidgetLayout, type Shortcut } from '@/types/widget'
+import type { TodoItem } from '@/store/useTodoStore'
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const ALL_IDS = Object.keys(WIDGET_LABELS) as WidgetId[]
+const MAX_IMPORT_SIZE = 5 * 1024 * 1024
+const SUPPORTED_VERSIONS = [1, 2, 3, 4]
+
+const VALID_THEMES = ['light', 'dark', 'system'] as const
+const VALID_ENGINES = ['google', 'bing', 'baidu', 'duckduckgo'] as const
+const VALID_GLASS = ['sequoia', 'tahoe'] as const
+
+// ---------------------------------------------------------------------------
+// Type guards
+// ---------------------------------------------------------------------------
+
+function isStr(v: unknown): v is string {
+  return typeof v === 'string'
+}
+function isNum(v: unknown): v is number {
+  return typeof v === 'number' && isFinite(v)
+}
+function isBool(v: unknown): v is boolean {
+  return typeof v === 'boolean'
+}
+function isObj(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
+}
+
+// ---------------------------------------------------------------------------
+// Parse / validation helpers
+// ---------------------------------------------------------------------------
+
+function parseLayouts(raw: unknown): WidgetLayout[] {
+  if (!Array.isArray(raw)) throw new Error('layouts 格式错误')
+  for (const item of raw) {
+    if (!isObj(item) || !ALL_IDS.includes(item.i as WidgetId))
+      throw new Error(`非法 widget id: ${String(item?.i)}`)
+    if (!isNum(item.x) || !isNum(item.y) || !isNum(item.w) || !isNum(item.h))
+      throw new Error('layouts 坐标格式错误')
+  }
+  return raw as WidgetLayout[]
+}
+
+function parseEnabled(raw: unknown): WidgetId[] {
+  if (!Array.isArray(raw)) throw new Error('enabled 格式错误')
+  for (const id of raw)
+    if (!ALL_IDS.includes(id as WidgetId)) throw new Error(`非法 widget id: ${String(id)}`)
+  return raw as WidgetId[]
+}
+
+function parseSettings(raw: unknown) {
+  if (!isObj(raw)) throw new Error('settings 格式错误')
+  const {
+    theme,
+    glassMode,
+    searchEngine,
+    wallpaper,
+    wallpaperTint,
+    wallpaperLuminance,
+    wallpaperDimming,
+    reduceMotion,
+  } = raw
+  if (theme !== undefined && !VALID_THEMES.includes(theme as (typeof VALID_THEMES)[number]))
+    throw new Error(`非法 theme: ${String(theme)}`)
+  if (glassMode !== undefined && !VALID_GLASS.includes(glassMode as (typeof VALID_GLASS)[number]))
+    throw new Error(`非法 glassMode: ${String(glassMode)}`)
+  if (
+    searchEngine !== undefined &&
+    !VALID_ENGINES.includes(searchEngine as (typeof VALID_ENGINES)[number])
+  )
+    throw new Error(`非法 searchEngine: ${String(searchEngine)}`)
+  if (wallpaper !== undefined && !isStr(wallpaper)) throw new Error('wallpaper 格式错误')
+  if (wallpaperTint !== undefined && !isStr(wallpaperTint) && wallpaperTint !== null)
+    throw new Error('wallpaperTint 格式错误')
+
+  // Downward compatibility: migrate wallpaperIsDark to wallpaperLuminance (v3 -> v4)
+  let finalLuminance = wallpaperLuminance
+  if (finalLuminance === undefined && raw.wallpaperIsDark !== undefined) {
+    finalLuminance = raw.wallpaperIsDark === true ? 0.3 : 0.7
+  }
+
+  if (finalLuminance !== undefined && !isNum(finalLuminance) && finalLuminance !== null)
+    throw new Error('wallpaperLuminance 格式错误')
+  if (
+    wallpaperDimming !== undefined &&
+    (!isNum(wallpaperDimming) || wallpaperDimming < 0 || wallpaperDimming > 0.6)
+  )
+    throw new Error('wallpaperDimming 格式错误')
+  if (reduceMotion !== undefined && !isBool(reduceMotion)) throw new Error('reduceMotion 格式错误')
+  return {
+    theme,
+    glassMode,
+    searchEngine,
+    wallpaper,
+    wallpaperTint,
+    wallpaperLuminance: finalLuminance,
+    wallpaperDimming,
+    reduceMotion,
+  } as {
+    theme?: (typeof VALID_THEMES)[number]
+    glassMode?: (typeof VALID_GLASS)[number]
+    searchEngine?: (typeof VALID_ENGINES)[number]
+    wallpaper?: string
+    wallpaperTint?: string | null
+    wallpaperLuminance?: number | null
+    wallpaperDimming?: number
+    reduceMotion?: boolean
+  }
+}
+
+function parseShortcuts(raw: unknown): Shortcut[] {
+  if (!Array.isArray(raw)) throw new Error('shortcuts 格式错误')
+  for (const item of raw) {
+    if (!isObj(item) || !isStr(item.id) || !isStr(item.title) || !isStr(item.url))
+      throw new Error('shortcuts 条目格式错误')
+  }
+  return raw as Shortcut[]
+}
+
+function parseTodos(raw: unknown): TodoItem[] {
+  if (!Array.isArray(raw)) throw new Error('todos 格式错误')
+  for (const item of raw) {
+    if (
+      !isObj(item) ||
+      !isStr(item.id) ||
+      !isStr(item.text) ||
+      !isBool(item.done) ||
+      !isNum(item.createdAt)
+    )
+      throw new Error('todos 条目格式错误')
+  }
+  return raw as TodoItem[]
+}
+
+// ---------------------------------------------------------------------------
+// Hook
+// ---------------------------------------------------------------------------
+
+export interface UseBackupRestoreReturn {
+  handleExport: () => void
+  handleImport: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>
+}
+
+export function useBackupRestore(): UseBackupRestoreReturn {
+  const handleExport = () => {
+    const {
+      theme,
+      glassMode,
+      searchEngine,
+      wallpaper,
+      wallpaperTint,
+      wallpaperLuminance,
+      wallpaperDimming,
+      reduceMotion,
+    } = useSettingsStore.getState()
+    const data = {
+      version: 4,
+      layouts: useLayoutStore.getState().layouts,
+      enabled: useLayoutStore.getState().enabled,
+      settings: {
+        theme,
+        glassMode,
+        searchEngine,
+        wallpaper,
+        wallpaperTint,
+        wallpaperLuminance,
+        wallpaperDimming,
+        reduceMotion,
+      },
+      shortcuts: useShortcutsStore.getState().items,
+      todos: useTodoStore.getState().items,
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `tab-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      if (file.size > MAX_IMPORT_SIZE) throw new Error('文件过大，最大支持 5MB')
+      const raw = JSON.parse(await file.text())
+      if (!isObj(raw)) throw new Error('文件不是合法 JSON 对象')
+      if (raw.version !== undefined && !SUPPORTED_VERSIONS.includes(raw.version as number))
+        throw new Error(`不支持的版本号: ${String(raw.version)}`)
+
+      const layouts = raw.layouts !== undefined ? parseLayouts(raw.layouts) : undefined
+      const enabledVal = raw.enabled !== undefined ? parseEnabled(raw.enabled) : undefined
+      const settings = raw.settings !== undefined ? parseSettings(raw.settings) : undefined
+      const shortcuts = raw.shortcuts !== undefined ? parseShortcuts(raw.shortcuts) : undefined
+      const todos = raw.todos !== undefined ? parseTodos(raw.todos) : undefined
+
+      if (layouts !== undefined) useLayoutStore.setState({ layouts })
+      if (enabledVal !== undefined) useLayoutStore.setState({ enabled: enabledVal })
+      if (settings !== undefined) useSettingsStore.setState(settings)
+      if (shortcuts !== undefined) useShortcutsStore.setState({ items: shortcuts })
+      if (todos !== undefined) useTodoStore.setState({ items: todos })
+    } catch (err) {
+      showToast(`导入失败：${err instanceof Error ? err.message : '文件格式不正确'}`, 'error')
+    } finally {
+      e.target.value = ''
+    }
+  }
+
+  return { handleExport, handleImport }
+}
