@@ -29,6 +29,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
   color: var(--text-primary);
   background: #f2f2f7;
+  /* Smooth out theme switches so colour-driven CSS variables fade rather
+     than snap. The wallpaper layer in App.tsx already covers most of the
+     viewport, so this only affects the bare backdrop and root text colour
+     during a light/dark flip. The blanket reduce-motion overrides below
+     (and the `.reduce-motion` class) automatically disable this. */
+  transition:
+    background-color var(--transition-duration-slow) ease,
+    color var(--transition-duration-slow) ease;
 }
 
 .dark body {

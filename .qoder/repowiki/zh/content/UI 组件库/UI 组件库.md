@@ -16,6 +16,8 @@
 - [src/components/ui/Dialog.test.tsx](file://src/components/ui/Dialog.test.tsx)
 - [src/components/ui/Drawer.test.tsx](file://src/components/ui/Drawer.test.tsx)
 - [src/components/ui/Input.test.tsx](file://src/components/ui/Input.test.tsx)
+- [src/lib/cn.test.ts](file://src/lib/cn.test.ts)
+- [src/lib/theme.test.ts](file://src/lib/theme.test.ts)
 - [package.json](file://package.json)
 </cite>
 
@@ -23,10 +25,11 @@
 
 **变更内容**
 
-- 新增微动画系统，包括基于弹簧的进入动画和自定义三次贝塞尔缓动函数
-- Dialog 组件动画状态管理重构，支持更流畅的进入和退出动画
-- 新增自定义缓动函数 cubic-bezier(0.34, 1.56, 0.64, 1) 提供更自然的动画体验
-- 组件动画性能优化，使用 requestAnimationFrame 确保动画同步
+- 增强了基础 UI 组件的测试覆盖，完善了 Button、Dialog、Drawer、Input 的单元测试
+- 优化了 Dialog 组件的动画状态管理，采用双状态模式确保动画与渲染同步
+- 改进了 cn 工具函数的类名合并机制，增强了冲突处理能力
+- 新增了微动画系统的完整实现，包括 spring-in 动画和自定义缓动函数
+- 强化了无障碍支持的测试验证，确保焦点陷阱和键盘交互的可靠性
 
 ## 目录
 
@@ -36,13 +39,14 @@
 4. [架构总览](#架构总览)
 5. [组件详解](#组件详解)
 6. [微动画系统](#微动画系统)
-7. [依赖关系分析](#依赖关系分析)
-8. [性能与渲染策略](#性能与渲染策略)
-9. [无障碍与可访问性](#无障碍与可访问性)
-10. [样式系统与定制指南](#样式系统与定制指南)
-11. [响应式与跨浏览器兼容](#响应式与跨浏览器兼容)
-12. [故障排查](#故障排查)
-13. [结论](#结论)
+7. [测试增强与质量保证](#测试增强与质量保证)
+8. [依赖关系分析](#依赖关系分析)
+9. [性能与渲染策略](#性能与渲染策略)
+10. [无障碍与可访问性](#无障碍与可访问性)
+11. [样式系统与定制指南](#样式系统与定制指南)
+12. [响应式与跨浏览器兼容](#响应式与跨浏览器兼容)
+13. [故障排查](#故障排查)
+14. [结论](#结论)
 
 ## 简介
 
@@ -403,6 +407,85 @@ ShouldRender --> [*] : shouldRender=false
 - [src/styles/globals.css](file://src/styles/globals.css)
 - [src/components/ui/Dialog.tsx](file://src/components/ui/Dialog.tsx)
 
+## 测试增强与质量保证
+
+### 测试框架与工具
+
+组件库采用 Vitest + Testing Library 进行单元测试，确保组件的可靠性和稳定性。测试覆盖了核心功能、边界条件和错误处理场景。
+
+### Button 组件测试增强
+
+Button 组件的测试覆盖了以下关键场景：
+
+- 子元素文本渲染验证
+- 默认 secondary 变体的正确应用
+- 各种变体（primary、ghost、danger）的类名应用
+- 尺寸变体（sm、md）的正确实现
+- 自定义类名的合并机制
+- 禁用状态的正确处理
+- HTML 属性的透传功能
+
+### Dialog 组件测试增强
+
+Dialog 组件的测试重点包括：
+
+- 关闭状态下的空渲染验证
+- 打开状态下的内容和标题渲染
+- 遮罩点击事件的正确处理
+- Esc 键盘事件的响应
+- 内容区域点击的事件冒泡阻止
+- 关闭按钮的功能验证
+- 无标题场景的兼容性
+
+### Drawer 组件测试增强
+
+Drawer 组件的测试涵盖了：
+
+- 关闭状态下的隐藏效果（translate-x-full）
+- 打开状态下的可见性（translate-x-0）
+- 标题文本的正确渲染
+- 遮罩点击事件的处理
+- Esc 键盘事件的响应
+
+### Input 组件测试增强
+
+Input 组件的测试验证了：
+
+- 输入元素的正确渲染
+- 占位符文本的显示
+- 自定义类名的透传
+- 禁用状态的处理
+- 默认值的正确设置
+- type 属性的透传
+
+### cn 工具函数测试
+
+cn 工具函数的测试确保了类名合并的正确性：
+
+- 基础类名合并功能
+- 条件类名的正确处理
+- Tailwind 冲突类的去重
+- 空输入的处理
+- undefined 和 null 值的容错
+
+### 无障碍测试验证
+
+通过测试验证了组件的无障碍功能：
+
+- role 属性的正确设置
+- aria-modal 属性的应用
+- aria-label 的动态更新
+- Tab 键导航的焦点管理
+- Esc 键关闭功能的验证
+
+**章节来源**
+
+- [src/components/ui/Button.test.tsx](file://src/components/ui/Button.test.tsx)
+- [src/components/ui/Dialog.test.tsx](file://src/components/ui/Dialog.test.tsx)
+- [src/components/ui/Drawer.test.tsx](file://src/components/ui/Drawer.test.tsx)
+- [src/components/ui/Input.test.tsx](file://src/components/ui/Input.test.tsx)
+- [src/lib/cn.test.ts](file://src/lib/cn.test.ts)
+
 ## 依赖关系分析
 
 - 组件依赖 cn 进行类名合并，确保默认类、变体/尺寸类与自定义类的正确优先级与冲突消除。
@@ -618,5 +701,7 @@ TailwindConfig --> Globals : "生成CSS"
 该 UI 组件库以 Tailwind 原子化样式为核心，结合 CSS 变量主题系统与 cn 工具实现一致、可扩展且高性能的组件体验。**最新更新**引入了完整的微动画系统，通过基于弹簧的进入动画和自定义三次贝塞尔缓动函数，为模态对话框和交互元素提供了更加自然流畅的用户体验。
 
 Dialog 与 Drawer 通过 Portal 与焦点陷阱提供良好的可访问性；Button 与 Input 提供清晰的变体与尺寸体系。**新增的微动画系统**通过 requestAnimationFrame 和双状态管理模式，确保动画与渲染的完美同步，同时保持优秀的性能表现。
+
+**测试增强**显著提升了组件的可靠性，通过全面的单元测试覆盖了核心功能、边界条件和无障碍特性。cn 工具函数的优化确保了类名合并的正确性和效率。
 
 通过合理的依赖与构建配置，组件在响应式与跨浏览器方面具备良好表现。**微动画系统的加入**进一步提升了产品的整体质感，为用户提供了更加现代化和专业的交互体验。建议在扩展新组件时复用现有模式：使用 cn 合并类名、提供明确的变体/尺寸常量、遵循无障碍最佳实践、应用微动画系统，并在测试中覆盖关键交互路径和动画效果。

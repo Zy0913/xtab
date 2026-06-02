@@ -13,7 +13,7 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         chunkFileNames: 'assets/[name]-[hash].js',
         manualChunks: (id) => {

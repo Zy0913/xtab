@@ -5,6 +5,8 @@
 // single `fetch-wallhaven` message; the response shape mirrors what the
 // frontend `fetchRandomWallhaven` helper expects in `src/lib/wallhaven.ts`.
 
+import { logger } from '@/lib/logger'
+
 // Allowed topRange values per wallhaven API: 1d, 3d, 1w, 1M, 3M, 6M, 1y.
 // Frontend exposes 1d / 1w / 1M / 1y; if narrower windows yield zero results
 // (common at off-hours), we widen to the next bucket transparently.
@@ -22,7 +24,7 @@ const FALLBACK_CHAIN: Record<TopRange, TopRange | null> = {
 }
 
 const MAX_PAGE_SAMPLE = 20
-const REQUEST_TIMEOUT_MS = 10_000
+const REQUEST_TIMEOUT_MS = 20_000
 
 interface WallhavenThumbs {
   large?: string
@@ -106,7 +108,7 @@ async function fetchWithFallback(
   if (result.json) return result
   const next = FALLBACK_CHAIN[result.strategy]
   if (!next) return result
-  console.warn('Wallhaven: empty result for ' + result.strategy + ', fallback to ' + next)
+  logger.warn('Wallhaven: empty result for ' + result.strategy + ', fallback to ' + next)
   return fetchWithFallback(next, signal)
 }
 
@@ -161,7 +163,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         actualStrategy: result.strategy,
       })
     } catch (err) {
-      console.error('Wallhaven fetch error:', err)
+      logger.error('Wallhaven fetch error:', err)
       sendResponse({ error: toFriendlyError(err) })
     } finally {
       clearTimeout(timer)

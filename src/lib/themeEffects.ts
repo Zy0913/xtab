@@ -2,7 +2,7 @@ import { useSettingsStore } from '@/store/useSettingsStore'
 import { extractWallpaperTint } from '@/lib/wallpaperTint'
 import { warn } from '@/lib/logger'
 import {
-  applyTheme,
+  applyThemeAndTint,
   applyGlassMode,
   applyReduceMotion,
   applyWallpaperTint,
@@ -33,12 +33,11 @@ export async function refreshWallpaperTint(
  */
 export async function initTheme() {
   const state = useSettingsStore.getState()
-  applyTheme(state.theme)
+  // Apply theme + cached tint atomically so the very first paint already
+  // shows a fully consistent colour state (no class-only frame).
+  applyThemeAndTint(state.theme, state.wallpaperTint)
   applyGlassMode(state.glassMode)
   applyReduceMotion(state.reduceMotion)
-
-  // Apply cached values immediately (no flash) while we re-extract if needed.
-  applyWallpaperTint(state.wallpaperTint)
   applyWallpaperLuminance(state.wallpaperLuminance)
 
   // Re-extract when we don't have a cached signal yet.
@@ -82,13 +81,15 @@ export async function initTheme() {
 
   useSettingsStore.subscribe((next, prev) => {
     if (next.theme !== prev.theme) {
-      applyTheme(next.theme)
-      // Re-apply tint so --accent-hover updates for the new dark/light state
-      if (next.wallpaperTint) applyWallpaperTint(next.wallpaperTint)
+      // Atomic batch: dark class + tint vars updated in a single JS task so
+      // the browser never paints an intermediate frame where the class has
+      // flipped but `--accent-hover` still reflects the previous theme.
+      applyThemeAndTint(next.theme, next.wallpaperTint)
+    } else if (next.wallpaperTint !== prev.wallpaperTint) {
+      applyWallpaperTint(next.wallpaperTint)
     }
     if (next.glassMode !== prev.glassMode) applyGlassMode(next.glassMode)
     if (next.reduceMotion !== prev.reduceMotion) applyReduceMotion(next.reduceMotion)
-    if (next.wallpaperTint !== prev.wallpaperTint) applyWallpaperTint(next.wallpaperTint)
     if (next.wallpaperLuminance !== prev.wallpaperLuminance)
       applyWallpaperLuminance(next.wallpaperLuminance)
     if (next.wallpaper !== prev.wallpaper) {
@@ -100,8 +101,9 @@ export async function initTheme() {
   mq.addEventListener('change', () => {
     const { theme, wallpaperTint } = useSettingsStore.getState()
     if (theme === 'system') {
-      applyTheme('system')
-      if (wallpaperTint) applyWallpaperTint(wallpaperTint)
+      // Same atomic batch for OS-level theme flips so we never expose the
+      // momentary mismatch between class and tint-derived hover colour.
+      applyThemeAndTint('system', wallpaperTint)
     }
   })
 
