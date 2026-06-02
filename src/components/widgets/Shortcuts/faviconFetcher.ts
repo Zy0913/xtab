@@ -17,12 +17,17 @@ export function getFaviconSources(url: string): string[] {
 
     const list: string[] = []
 
+    // 1. Try site's own favicon first (works without proxy in China)
+    list.push(`https://${domain}/favicon.ico`)
+
+    // 2. Chrome extension favicon cache (works if previously visited)
     if (typeof chrome !== 'undefined' && chrome.runtime?.id) {
       list.push(
         `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=32`,
       )
     }
 
+    // 3. DuckDuckGo & Google (blocked in China, but keep for users with proxy)
     list.push(
       `https://icons.duckduckgo.com/ip3/${domain}.ico`,
       `https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
