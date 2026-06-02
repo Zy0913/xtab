@@ -1,16 +1,7 @@
-import { useSettingsStore } from '@/store/useSettingsStore'
-import { extractWallpaperTint } from '@/lib/wallpaperTint'
-import { warn } from '@/lib/logger'
-
 export function applyTheme(theme: 'light' | 'dark' | 'system') {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
   const isDark = theme === 'dark' || (theme === 'system' && prefersDark)
   document.documentElement.classList.toggle('dark', isDark)
-
-  const tint = useSettingsStore.getState().wallpaperTint
-  if (tint) {
-    applyWallpaperTint(tint)
-  }
 }
 
 export function applyGlassMode(mode: 'sequoia' | 'tahoe') {
@@ -54,82 +45,4 @@ export function applyWallpaperLuminance(lum: number | null) {
 
 export function applyReduceMotion(reduce: boolean) {
   document.documentElement.classList.toggle('reduce-motion', reduce)
-}
-
-export async function refreshWallpaperTint() {
-  const store = useSettingsStore.getState()
-  const wallpaper = store.wallpaper
-  if (!wallpaper) {
-    store.setWallpaperTint(null)
-    store.setWallpaperLuminance(null)
-    applyWallpaperTint(null)
-    applyWallpaperLuminance(null)
-    return
-  }
-
-  const tint = await extractWallpaperTint(wallpaper)
-  if (tint) {
-    const next = useSettingsStore.getState()
-    next.setWallpaperTint(tint.rgb)
-    next.setWallpaperLuminance(tint.luminance)
-    applyWallpaperTint(tint.rgb)
-    applyWallpaperLuminance(tint.luminance)
-  }
-}
-
-export async function initTheme() {
-  const state = useSettingsStore.getState()
-  applyTheme(state.theme)
-  applyGlassMode(state.glassMode)
-  applyReduceMotion(state.reduceMotion)
-
-  // Apply cached values immediately (no flash) while we re-extract if needed.
-  applyWallpaperTint(state.wallpaperTint)
-  applyWallpaperLuminance(state.wallpaperLuminance)
-
-  // Re-extract when we don't have a cached signal yet.
-  const needsExtract =
-    state.wallpaper && (!state.wallpaperTint || state.wallpaperLuminance === null)
-  if (needsExtract) {
-    await refreshWallpaperTint()
-  }
-
-  // Debounce tint extraction so rapid wallpaper swaps (e.g., clicking through
-  // presets) don't fire a burst of canvas decodes.
-  const TINT_DEBOUNCE_MS = 150
-  let tintTimer: ReturnType<typeof setTimeout> | null = null
-  const scheduleTint = () => {
-    if (tintTimer) clearTimeout(tintTimer)
-    tintTimer = setTimeout(() => {
-      tintTimer = null
-      refreshWallpaperTint().catch((e) => warn('Tint extraction failed:', e))
-    }, TINT_DEBOUNCE_MS)
-  }
-
-  useSettingsStore.subscribe((next, prev) => {
-    if (next.theme !== prev.theme) applyTheme(next.theme)
-    if (next.glassMode !== prev.glassMode) applyGlassMode(next.glassMode)
-    if (next.reduceMotion !== prev.reduceMotion) applyReduceMotion(next.reduceMotion)
-    if (next.wallpaperTint !== prev.wallpaperTint) applyWallpaperTint(next.wallpaperTint)
-    if (next.wallpaperLuminance !== prev.wallpaperLuminance)
-      applyWallpaperLuminance(next.wallpaperLuminance)
-    if (next.wallpaper !== prev.wallpaper) {
-      scheduleTint()
-    }
-  })
-
-  const mq = window.matchMedia('(prefers-color-scheme: dark)')
-  mq.addEventListener('change', () => {
-    if (useSettingsStore.getState().theme === 'system') applyTheme('system')
-  })
-
-  // Respect system prefers-reduced-motion
-  const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)')
-  motionMq.addEventListener('change', (e) => {
-    const store = useSettingsStore.getState()
-    // Only auto-apply if user hasn't explicitly toggled the setting
-    if (store.reduceMotion !== e.matches) {
-      store.setReduceMotion(e.matches)
-    }
-  })
 }
