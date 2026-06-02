@@ -15,9 +15,9 @@ const DEFAULT_LAYOUTS: WidgetLayout[] = [
   { i: 'clock', x: 0, y: 0, w: 12, h: 3, minW: 4, minH: 2 },
   { i: 'search', x: 0, y: 3, w: 12, h: 1, minW: 4, minH: 1 },
   { i: 'shortcuts', x: 0, y: 4, w: 12, h: 3, minW: 4, minH: 2 },
-  { i: 'weather', x: 0, y: 7, w: 4, h: 4, minW: 3, minH: 3 },
-  { i: 'todo', x: 4, y: 7, w: 4, h: 4, minW: 3, minH: 3 },
-  { i: 'bookmarks', x: 8, y: 7, w: 4, h: 4, minW: 3, minH: 3 },
+  { i: 'weather', x: 0, y: 7, w: 4, h: 3, minW: 3, minH: 2 },
+  { i: 'todo', x: 4, y: 7, w: 4, h: 3, minW: 3, minH: 2 },
+  { i: 'bookmarks', x: 8, y: 7, w: 4, h: 3, minW: 3, minH: 2 },
 ]
 
 const DEFAULT_ENABLED: WidgetId[] = ['clock', 'search', 'shortcuts', 'weather', 'todo', 'bookmarks']

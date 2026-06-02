@@ -1,23 +1,6 @@
-import {
-  Cloud,
-  CloudRain,
-  CloudSnow,
-  Sun,
-  CloudFog,
-  CloudLightning,
-  type LucideIcon,
-} from 'lucide-react'
 import { useWeather } from './useWeather'
-
-const ICON_MAP: Array<{ maxCode: number; Icon: LucideIcon }> = [
-  { maxCode: 0, Icon: Sun },
-  { maxCode: 3, Icon: Cloud },
-  { maxCode: 48, Icon: CloudFog },
-  { maxCode: 67, Icon: CloudRain },
-  { maxCode: 77, Icon: CloudSnow },
-  { maxCode: 82, Icon: CloudRain },
-  { maxCode: 99, Icon: CloudLightning },
-]
+import { CitySearch } from './CitySearch'
+import { renderWeatherIcon } from './WeatherIcons'
 
 const LABEL_MAP: Array<{ maxCode: number; label: string }> = [
   { maxCode: 0, label: '晴' },
@@ -31,132 +14,89 @@ const LABEL_MAP: Array<{ maxCode: number; label: string }> = [
   { maxCode: 99, label: '雷暴' },
 ]
 
-function lookup<T extends { maxCode: number }>(map: T[], code: number, fallback: T): T {
-  for (const entry of map) {
-    if (code <= entry.maxCode) return entry
+function lookupLabel(code: number): string {
+  for (const entry of LABEL_MAP) {
+    if (code <= entry.maxCode) return entry.label
   }
-  return fallback
-}
-
-const DEFAULT_ICON = ICON_MAP[ICON_MAP.length - 1]
-const DEFAULT_LABEL = { maxCode: Infinity, label: '—' }
-
-function getGradientClass(code: number, isDay: boolean): string {
-  if (!isDay) {
-    return 'bg-gradient-to-br from-slate-900/80 via-slate-950/85 to-indigo-950/65 border-white/5'
-  }
-  if (code === 0) {
-    return 'bg-gradient-to-br from-sky-400/50 via-blue-500/35 to-indigo-950/45 border-white/10'
-  }
-  if (code <= 3) {
-    return 'bg-gradient-to-br from-slate-500/45 via-blue-900/30 to-slate-900/50 border-white/10'
-  }
-  return 'bg-gradient-to-br from-slate-700/50 via-slate-800/40 to-slate-950/60 border-white/5'
+  return '—'
 }
 
 export function WeatherWidget() {
   const { data, error } = useWeather()
 
-  const cardClassName =
-    'flex h-full w-full flex-col justify-between rounded-card p-4 shadow-card backdrop-blur-glass glass-noise border text-white select-none transition-all duration-500'
-
   if (error) {
     return (
-      <div
-        className={`${cardClassName} items-center justify-center border-white/5 bg-slate-900/40`}
-      >
-        <div className="text-sm text-white/50" role="alert" aria-live="assertive">
+      <div className="flex h-full flex-col items-center justify-center">
+        <p className="text-sm text-text-tertiary" role="alert" aria-live="assertive">
           无法获取天气
-        </div>
+        </p>
       </div>
     )
   }
 
   if (!data) {
     return (
-      <div
-        className={`${cardClassName} items-center justify-center border-white/5 bg-slate-900/40`}
-      >
-        <div className="animate-pulse text-sm text-white/50" role="status" aria-live="polite">
+      <div className="flex h-full flex-col items-center justify-center">
+        <p className="animate-pulse text-sm text-text-tertiary" role="status" aria-live="polite">
           加载中…
-        </div>
+        </p>
       </div>
     )
   }
 
-  const { Icon } = lookup(ICON_MAP, data.weatherCode, DEFAULT_ICON)
-  const { label } = lookup(LABEL_MAP, data.weatherCode, DEFAULT_LABEL)
-
-  // Gracefully handle partial/old cached entries
-  const tempMax = data.tempMax !== undefined ? data.tempMax : data.temperature
-  const tempMin = data.tempMin !== undefined ? data.tempMin : data.temperature
+  const label = lookupLabel(data.weatherCode)
   const hourly = data.hourly || []
 
-  const gradientClass = getGradientClass(data.weatherCode, data.isDay)
+  const today = data.daily[0]
+  const tempMax = today?.tempMax ?? data.temperature
+  const tempMin = today?.tempMin ?? data.temperature
+  const maxCode = today?.weatherCode ?? data.weatherCode
+  const minCode = data.daily[1]?.weatherCode ?? maxCode
 
   return (
-    <div className={`${cardClassName} ${gradientClass}`}>
-      {/* Header section: Location + Navigation arrow (filled up-right), weather icon */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5 text-[13px] font-semibold tracking-wide text-white">
-          <span>{data.location}</span>
-          <svg
-            viewBox="0 0 24 24"
-            className="h-3 w-3 fill-current text-white/80"
-            aria-hidden="true"
-          >
-            <path d="M21 3L3 10.53L11.47 12.53L13.47 21L21 3Z" />
-          </svg>
-          {data.isFallback && (
-            <span
-              className="cursor-help text-[10px] text-white/40"
-              title="定位不可用，显示默认城市"
-            >
-              *
-            </span>
-          )}
+    <div className="flex w-full select-none flex-col gap-2">
+      {/* Top: Location + Temperature + Condition/High-Low */}
+      <div>
+        {/* Location */}
+        <div className="mb-2 flex items-center">
+          <CitySearch currentCity={data.location} />
         </div>
-        <Icon size={26} className="text-white drop-shadow-sm" />
-      </div>
 
-      {/* Middle section: Temperature + stacked High/Low and weather description */}
-      <div className="my-1 flex items-center justify-between">
-        <div className="flex items-start">
-          <span className="text-[52px] font-light tabular-nums leading-none tracking-tight text-white">
-            {data.temperature}
-          </span>
-          <span className="-mt-0.5 text-2xl font-light leading-none text-white/90">°</span>
-        </div>
-        <div className="flex flex-col items-end text-right">
-          <span className="text-[13px] font-semibold text-white">{label}</span>
-          <div className="mt-1 flex items-center gap-2 text-[11px] text-white/80">
-            <div className="flex items-center gap-0.5">
-              <span className="flex flex-col text-[8px] font-medium leading-[1] text-white/50">
-                <span>最</span>
-                <span>高</span>
-              </span>
-              <span className="font-semibold tabular-nums">{tempMax}°</span>
+        {/* Temperature (left) + Condition & High/Low (right) */}
+        <div className="flex items-start justify-between">
+          {/* Left: Large temperature */}
+          <div className="flex items-start leading-none">
+            <span className="text-[48px] font-light tabular-nums tracking-tight text-text-primary">
+              {data.temperature}
+            </span>
+            <span className="mt-0.5 text-xl font-light text-text-secondary">°</span>
+          </div>
+
+          {/* Right: Condition + High/Low */}
+          <div className="flex flex-col items-end gap-2 text-right">
+            <div className="flex items-center gap-2">
+              {renderWeatherIcon(data.weatherCode, 30)}
+              <span className="text-[14px] font-medium text-text-primary">{label}</span>
             </div>
-            <div className="flex items-center gap-0.5">
-              <span className="flex flex-col text-[8px] font-medium leading-[1] text-white/50">
-                <span>最</span>
-                <span>低</span>
-              </span>
-              <span className="font-semibold tabular-nums">{tempMin}°</span>
+            <div className="flex items-center gap-4 text-[12px]">
+              <div className="flex items-center gap-1">
+                <span className="text-[9px] font-medium text-text-tertiary">最高</span>
+                {renderWeatherIcon(maxCode, 14)}
+                <span className="font-semibold tabular-nums text-text-secondary">{tempMax}°</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[9px] font-medium text-text-tertiary">最低</span>
+                {renderWeatherIcon(minCode, 14)}
+                <span className="font-semibold tabular-nums text-text-secondary">{tempMin}°</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="border-t border-white/10" />
-
-      {/* Bottom section: Hourly forecast */}
-      <div className="scrollbar-none mt-1 flex items-center justify-between gap-1 overflow-x-auto">
+      {/* Bottom: Hourly forecast */}
+      <div className="scrollbar-none flex items-center justify-between gap-1 overflow-x-auto">
         {hourly.slice(0, 6).map((item, index) => {
-          const itemIconInfo = lookup(ICON_MAP, item.weatherCode, DEFAULT_ICON)
-          const ItemIcon = itemIconInfo.Icon
-
           let hourLabel = '现在'
           if (index > 0) {
             const hour = parseInt(item.time.split('T')[1]?.split(':')[0] || '0', 10)
@@ -164,15 +104,12 @@ export function WeatherWidget() {
           }
 
           return (
-            <div
-              key={item.time}
-              className="flex min-w-[32px] flex-1 flex-col items-center justify-between gap-1.5"
-            >
-              <span className="whitespace-nowrap text-[10px] font-medium text-white/60">
+            <div key={item.time} className="flex min-w-[44px] flex-1 flex-col items-center gap-1.5">
+              <span className="whitespace-nowrap text-[11px] font-medium text-text-tertiary">
                 {hourLabel}
               </span>
-              <ItemIcon size={16} className="text-white/80" />
-              <span className="text-[11px] font-semibold tabular-nums text-white">
+              {renderWeatherIcon(item.weatherCode, 24)}
+              <span className="text-[13px] font-semibold tabular-nums text-text-primary">
                 {item.temperature}°
               </span>
             </div>

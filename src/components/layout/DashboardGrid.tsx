@@ -26,7 +26,7 @@ const WIDGETS: Record<
   search: { title: WIDGET_LABELS.search, render: () => <SearchBar />, transparent: true },
   clock: { title: WIDGET_LABELS.clock, render: () => <Clock />, transparent: true },
   shortcuts: { title: WIDGET_LABELS.shortcuts, render: () => <ShortcutsGrid />, transparent: true },
-  weather: { title: WIDGET_LABELS.weather, render: () => <WeatherWidget />, transparent: true },
+  weather: { title: WIDGET_LABELS.weather, render: () => <WeatherWidget /> },
   todo: { title: WIDGET_LABELS.todo, render: () => <TodoList /> },
   bookmarks: { title: WIDGET_LABELS.bookmarks, render: () => <BookmarksTree /> },
 }

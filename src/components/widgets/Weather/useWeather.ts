@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { warn } from '@/lib/logger'
+import { useWeatherCityStore, type SelectedCity } from '@/store/useWeatherCityStore'
 
-interface GeocodeResult {
+export interface CitySearchResult {
   name: string
+  country: string
   latitude: number
   longitude: number
-  country?: string
 }
 
 interface HourlyForecast {
@@ -14,31 +14,30 @@ interface HourlyForecast {
   weatherCode: number
 }
 
+interface DailyForecast {
+  date: string
+  tempMax: number
+  tempMin: number
+  weatherCode: number
+}
+
 interface WeatherData {
   location: string
   temperature: number
-  windspeed: number
   weatherCode: number
   isDay: boolean
-  isFallback: boolean
-  tempMax: number
-  tempMin: number
   hourly: HourlyForecast[]
-}
-
-interface LocResult extends GeocodeResult {
-  isFallback: boolean
+  daily: DailyForecast[]
 }
 
 interface CacheEntry {
-  loc: LocResult
+  city: SelectedCity
   weather: WeatherData
   ts: number
 }
 
-const DEFAULT_CITY = { name: '北京', latitude: 39.9042, longitude: 116.4074 }
-const CACHE_KEY = 'tab:weather-cache'
-const GEOCODE_CACHE_KEY = 'tab:geocode-cache'
+const DEFAULT_CITY: SelectedCity = { name: '北京', latitude: 39.9042, longitude: 116.4074 }
+const CACHE_KEY = 'tab:weather-cache-v3'
 const FRESH_MS = 15 * 60 * 1000
 const REFRESH_MS = 15 * 60 * 1000
 
@@ -69,81 +68,46 @@ async function writeCache(key: string, value: unknown): Promise<void> {
   await chrome.storage.local.set({ [key]: value })
 }
 
-// Round lat/lng to ~1km so small movements don't bust the cache
-function geocodeKey(lat: number, lon: number): string {
-  return `${lat.toFixed(2)},${lon.toFixed(2)}`
-}
-
-async function reverseGeocode(lat: number, lon: number, signal?: AbortSignal): Promise<string> {
-  const key = geocodeKey(lat, lon)
-  const cache = (await readCache<Record<string, string>>(GEOCODE_CACHE_KEY)) ?? {}
-  if (cache[key]) return cache[key]
-
+/**
+ * Search cities using Open-Meteo Geocoding API (free, no key required).
+ */
+export async function searchCities(
+  query: string,
+  signal?: AbortSignal,
+): Promise<CitySearchResult[]> {
+  if (!query.trim()) return []
   try {
-    // BigDataCloud client endpoint: no key, CORS-enabled, unlimited free.
     const res = await fetch(
-      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`,
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=8&language=zh`,
       { signal },
     )
-    if (res.ok) {
-      const data = await res.json()
-      const name: string =
-        data?.city ||
-        data?.locality ||
-        data?.principalSubdivision ||
-        data?.countryName ||
-        '当前位置'
-      cache[key] = name
-      await writeCache(GEOCODE_CACHE_KEY, cache)
-      return name
-    }
+    if (!res.ok) return []
+    const data = await res.json()
+    return (data.results ?? []).map(
+      (r: { name: string; country?: string; latitude: number; longitude: number }) => ({
+        name: r.name,
+        country: r.country ?? '',
+        latitude: r.latitude,
+        longitude: r.longitude,
+      }),
+    )
   } catch {
-    warn('Reverse geocoding failed')
-  }
-  return '当前位置'
-}
-
-async function getLocation(signal?: AbortSignal): Promise<LocResult> {
-  try {
-    const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        timeout: 4000,
-        maximumAge: 1000 * 60 * 60,
-      })
-    })
-    const lat = pos.coords.latitude
-    const lon = pos.coords.longitude
-    const name = await reverseGeocode(lat, lon, signal)
-    return { name, latitude: lat, longitude: lon, isFallback: false }
-  } catch {
-    warn('Geolocation failed, using fallback')
-    return { ...DEFAULT_CITY, isFallback: true }
+    return []
   }
 }
 
-async function fetchWeather(loc: LocResult, signal?: AbortSignal): Promise<WeatherData> {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true&hourly=temperature_2m,weathercode&daily=temperature_2m_max,temperature_2m_min&timezone=auto`
+async function fetchWeather(city: SelectedCity, signal?: AbortSignal): Promise<WeatherData> {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&current_weather=true&hourly=temperature_2m,weathercode&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&forecast_days=5`
   const res = await fetch(url, { signal })
   if (!res.ok) throw new Error(`天气服务不可用 (HTTP ${res.status})`)
   const data = await res.json()
   const cw = data.current_weather
 
-  // Extract daily max and min temperature
-  const tempMax =
-    data.daily?.temperature_2m_max?.[0] !== undefined
-      ? Math.round(data.daily.temperature_2m_max[0])
-      : Math.round(cw.temperature)
-  const tempMin =
-    data.daily?.temperature_2m_min?.[0] !== undefined
-      ? Math.round(data.daily.temperature_2m_min[0])
-      : Math.round(cw.temperature)
-
-  // Extract hourly forecasts
-  const hourlyList: HourlyForecast[] = []
+  // Extract hourly forecasts (up to 6 hours)
+  const hourly: HourlyForecast[] = []
   if (data.hourly?.time && data.hourly?.temperature_2m && data.hourly?.weathercode) {
     let currentIndex = data.hourly.time.indexOf(cw.time)
     if (currentIndex === -1) {
-      // Fallback: match by date hour prefix (e.g. "2026-05-22T16")
       const hourPrefix = cw.time.substring(0, 13)
       currentIndex = data.hourly.time.findIndex((t: string) => t.startsWith(hourPrefix))
     }
@@ -153,7 +117,7 @@ async function fetchWeather(loc: LocResult, signal?: AbortSignal): Promise<Weath
     for (let i = 0; i < 6; i++) {
       const idx = currentIndex + i
       if (idx < data.hourly.time.length) {
-        hourlyList.push({
+        hourly.push({
           time: data.hourly.time[idx],
           temperature: Math.round(data.hourly.temperature_2m[idx]),
           weatherCode: data.hourly.weathercode[idx],
@@ -162,16 +126,26 @@ async function fetchWeather(loc: LocResult, signal?: AbortSignal): Promise<Weath
     }
   }
 
+  // Extract daily forecasts
+  const daily: DailyForecast[] = []
+  if (data.daily?.time && data.daily?.temperature_2m_max && data.daily?.temperature_2m_min) {
+    for (let i = 0; i < Math.min(5, data.daily.time.length); i++) {
+      daily.push({
+        date: data.daily.time[i],
+        tempMax: Math.round(data.daily.temperature_2m_max[i]),
+        tempMin: Math.round(data.daily.temperature_2m_min[i]),
+        weatherCode: data.daily.weathercode?.[i] ?? 0,
+      })
+    }
+  }
+
   return {
-    location: loc.name,
+    location: city.name,
     temperature: Math.round(cw.temperature),
-    windspeed: cw.windspeed,
     weatherCode: cw.weathercode,
     isDay: cw.is_day === 1,
-    isFallback: loc.isFallback,
-    tempMax,
-    tempMin,
-    hourly: hourlyList,
+    hourly,
+    daily,
   }
 }
 
@@ -182,55 +156,43 @@ export function useWeather() {
   useEffect(() => {
     let alive = true
     const ctrl = new AbortController()
-    let cachedLoc: LocResult | null = null
-
-    // Stale-while-revalidate: show cached value instantly, then refresh.
-    const bootFromCache = async () => {
-      const cached = await readCache<CacheEntry>(CACHE_KEY)
-      if (cached && alive) {
-        cachedLoc = cached.loc
-        setData(cached.weather)
-        // If the cached entry is fresh enough, skip the immediate refresh.
-        if (Date.now() - cached.ts < FRESH_MS) return true
-      }
-      return false
-    }
 
     const refresh = async () => {
       try {
-        if (!cachedLoc || cachedLoc.isFallback) {
-          const freshLoc = await getLocation(ctrl.signal)
-          if (!freshLoc.isFallback || !cachedLoc) {
-            cachedLoc = freshLoc
-          }
-        }
-        const weather = await fetchWeather(cachedLoc, ctrl.signal)
+        const city = useWeatherCityStore.getState().selectedCity ?? DEFAULT_CITY
+        const weather = await fetchWeather(city, ctrl.signal)
         if (!alive) return
         setData(weather)
         setError(null)
-        void writeCache(CACHE_KEY, { loc: cachedLoc, weather, ts: Date.now() })
+        void writeCache(CACHE_KEY, { city, weather, ts: Date.now() })
       } catch (e) {
         if (!alive || (e instanceof DOMException && e.name === 'AbortError')) return
         setError(e instanceof Error ? e.message : '天气加载失败')
       }
     }
 
+    // Boot from cache
     ;(async () => {
-      const fresh = await bootFromCache()
-      if (!fresh) await refresh()
+      const cached = await readCache<CacheEntry>(CACHE_KEY)
+      if (cached && alive) {
+        setData(cached.weather)
+        if (Date.now() - cached.ts < FRESH_MS) return
+      }
+      await refresh()
     })()
 
     const timer = setInterval(refresh, REFRESH_MS)
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') refresh()
-    }
-    document.addEventListener('visibilitychange', onVisible)
+
+    // Re-fetch when selected city changes
+    const unsub = useWeatherCityStore.subscribe(() => {
+      refresh()
+    })
 
     return () => {
       alive = false
       ctrl.abort()
       clearInterval(timer)
-      document.removeEventListener('visibilitychange', onVisible)
+      unsub()
     }
   }, [])
 
