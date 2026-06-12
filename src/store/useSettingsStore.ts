@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { chromeStorage, registerHydration, registerRemoteSync } from './storage'
 import { DEFAULT_WALLPAPER } from '@/lib/wallpapers'
+import { getDefaultSearchEngine } from '@/lib/region'
 
 export type ThemeMode = 'light' | 'dark' | 'system'
 export type GlassMode = 'sequoia' | 'tahoe'
@@ -37,7 +38,7 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       theme: 'system',
       glassMode: 'sequoia',
-      searchEngine: 'google',
+      searchEngine: getDefaultSearchEngine(),
       wallpaper: DEFAULT_WALLPAPER,
       wallpaperTint: null,
       wallpaperLuminance: null,

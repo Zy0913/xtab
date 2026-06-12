@@ -37,11 +37,12 @@ export function Drawer({ open, onClose, title, children }: Props) {
       <aside
         ref={trapRef}
         role="dialog"
-        aria-modal="true"
+        aria-modal={open ? 'true' : undefined}
+        aria-hidden={open ? undefined : true}
         aria-label={title}
         className={cn(
           'backdrop-blur-glass fixed right-0 top-0 z-50 flex h-screen w-[380px] max-w-[90vw] flex-col border-l border-border bg-surface-strong shadow-pop transition-transform duration-300',
-          open ? 'translate-x-0' : 'translate-x-full',
+          open ? 'visible translate-x-0' : 'pointer-events-none invisible translate-x-full',
         )}
       >
         <header className="flex h-12 items-center justify-between border-b border-border px-5">

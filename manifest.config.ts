@@ -18,7 +18,7 @@ export default defineManifest({
     48: 'icons/icon48.png',
     128: 'icons/icon128.png',
   },
-  permissions: ['storage', 'bookmarks', 'unlimitedStorage', 'tabs', 'geolocation', 'favicon'],
+  permissions: ['storage', 'bookmarks', 'unlimitedStorage', 'tabs', 'favicon'],
   host_permissions: [
     'https://suggestqueries.google.com/*',
     'https://api.bing.com/*',
@@ -32,6 +32,5 @@ export default defineManifest({
     'https://wallhaven.cc/*',
     'https://w.wallhaven.cc/*',
     'https://th.wallhaven.cc/*',
-    'https://api.bigdatacloud.net/*',
   ],
 })

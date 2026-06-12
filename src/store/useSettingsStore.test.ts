@@ -1,12 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { DEFAULT_WALLPAPER } from '@/lib/wallpapers'
+import { getDefaultSearchEngine } from '@/lib/region'
 
 function resetStore() {
   useSettingsStore.setState({
     theme: 'system',
     glassMode: 'sequoia',
-    searchEngine: 'google',
+    searchEngine: getDefaultSearchEngine(),
     wallpaper: DEFAULT_WALLPAPER,
     wallpaperTint: null,
     wallpaperLuminance: null,
@@ -23,7 +24,7 @@ describe('useSettingsStore', () => {
     const s = useSettingsStore.getState()
     expect(s.theme).toBe('system')
     expect(s.glassMode).toBe('sequoia')
-    expect(s.searchEngine).toBe('google')
+    expect(s.searchEngine).toBe(getDefaultSearchEngine())
     expect(s.wallpaper).toBe(DEFAULT_WALLPAPER)
     expect(s.wallpaperTint).toBeNull()
     expect(s.wallpaperLuminance).toBeNull()

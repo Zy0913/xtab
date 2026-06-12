@@ -1,17 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useShortcutsStore } from '@/store/useShortcutsStore'
-
-const DEFAULTS = [
-  { id: 'google', title: 'Google', url: 'https://www.google.com' },
-  { id: 'github', title: 'GitHub', url: 'https://github.com' },
-  { id: 'youtube', title: 'YouTube', url: 'https://www.youtube.com' },
-  { id: 'twitter', title: 'X', url: 'https://x.com' },
-  { id: 'chatgpt', title: 'ChatGPT', url: 'https://chat.openai.com' },
-  { id: 'claude', title: 'Claude', url: 'https://claude.ai' },
-]
+import {
+  GLOBAL_DEFAULT_SHORTCUTS,
+  getDefaultShortcuts,
+  useShortcutsStore,
+} from '@/store/useShortcutsStore'
 
 beforeEach(() => {
-  useShortcutsStore.setState({ items: DEFAULTS })
+  useShortcutsStore.setState({ items: getDefaultShortcuts(['en-US']) })
 })
 
 describe('useShortcutsStore', () => {
@@ -19,6 +14,13 @@ describe('useShortcutsStore', () => {
     const items = useShortcutsStore.getState().items
     expect(items).toHaveLength(6)
     expect(items[0].id).toBe('google')
+  })
+
+  it('uses CN-friendly default items for mainland Chinese locale', () => {
+    const items = getDefaultShortcuts(['zh-CN'])
+    expect(items).toHaveLength(6)
+    expect(items[0]).toEqual({ id: 'baidu', title: '百度', url: 'https://www.baidu.com' })
+    expect(items.some((item) => item.url.includes('youtube.com'))).toBe(false)
   })
 
   it('add inserts a new shortcut', () => {
@@ -58,7 +60,11 @@ describe('useShortcutsStore', () => {
   })
 
   it('reorder replaces entire items array', () => {
-    const reordered = [DEFAULTS[1], DEFAULTS[0], ...DEFAULTS.slice(2)]
+    const reordered = [
+      GLOBAL_DEFAULT_SHORTCUTS[1],
+      GLOBAL_DEFAULT_SHORTCUTS[0],
+      ...GLOBAL_DEFAULT_SHORTCUTS.slice(2),
+    ]
     useShortcutsStore.getState().reorder(reordered)
     const items = useShortcutsStore.getState().items
     expect(items).toHaveLength(6)

@@ -9,8 +9,11 @@ describe('Drawer', () => {
         Content
       </Drawer>,
     )
-    const aside = screen.getByRole('dialog')
+    const aside = screen.getByRole('dialog', { hidden: true })
     expect(aside.className).toContain('translate-x-full')
+    expect(aside.className).toContain('invisible')
+    expect(aside).toHaveAttribute('aria-hidden', 'true')
+    expect(aside).not.toHaveAttribute('aria-modal')
   })
 
   it('is visible when open', () => {
@@ -21,6 +24,9 @@ describe('Drawer', () => {
     )
     const aside = screen.getByRole('dialog')
     expect(aside.className).toContain('translate-x-0')
+    expect(aside.className).toContain('visible')
+    expect(aside).toHaveAttribute('aria-modal', 'true')
+    expect(aside).not.toHaveAttribute('aria-hidden')
     expect(screen.getByText('Drawer content')).toBeInTheDocument()
   })
 
