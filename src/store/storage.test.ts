@@ -87,9 +87,12 @@ describe('chromeStorage (extension mode)', () => {
 
   it('logs error on runtime.lastError after set', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    globalThis.chrome.runtime.lastError = {
-      message: 'QUOTA_EXCEEDED',
-    } as unknown as chrome.runtime.LastError
+    // runtime.lastError is typed readonly in @types/chrome; cast to a
+    // writable shape for the test fixture.
+    ;(globalThis.chrome.runtime as { lastError: chrome.runtime.LastError | undefined }).lastError =
+      {
+        message: 'QUOTA_EXCEEDED',
+      } as unknown as chrome.runtime.LastError
     await chromeStorage.setItem('k', '"v"')
     expect(spy).toHaveBeenCalledWith(
       expect.stringContaining('chrome.storage.local.set'),

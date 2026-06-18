@@ -127,7 +127,7 @@ export function useOpenTabs(enabled: boolean) {
       }, REFRESH_DEBOUNCE_MS)
     }
 
-    const onUpdated = (_id: number, info: chrome.tabs.TabChangeInfo) => {
+    const onUpdated = (_id: number, info: chrome.tabs.OnUpdatedInfo) => {
       // Skip noisy fields (loading state, audible/muted, attention) — only
       // refresh when something we render or filter on actually changed.
       if (

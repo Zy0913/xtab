@@ -20,17 +20,29 @@ export default defineManifest({
   },
   permissions: ['storage', 'bookmarks', 'unlimitedStorage', 'tabs', 'favicon'],
   host_permissions: [
-    'https://suggestqueries.google.com/*',
-    'https://api.bing.com/*',
+    // Search suggest APIs — paths narrowed to the exact endpoints we hit so a
+    // compromised extension can't blanket-fetch the host with cookies.
+    'https://suggestqueries.google.com/complete/search*',
+    'https://api.bing.com/osjson.aspx*',
     'https://www.baidu.com/sugrec*',
     'https://duckduckgo.com/ac/*',
+    // Weather + geocoding.
     'https://api.open-meteo.com/*',
     'https://geocoding-api.open-meteo.com/*',
+    // Favicons.
     'https://icons.duckduckgo.com/*',
-    'https://www.google.com/*',
+    // Wallpapers.
     'https://images.unsplash.com/*',
     'https://wallhaven.cc/*',
     'https://w.wallhaven.cc/*',
     'https://th.wallhaven.cc/*',
   ],
+  // Defense in depth: make MV3's safe default explicit and constrain
+  // connect/img sources. img-src stays open to https: because favicons and
+  // user wallpapers come from arbitrary origins; connect-src is https-only to
+  // block accidental plaintext / non-http fetches.
+  content_security_policy: {
+    extension_pages:
+      "script-src 'self'; object-src 'self'; base-uri 'self'; form-action 'self'; connect-src 'self' https:; img-src 'self' data: blob: chrome-extension: https:",
+  },
 })

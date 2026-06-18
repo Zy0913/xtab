@@ -290,6 +290,32 @@ describe('parseSettings', () => {
     expect(result.wallpaper).toBe('https://example.com/bg.jpg')
   })
 
+  it('accepts local path wallpaper (scheme-less)', () => {
+    const result = parseSettings({ wallpaper: '/wallpapers/default.svg' })
+    expect(result.wallpaper).toBe('/wallpapers/default.svg')
+  })
+
+  it('accepts data: / blob: wallpaper', () => {
+    expect(parseSettings({ wallpaper: 'data:image/svg+xml,<x/>' }).wallpaper).toBe(
+      'data:image/svg+xml,<x/>',
+    )
+    expect(parseSettings({ wallpaper: 'blob:https://self/x' }).wallpaper).toBe(
+      'blob:https://self/x',
+    )
+  })
+
+  it('rejects javascript: wallpaper', () => {
+    expect(() => parseSettings({ wallpaper: 'javascript:alert(1)' })).toThrow(
+      'wallpaper 包含非法协议',
+    )
+  })
+
+  it('rejects vbscript: wallpaper', () => {
+    expect(() => parseSettings({ wallpaper: 'vbscript:msgbox(1)' })).toThrow(
+      'wallpaper 包含非法协议',
+    )
+  })
+
   it('accepts null wallpaperTint', () => {
     const result = parseSettings({ wallpaperTint: null })
     expect(result.wallpaperTint).toBeNull()
@@ -400,6 +426,26 @@ describe('parseShortcuts', () => {
     expect(() => parseShortcuts([{ id: 1, title: 'Google', url: 'https://google.com' }])).toThrow(
       'shortcuts 条目格式错误',
     )
+  })
+
+  it('rejects javascript: url', () => {
+    expect(() =>
+      parseShortcuts([{ id: '1', title: 'evil', url: 'javascript:alert(document.cookie)' }]),
+    ).toThrow('shortcuts url 包含非法协议')
+  })
+
+  it('rejects vbscript: url', () => {
+    expect(() => parseShortcuts([{ id: '1', title: 'evil', url: 'vbscript:msgbox(1)' }])).toThrow(
+      'shortcuts url 包含非法协议',
+    )
+  })
+
+  it('accepts http and https urls', () => {
+    const input = [
+      { id: '1', title: 'A', url: 'http://example.com' },
+      { id: '2', title: 'B', url: 'https://example.com' },
+    ]
+    expect(parseShortcuts(input)).toEqual(input)
   })
 })
 

@@ -35,6 +35,15 @@ export function isObj(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v)
 }
 
+// Schemes that execute script when placed in href="..." (or, for wallpaper,
+// reach a fetch/img sink). Backup files are untrusted, so we reject these
+// before the value reaches the DOM. http/https/data/blob and scheme-less
+// relative paths (e.g. "/wallpapers/default.svg") are all still allowed.
+const SCRIPT_URL_SCHEME = /^\s*(javascript|vbscript):/i
+export function isScriptUrl(url: string): boolean {
+  return SCRIPT_URL_SCHEME.test(url)
+}
+
 // ---------------------------------------------------------------------------
 // Parse / validation helpers
 // ---------------------------------------------------------------------------
@@ -79,6 +88,8 @@ export function parseSettings(raw: unknown) {
   )
     throw new Error(`非法 searchEngine: ${String(searchEngine)}`)
   if (wallpaper !== undefined && !isStr(wallpaper)) throw new Error('wallpaper 格式错误')
+  if (isStr(wallpaper) && wallpaper && isScriptUrl(wallpaper))
+    throw new Error('wallpaper 包含非法协议')
   if (wallpaperTint !== undefined && !isStr(wallpaperTint) && wallpaperTint !== null)
     throw new Error('wallpaperTint 格式错误')
 
@@ -122,6 +133,10 @@ export function parseShortcuts(raw: unknown): Shortcut[] {
   for (const item of raw) {
     if (!isObj(item) || !isStr(item.id) || !isStr(item.title) || !isStr(item.url))
       throw new Error('shortcuts 条目格式错误')
+    // Block javascript:/vbscript: URLs — they execute script on click. The
+    // manual-add path force-prefixes https via normalizeUrl, but imports
+    // bypass it, so we harden here.
+    if (isScriptUrl(item.url)) throw new Error('shortcuts url 包含非法协议')
   }
   return raw as Shortcut[]
 }

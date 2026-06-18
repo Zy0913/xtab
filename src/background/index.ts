@@ -75,8 +75,16 @@ async function fetchJson(url: string, signal: AbortSignal): Promise<WallhavenSea
   return (await res.json()) as WallhavenSearchResponse
 }
 
+// Wallhaven image/thumbnail URLs always live on wallhaven.cc subdomains and
+// are served over https. If the API is ever tampered with to return a
+// non-wallhaven or non-https URL (tracking pixel, redirect to a third party),
+// drop the item rather than feeding it to the newtab page's fetch/img sinks.
+function isSafeWallhavenUrl(u: unknown): u is string {
+  return typeof u === 'string' && /^https:\/\/[^/]*\.wallhaven\.cc\//i.test(u)
+}
+
 function pickRandomFromList(list: WallhavenItem[]): WallhavenItem | null {
-  const pool = list.filter((x) => x && typeof x.path === 'string' && x.path)
+  const pool = list.filter((x) => x && isSafeWallhavenUrl(x.path))
   if (!pool.length) return null
   return pool[Math.floor(Math.random() * pool.length)]
 }
@@ -151,9 +159,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({ error: '当前条件下暂无符合的壁纸' })
         return
       }
-      const thumb =
+      const thumbRaw =
         (pick.thumbs && (pick.thumbs.large || pick.thumbs.original || pick.thumbs.small)) ||
         pick.path
+      // Only forward a thumbnail we trust; otherwise fall back to the already
+      // validated full-size path.
+      const thumb = isSafeWallhavenUrl(thumbRaw) ? thumbRaw : pick.path
       sendResponse({
         id: pick.id,
         url: pick.path,

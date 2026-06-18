@@ -27,7 +27,10 @@ export function getFaviconSources(url: string): string[] {
       )
     }
 
-    // 3. DuckDuckGo & Google (blocked in China, but keep for users with proxy)
+    // 3. DuckDuckGo, then Google only as a last-resort fallback. The tile's
+    // onError advances sourceIndex, so Google is only contacted when every
+    // earlier source failed — this limits how much of the user's bookmarked
+    // domain set leaks to Google's favicon service.
     list.push(
       `https://icons.duckduckgo.com/ip3/${domain}.ico`,
       `https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
