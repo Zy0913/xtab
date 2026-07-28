@@ -27,11 +27,11 @@ export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: P
     : { href: shortcut.url, target: '_blank', rel: 'noopener noreferrer' }
 
   return (
-    <div className="group relative flex flex-col items-center gap-2">
+    <div className="group relative flex w-full flex-col items-center gap-1">
       <TileTag
         {...linkProps}
         className={cn(
-          'relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-card bg-surface-strong shadow-card transition group-hover:-translate-y-0.5',
+          'bg-surface-strong/90 relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-[14px] shadow-card transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-pop sm:h-[3.15rem] sm:w-[3.15rem]',
           editable && 'cursor-default',
         )}
         aria-label={shortcut.title}
@@ -40,14 +40,14 @@ export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: P
           <img
             src={sources[sourceIndex]}
             alt=""
-            width={28}
-            height={28}
-            className="h-7 w-7 object-contain"
+            width={26}
+            height={26}
+            className="h-6 w-6 object-contain sm:h-[1.625rem] sm:w-[1.625rem]"
             onError={() => setSourceIndex((i) => i + 1)}
           />
         ) : (
           <div
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-sm font-semibold text-white"
+            className="flex h-8 w-8 items-center justify-center rounded-[10px] text-xs font-semibold text-white sm:h-9 sm:w-9 sm:text-sm"
             style={{ backgroundColor: getColorFor(shortcut.title) }}
           >
             {getInitial(shortcut.title)}
@@ -62,14 +62,14 @@ export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: P
           }}
           onMouseDown={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()}
-          className="absolute -right-1 -top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow transition hover:scale-110"
+          className="absolute -right-1 -top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-white shadow transition hover:scale-110"
           aria-label="删除"
         >
           <X size={12} />
         </button>
       )}
       <span
-        className="text-shadow-wallpaper max-w-[72px] truncate text-xs"
+        className="text-shadow-wallpaper w-full max-w-[4.4rem] truncate text-center text-micro sm:text-[11px]"
         style={{ color: 'var(--text-primary)' }}
       >
         {shortcut.title}

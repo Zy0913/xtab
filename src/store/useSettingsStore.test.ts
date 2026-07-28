@@ -14,6 +14,7 @@ function resetStore() {
     wallpaperDimming: 0.25,
     editMode: false,
     reduceMotion: false,
+    onboardingDone: true,
   })
 }
 
@@ -31,6 +32,14 @@ describe('useSettingsStore', () => {
     expect(s.wallpaperDimming).toBe(0.25)
     expect(s.editMode).toBe(false)
     expect(s.reduceMotion).toBe(false)
+    expect(s.onboardingDone).toBe(true)
+  })
+
+  it('completeOnboarding and resetOnboarding toggle flag', () => {
+    useSettingsStore.getState().resetOnboarding()
+    expect(useSettingsStore.getState().onboardingDone).toBe(false)
+    useSettingsStore.getState().completeOnboarding()
+    expect(useSettingsStore.getState().onboardingDone).toBe(true)
   })
 
   it('setTheme updates theme', () => {

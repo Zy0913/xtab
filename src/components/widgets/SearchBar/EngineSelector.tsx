@@ -82,17 +82,17 @@ export function EngineSelector() {
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-label="选择搜索引擎"
-        className="flex h-8 items-center gap-1 rounded-btn px-2 text-xs font-medium text-text-secondary hover:bg-surface-strong"
+        className="relative z-[2] flex h-8 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-text-secondary transition hover:bg-surface-strong hover:text-text-primary"
       >
         {current.name}
-        <ChevronDown size={12} />
+        <ChevronDown size={12} className="opacity-70" />
       </button>
       {open && (
         <div
           ref={listRef}
           role="listbox"
           aria-label="搜索引擎"
-          className="backdrop-blur-glass absolute left-0 top-full z-20 mt-2 min-w-[140px] overflow-hidden rounded-btn bg-surface-strong p-1 shadow-pop"
+          className="backdrop-blur-glass glass-noise absolute left-0 top-full z-20 mt-2 min-w-[148px] overflow-hidden rounded-btn border border-border bg-surface-strong p-1 shadow-pop"
         >
           {ENGINE_IDS.map((id, index) => (
             <button

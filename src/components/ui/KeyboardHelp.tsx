@@ -19,15 +19,18 @@ const SHORTCUTS: Array<{ keys: string[]; desc: string }> = [
 export function KeyboardHelp({ open, onClose }: Props) {
   return (
     <Dialog open={open} onClose={onClose} title="键盘快捷键">
-      <ul className="space-y-2">
+      <ul className="space-y-1">
         {SHORTCUTS.map(({ keys, desc }) => (
-          <li key={desc} className="flex items-center justify-between gap-4 text-sm">
+          <li
+            key={desc}
+            className="flex items-center justify-between gap-4 rounded-btn px-1 py-2 text-sm"
+          >
             <span className="text-text-secondary">{desc}</span>
             <span className="flex items-center gap-1">
               {keys.map((k, i) => (
                 <kbd
                   key={i}
-                  className="inline-flex min-w-[22px] items-center justify-center rounded bg-surface px-1.5 py-0.5 text-[11px] text-text-primary shadow-card"
+                  className="border-border/80 inline-flex min-w-[26px] items-center justify-center rounded-md border bg-surface px-1.5 py-0.5 text-micro font-medium text-text-primary shadow-card"
                 >
                   {k}
                 </kbd>
@@ -36,7 +39,9 @@ export function KeyboardHelp({ open, onClose }: Props) {
           </li>
         ))}
       </ul>
-      <p className="mt-4 text-xs text-text-tertiary">输入状态下按下的字符不会触发全局快捷键。</p>
+      <p className="border-border/60 mt-4 border-t pt-3 text-micro leading-relaxed text-text-tertiary">
+        输入框聚焦时，字母键不会触发全局快捷键。
+      </p>
     </Dialog>
   )
 }

@@ -47,15 +47,16 @@ export function getInitial(title: string): string {
   return title.trim().charAt(0).toUpperCase() || '·'
 }
 
+// Muted, slightly desaturated system palette — less clash with wallpapers
 const PALETTE = [
-  '#FF9F0A',
-  '#FF375F',
-  '#BF5AF2',
-  '#0A84FF',
-  '#30D158',
-  '#64D2FF',
-  '#5E5CE6',
-  '#FF453A',
+  '#C48A2A',
+  '#C94B66',
+  '#8E5FB8',
+  '#3B7DD8',
+  '#3BA55D',
+  '#4A9BB8',
+  '#5C5AB0',
+  '#C45A52',
 ]
 
 export function getColorFor(key: string): string {

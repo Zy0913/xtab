@@ -3,6 +3,7 @@ import { Search as SearchIcon } from 'lucide-react'
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { ENGINES, fetchSuggestions } from '@/lib/search'
 import { useShortcut } from '@/lib/useShortcut'
+import { cn } from '@/lib/cn'
 import { EngineSelector } from './EngineSelector'
 import { Suggestions } from './Suggestions'
 
@@ -70,12 +71,15 @@ export function SearchBar() {
   return (
     <div className="relative w-full">
       <div
-        className="backdrop-blur-glass focus-within:ring-accent/30 mx-auto flex h-14 max-w-2xl items-center gap-2.5 border border-border bg-surface px-5 shadow-card transition-all focus-within:ring-2 hover:shadow-pop 2xl:max-w-3xl"
+        className={cn(
+          'backdrop-blur-glass glass-noise focus-within:border-accent/25 focus-within:ring-accent/25 relative mx-auto flex h-12 max-w-xl items-center gap-2 border border-border bg-surface px-4 shadow-card transition-all duration-200 focus-within:shadow-pop focus-within:ring-2 hover:shadow-pop sm:h-[3.25rem] sm:max-w-2xl sm:gap-2.5 sm:px-5',
+          focused && 'bg-surface-strong/80',
+        )}
         style={{ borderRadius: 'var(--radius-pill)' }}
       >
         <EngineSelector />
-        <div className="h-5 w-px bg-border" />
-        <SearchIcon size={16} className="text-text-tertiary" />
+        <div className="h-4 w-px shrink-0 bg-border" aria-hidden />
+        <SearchIcon size={16} className="shrink-0 text-text-tertiary" strokeWidth={1.75} />
         <input
           ref={inputRef}
           type="text"
@@ -98,9 +102,14 @@ export function SearchBar() {
           onFocus={() => setFocused(true)}
           onBlur={handleBlur}
           placeholder={ENGINES[engine].placeholder}
-          className="flex-1 bg-transparent text-sm text-text-primary outline-none placeholder:text-text-tertiary"
+          className="relative z-[2] flex-1 bg-transparent text-sm text-text-primary outline-none placeholder:text-text-tertiary sm:text-[15px]"
         />
-        <kbd className="hidden rounded bg-surface-strong px-1.5 py-0.5 text-[10px] text-text-tertiary sm:inline">
+        <kbd
+          className={cn(
+            'bg-surface-strong/90 relative z-[2] hidden rounded-md px-1.5 py-0.5 text-micro text-text-tertiary transition sm:inline',
+            focused && 'opacity-40',
+          )}
+        >
           /
         </kbd>
       </div>

@@ -57,7 +57,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
   return createPortal(
     <div
       className={cn(
-        'fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md transition-all duration-200 ease-out',
+        'fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-md transition-all duration-200 ease-out',
         animateIn ? 'opacity-100 backdrop-blur-sm' : 'opacity-0 backdrop-blur-none',
       )}
       style={{ backgroundColor: 'var(--overlay)' }}
@@ -69,21 +69,25 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'backdrop-blur-glass relative w-full max-w-md rounded-card border border-border bg-surface-strong p-5 shadow-pop transition-all duration-200 ease-out',
+          'backdrop-blur-glass glass-noise relative w-full max-w-md rounded-card border border-border bg-surface-strong p-6 shadow-pop transition-all duration-200 ease-out',
           animateIn ? 'scale-100 opacity-100' : 'scale-95 opacity-0',
           className,
         )}
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          className="absolute right-3 top-3 rounded-full p-1 text-text-secondary transition hover:bg-surface hover:text-text-primary"
+          className="absolute right-3.5 top-3.5 z-[2] rounded-full p-1.5 text-text-secondary transition hover:bg-surface hover:text-text-primary"
           onClick={onClose}
           aria-label="关闭"
         >
           <X size={16} />
         </button>
-        {title && <h2 className="mb-4 text-base font-semibold text-text-primary">{title}</h2>}
-        {children}
+        {title && (
+          <h2 className="relative z-[2] mb-5 pr-8 text-[15px] font-semibold tracking-tight text-text-primary">
+            {title}
+          </h2>
+        )}
+        <div className="relative z-[2]">{children}</div>
       </div>
     </div>,
     document.getElementById('portal-root') || document.body,

@@ -14,8 +14,8 @@ export function WallpaperFavorites() {
   return (
     <div className="space-y-1.5 pt-1">
       <div className="flex items-center justify-between">
-        <h4 className="text-[11px] font-medium text-text-secondary">我的收藏</h4>
-        <span className="text-[10px] text-text-tertiary">{items.length}</span>
+        <h4 className="text-micro font-medium text-text-secondary">我的收藏</h4>
+        <span className="text-micro text-text-tertiary">{items.length}</span>
       </div>
       <div className="grid grid-cols-3 gap-2">
         {items.map((item) => {

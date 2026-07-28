@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, X } from 'lucide-react'
+import { MapPin, X } from 'lucide-react'
 import { searchCities, type CitySearchResult } from './useWeather'
 import { useWeatherCityStore } from '@/store/useWeatherCityStore'
 
@@ -16,13 +16,11 @@ export function CitySearch({ currentCity }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const setSelectedCity = useWeatherCityStore((s) => s.setSelectedCity)
 
-  // Derive displayed results based on query
   const results = useMemo(() => {
     if (!query.trim()) return []
     return rawResults
   }, [query, rawResults])
 
-  // Close on click outside
   useEffect(() => {
     if (!open) return
     const onClick = (e: MouseEvent) => {
@@ -36,12 +34,10 @@ export function CitySearch({ currentCity }: Props) {
     return () => document.removeEventListener('mousedown', onClick)
   }, [open])
 
-  // Focus input when opened
   useEffect(() => {
     if (open) inputRef.current?.focus()
   }, [open])
 
-  // Debounced search
   useEffect(() => {
     if (!query.trim()) return
 
@@ -74,14 +70,14 @@ export function CitySearch({ currentCity }: Props) {
   if (open) {
     return (
       <div ref={containerRef} className="relative">
-        <div className="bg-surface-strong/80 flex items-center gap-1.5 rounded-md border border-border px-2 py-1 backdrop-blur-sm">
+        <div className="bg-surface-strong/90 flex items-center gap-1.5 rounded-btn border border-border px-2.5 py-1 backdrop-blur-sm">
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="搜索城市…"
-            className="w-20 bg-transparent text-[12px] text-text-primary outline-none placeholder:text-text-tertiary"
+            className="w-24 bg-transparent text-caption text-text-primary outline-none placeholder:text-text-tertiary"
           />
           <button
             onClick={() => {
@@ -90,14 +86,15 @@ export function CitySearch({ currentCity }: Props) {
               setRawResults([])
             }}
             className="text-text-tertiary transition-colors hover:text-text-secondary"
+            aria-label="取消"
           >
             <X size={12} />
           </button>
         </div>
 
-        {(loading || results.length > 0) && (
-          <div className="absolute left-0 top-full z-50 mt-1 w-52 overflow-hidden rounded-lg border border-border bg-surface-strong shadow-card">
-            {loading && <div className="px-3 py-2 text-[11px] text-text-tertiary">搜索中…</div>}
+        {(loading || results.length > 0 || query.trim()) && (
+          <div className="backdrop-blur-glass absolute left-0 top-full z-50 mt-1.5 w-56 overflow-hidden rounded-btn border border-border bg-surface-strong p-1 shadow-pop">
+            {loading && <div className="px-2.5 py-2 text-micro text-text-tertiary">搜索中…</div>}
 
             {!loading && results.length > 0 && (
               <div className="max-h-40 overflow-y-auto">
@@ -105,10 +102,10 @@ export function CitySearch({ currentCity }: Props) {
                   <button
                     key={`${city.latitude},${city.longitude}`}
                     onClick={() => handleSelect(city)}
-                    className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-white/5"
+                    className="flex w-full items-center justify-between rounded-btn px-2.5 py-2 text-left transition-colors hover:bg-surface"
                   >
-                    <span className="truncate text-[12px] text-text-primary">{city.name}</span>
-                    <span className="ml-2 shrink-0 text-[11px] text-text-tertiary">
+                    <span className="truncate text-caption text-text-primary">{city.name}</span>
+                    <span className="ml-2 shrink-0 text-micro text-text-tertiary">
                       {city.country}
                     </span>
                   </button>
@@ -117,7 +114,7 @@ export function CitySearch({ currentCity }: Props) {
             )}
 
             {!loading && query && results.length === 0 && (
-              <div className="px-3 py-2 text-[11px] text-text-tertiary">无结果</div>
+              <div className="px-2.5 py-2 text-micro text-text-tertiary">无结果</div>
             )}
           </div>
         )}
@@ -132,10 +129,17 @@ export function CitySearch({ currentCity }: Props) {
         setQuery('')
         setRawResults([])
       }}
-      className="flex items-center gap-0.5 rounded px-1 py-0.5 text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary"
+      className="text-text-primary/80 group -ml-0.5 flex max-w-full items-center gap-0.5 rounded-md px-0.5 py-0.5 text-left transition-colors hover:text-text-primary"
     >
-      <span className="text-[13px] font-semibold">{currentCity}</span>
-      <ChevronDown size={14} />
+      <span className="truncate text-[12.5px] font-medium leading-snug tracking-wide">
+        {currentCity}
+      </span>
+      <MapPin
+        size={11}
+        strokeWidth={2.4}
+        className="mb-px shrink-0 opacity-50 transition group-hover:opacity-75"
+        aria-hidden
+      />
     </button>
   )
 }

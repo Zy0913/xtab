@@ -38,7 +38,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               className={cn(
                 'animate-toast-in backdrop-blur-pop flex items-center gap-2 rounded-card border px-4 py-2.5 text-sm shadow-pop',
                 t.type === 'error'
-                  ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
+                  ? 'border-danger-border bg-danger-soft text-danger'
                   : 'border-border bg-surface-strong text-text-primary',
               )}
               role="alert"

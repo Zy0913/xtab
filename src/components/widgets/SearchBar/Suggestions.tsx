@@ -14,7 +14,7 @@ export function Suggestions({ items, activeIndex, onPick, onHover }: Props) {
       id="search-suggestions"
       role="listbox"
       aria-label="搜索建议"
-      className="backdrop-blur-glass absolute left-1/2 top-full z-10 mt-2 w-full max-w-2xl -translate-x-1/2 overflow-hidden rounded-card border border-border bg-surface-strong p-1 shadow-pop 2xl:max-w-3xl"
+      className="backdrop-blur-glass glass-noise absolute left-1/2 top-full z-10 mt-2 w-full max-w-xl -translate-x-1/2 overflow-hidden rounded-card border border-border bg-surface-strong p-1.5 shadow-pop sm:max-w-2xl"
     >
       {items.map((text, i) => (
         <button
@@ -26,11 +26,13 @@ export function Suggestions({ items, activeIndex, onPick, onHover }: Props) {
           onClick={(e) => onPick(text, e.metaKey || e.ctrlKey)}
           onMouseEnter={() => onHover(i)}
           className={cn(
-            'flex w-full items-center gap-2.5 rounded-btn px-3 py-2 text-left text-sm transition',
-            i === activeIndex ? 'bg-accent/20 text-text-primary' : 'text-text-primary',
+            'relative z-[2] flex w-full items-center gap-2.5 rounded-btn px-3 py-2.5 text-left text-sm transition',
+            i === activeIndex
+              ? 'bg-accent/18 text-text-primary'
+              : 'text-text-primary hover:bg-surface',
           )}
         >
-          <Search size={14} className="text-text-tertiary" />
+          <Search size={14} className="shrink-0 text-text-tertiary" strokeWidth={1.75} />
           <span className="truncate">{text}</span>
         </button>
       ))}

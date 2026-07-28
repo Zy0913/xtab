@@ -29,7 +29,7 @@ describe('Button', () => {
   it('applies danger variant classes', () => {
     render(<Button variant="danger">Delete</Button>)
     const btn = screen.getByRole('button')
-    expect(btn.className).toContain('bg-red-500')
+    expect(btn.className).toContain('bg-danger')
   })
 
   it('applies md size by default', () => {

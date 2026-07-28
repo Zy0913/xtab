@@ -1,7 +1,7 @@
 {
   "name": "tab",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "A minimal macOS-style Chrome new tab extension",
   "engines": {

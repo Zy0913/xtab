@@ -30,8 +30,8 @@ export function WallpaperPicker() {
   } = useWallpaperPicker()
 
   return (
-    <section className="space-y-2">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">壁纸</h3>
+    <section className="space-y-2.5">
+      <h3 className="widget-title">壁纸</h3>
 
       <div className="grid grid-cols-3 gap-2">
         {PRESETS.map((p) => (
@@ -63,7 +63,7 @@ export function WallpaperPicker() {
             onClick={() => setStrategy(s.key)}
             disabled={randomLoading}
             className={cn(
-              'rounded-btn px-2 py-1 text-[11px] transition',
+              'rounded-btn px-2 py-1 text-micro transition',
               strategy === s.key
                 ? 'bg-accent/20 ring-accent/30 text-text-primary ring-1'
                 : 'bg-surface text-text-secondary hover:text-text-primary',
@@ -77,14 +77,14 @@ export function WallpaperPicker() {
       <div className="flex gap-2">
         <button
           onClick={() => fileRef.current?.click()}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-btn bg-surface py-2 text-xs text-text-primary hover:bg-surface-strong"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-btn bg-surface py-2 text-xs text-text-primary transition hover:bg-surface-strong"
         >
           <Upload size={12} /> 上传
         </button>
         <button
           onClick={handleRandom}
           disabled={randomLoading}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-btn bg-surface py-2 text-xs text-text-primary hover:bg-surface-strong disabled:opacity-50"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-btn bg-surface py-2 text-xs text-text-primary transition hover:bg-surface-strong disabled:opacity-50"
         >
           {randomLoading ? <Loader size={12} className="animate-spin" /> : <Shuffle size={12} />}{' '}
           随机排行榜
@@ -102,7 +102,7 @@ export function WallpaperPicker() {
           className={cn(
             'flex items-center justify-center gap-1.5 rounded-btn px-3 py-2 text-xs transition',
             'bg-surface text-text-primary hover:bg-surface-strong disabled:opacity-50',
-            alreadyFavorited && 'text-rose-500',
+            alreadyFavorited && 'text-danger',
           )}
           aria-label="收藏当前壁纸"
         >
@@ -117,8 +117,8 @@ export function WallpaperPicker() {
         onChange={handleUpload}
       />
 
-      <div className="space-y-1 pt-1">
-        <div className="flex items-center justify-between text-[11px] text-text-secondary">
+      <div className="space-y-1.5 pt-1">
+        <div className="flex items-center justify-between text-micro text-text-secondary">
           <span>壁纸暗化</span>
           <span className="tabular-nums text-text-tertiary">{Math.round(dimming * 100)}%</span>
         </div>
@@ -130,14 +130,14 @@ export function WallpaperPicker() {
           value={Math.round(dimming * 100)}
           onChange={(e) => setDimming(Number(e.target.value) / 100)}
           aria-label="壁纸暗化强度"
-          className="h-1 w-full cursor-pointer appearance-none rounded-full bg-surface accent-accent"
+          className="range-slider"
         />
-        <p className="text-[10px] text-text-tertiary">
+        <p className="text-micro text-text-tertiary">
           壁纸偏亮或偏花时拉高，提升时钟与组件的可读性
         </p>
       </div>
 
-      <p className="text-[11px] text-text-tertiary">图片通过本地缓存加载，重复打开秒开</p>
+      <p className="text-micro text-text-tertiary">图片本地缓存，重复打开秒开</p>
     </section>
   )
 }

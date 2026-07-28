@@ -31,8 +31,8 @@ export function GridLayer({
       className={editMode ? 'is-editing' : ''}
       breakpoints={{ lg: 1200, md: 900, sm: 640, xs: 0 }}
       cols={{ lg: 12, md: 12, sm: 8, xs: 4 }}
-      rowHeight={60}
-      margin={[16, 16]}
+      rowHeight={76}
+      margin={[28, 26]}
       containerPadding={[0, 0]}
       layouts={{ lg: visible, md: visible, sm: visible, xs: xsLayout }}
       onLayoutChange={onLayoutChange}

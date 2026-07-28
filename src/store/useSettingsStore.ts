@@ -20,6 +20,8 @@ interface SettingsState {
   wallpaperDimming: number
   editMode: boolean
   reduceMotion: boolean
+  /** False until the first-run guide is finished or skipped. */
+  onboardingDone: boolean
   setTheme: (theme: ThemeMode) => void
   setGlassMode: (mode: GlassMode) => void
   setSearchEngine: (engine: SearchEngine) => void
@@ -29,6 +31,8 @@ interface SettingsState {
   setWallpaperDimming: (v: number) => void
   toggleEditMode: () => void
   setReduceMotion: (v: boolean) => void
+  completeOnboarding: () => void
+  resetOnboarding: () => void
 }
 
 const clampDimming = (v: number) => Math.max(0, Math.min(0.6, v))
@@ -45,6 +49,7 @@ export const useSettingsStore = create<SettingsState>()(
       wallpaperDimming: 0.25,
       editMode: false,
       reduceMotion: false,
+      onboardingDone: false,
       setTheme: (theme) => set({ theme }),
       setGlassMode: (glassMode) => set({ glassMode }),
       setSearchEngine: (searchEngine) => set({ searchEngine }),
@@ -54,12 +59,14 @@ export const useSettingsStore = create<SettingsState>()(
       setWallpaperDimming: (v) => set({ wallpaperDimming: clampDimming(v) }),
       toggleEditMode: () => set((s) => ({ editMode: !s.editMode })),
       setReduceMotion: (reduceMotion) => set({ reduceMotion }),
+      completeOnboarding: () => set({ onboardingDone: true }),
+      resetOnboarding: () => set({ onboardingDone: false }),
     }),
     {
       name: 'tab:settings',
       storage: createJSONStorage(() => chromeStorage),
       skipHydration: true,
-      version: 4,
+      version: 5,
       migrate: (persisted, fromVersion) => {
         const data = (persisted ?? {}) as Record<string, unknown>
         // v1 → v2: introduce wallpaperDimming with a sensible default.
@@ -78,6 +85,10 @@ export const useSettingsStore = create<SettingsState>()(
               data.wallpaperIsDark === true ? 0.3 : data.wallpaperIsDark === false ? 0.7 : null
             delete data.wallpaperIsDark
           }
+        }
+        // v4 → v5: first-run guide. Existing installs skip the walkthrough.
+        if (fromVersion < 5) {
+          data.onboardingDone = true
         }
         return data as unknown as SettingsState
       },

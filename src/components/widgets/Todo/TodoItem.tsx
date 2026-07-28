@@ -12,7 +12,7 @@ export const TodoItem = memo(function TodoItem({ item }: Props) {
   const remove = useTodoStore((s) => s.remove)
 
   return (
-    <li className="group flex items-center gap-2 rounded px-1 py-1 hover:bg-surface">
+    <li className="group flex items-center gap-2 rounded-lg px-1.5 py-1.5 transition hover:bg-surface">
       <button
         onClick={() => toggle(item.id)}
         className={cn(
@@ -33,7 +33,7 @@ export const TodoItem = memo(function TodoItem({ item }: Props) {
       </span>
       <button
         onClick={() => remove(item.id)}
-        className="rounded p-0.5 text-text-tertiary opacity-0 transition hover:text-red-500 group-hover:opacity-100"
+        className="rounded p-0.5 text-text-tertiary opacity-0 transition hover:text-danger group-hover:opacity-100"
         aria-label="删除"
       >
         <X size={12} />

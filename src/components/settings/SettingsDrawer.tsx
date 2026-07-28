@@ -13,8 +13,10 @@ export function SettingsDrawer({ open, onClose }: Props) {
     <Drawer open={open} onClose={onClose} title="设置">
       <div className="space-y-6">
         <ThemeSection />
+        <div className="bg-border/70 h-px" />
         <WallpaperPicker />
-        <LayoutSection />
+        <div className="bg-border/70 h-px" />
+        <LayoutSection onRequestClose={onClose} />
       </div>
     </Drawer>
   )

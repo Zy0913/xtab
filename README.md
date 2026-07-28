@@ -4,15 +4,15 @@ A minimal, macOS-style Chrome new tab extension. Built with React + Vite.
 
 ## Features
 
-- Clean macOS aesthetic — frosted glass cards, SF system font, light/dark follows system
+- Clean macOS aesthetic — Sequoia / Tahoe glass, SF system font, wallpaper-aware contrast
+- First-run guide — pick a wallpaper and optional widgets in under a minute
 - Search across Google, Bing, Baidu, DuckDuckGo with autocomplete suggestions
-- Large clock + date
+- Large ceremonial clock + date
 - Customizable website shortcuts with auto-fetched favicons
 - Weather via Open-Meteo (no API key needed)
-- Simple todo list
-- Chrome bookmarks tree
+- Simple todo list & Chrome bookmarks tree (optional by default)
 - **Drag & drop layout** — rearrange and resize every widget
-- Wallpaper: built-in presets, custom upload, daily random from Unsplash
+- Wallpaper: built-in presets, favorites, custom upload, Wallhaven top lists
 - Import/export config as JSON
 
 All data stored locally via `chrome.storage.local` — no accounts, no cloud.

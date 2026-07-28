@@ -87,12 +87,20 @@ export function DashboardGrid() {
         <WidgetFrame editMode={editMode} transparent={w.transparent}>
           {editMode && !isMobile && (
             <div
-              className="widget-drag-handle absolute inset-x-0 top-0 z-10 h-6 cursor-grab rounded-t-card bg-gradient-to-b from-black/[0.08] to-transparent active:cursor-grabbing"
+              className="widget-drag-handle absolute inset-x-0 top-0 z-10 flex h-7 cursor-grab items-start justify-center rounded-t-card pt-1.5 active:cursor-grabbing"
               aria-label="拖拽移动"
-            />
+            >
+              <span
+                className="bg-text-tertiary/50 h-1 w-8 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+                aria-hidden
+              />
+            </div>
           )}
           <div
-            className={cn('relative z-[2] flex h-full w-full flex-col', !w.transparent && 'p-4')}
+            className={cn(
+              'relative z-[2] flex h-full w-full flex-col',
+              !w.transparent && 'p-4 sm:p-5',
+            )}
           >
             <ErrorBoundary>{w.render()}</ErrorBoundary>
           </div>

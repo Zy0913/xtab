@@ -1,8 +1,43 @@
-import { memo } from 'react'
-import { ChevronRight, Folder, BookmarkIcon, BookOpen } from 'lucide-react'
+import { memo, useState, useMemo } from 'react'
+import { ChevronRight, Folder, BookOpen } from 'lucide-react'
 import { useBookmarks, type BookmarkNode } from './useBookmarks'
 import { useBookmarksUiStore } from '@/store/useBookmarksUiStore'
+import {
+  getFaviconSources,
+  getInitial,
+  getColorFor,
+} from '@/components/widgets/Shortcuts/faviconFetcher'
+import { WidgetHeader } from '@/components/layout/WidgetHeader'
+import { WidgetEmpty } from '@/components/layout/WidgetEmpty'
 import { cn } from '@/lib/cn'
+
+function BookmarkFavicon({ url, title }: { url: string; title: string }) {
+  const sources = useMemo(() => getFaviconSources(url), [url])
+  const [sourceIndex, setSourceIndex] = useState(0)
+
+  if (sourceIndex < sources.length) {
+    return (
+      <img
+        src={sources[sourceIndex]}
+        alt=""
+        width={14}
+        height={14}
+        className="h-3.5 w-3.5 shrink-0 rounded-sm object-contain"
+        onError={() => setSourceIndex((i) => i + 1)}
+      />
+    )
+  }
+
+  return (
+    <span
+      className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm text-[8px] font-semibold text-white"
+      style={{ backgroundColor: getColorFor(title || url) }}
+      aria-hidden
+    >
+      {getInitial(title || url)}
+    </span>
+  )
+}
 
 const Row = memo(function Row({ node, depth = 0 }: { node: BookmarkNode; depth?: number }) {
   const expandedIds = useBookmarksUiStore((s) => s.expandedIds)
@@ -16,12 +51,17 @@ const Row = memo(function Row({ node, depth = 0 }: { node: BookmarkNode; depth?:
         <button
           onClick={() => toggleExpanded(node.id)}
           aria-expanded={open}
-          className="flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs text-text-primary hover:bg-surface"
-          style={{ paddingLeft: `${depth * 10 + 4}px` }}
+          className="widget-row text-left"
+          style={{ paddingLeft: `${depth * 12 + 6}px` }}
         >
-          <ChevronRight size={12} className={cn('shrink-0 transition', open && 'rotate-90')} />
-          <Folder size={12} className="shrink-0 text-text-secondary" />
-          <span className="truncate">{node.title || '未命名'}</span>
+          <ChevronRight
+            size={12}
+            className={cn('shrink-0 text-text-tertiary transition', open && 'rotate-90')}
+          />
+          <span className="bg-accent/15 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[3px] text-accent">
+            <Folder size={10} strokeWidth={2} />
+          </span>
+          <span className="truncate text-caption">{node.title || '未命名'}</span>
         </button>
         {open && (
           <ul>
@@ -40,11 +80,11 @@ const Row = memo(function Row({ node, depth = 0 }: { node: BookmarkNode; depth?:
         href={node.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-xs text-text-primary hover:bg-surface"
-        style={{ paddingLeft: `${depth * 10 + 4}px` }}
+        className="widget-row"
+        style={{ paddingLeft: `${depth * 12 + 6 + 18}px` }}
       >
-        <BookmarkIcon size={12} className="shrink-0 text-text-secondary" />
-        <span className="truncate">{node.title || node.url}</span>
+        <BookmarkFavicon url={node.url!} title={node.title || node.url || ''} />
+        <span className="truncate text-caption">{node.title || node.url}</span>
       </a>
     </li>
   )
@@ -56,16 +96,12 @@ export function BookmarksTree() {
   if (error) {
     return (
       <div className="flex h-full flex-col">
-        <span className="mb-2 text-xs font-medium uppercase tracking-wide text-text-tertiary">
-          书签
-        </span>
-        <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <div className="bg-surface-strong/30 mb-2.5 flex h-10 w-10 items-center justify-center rounded-full text-text-tertiary">
-            <BookOpen size={18} className="stroke-[1.5]" />
-          </div>
-          <p className="text-xs font-medium text-text-secondary">书签加载失败</p>
-          <p className="mt-0.5 px-4 text-[11px] text-text-tertiary">请确保已授予书签访问权限</p>
-        </div>
+        <WidgetHeader title="书签" />
+        <WidgetEmpty
+          icon={<BookOpen size={18} className="stroke-[1.5]" />}
+          title="书签加载失败"
+          description="请确保已授予书签访问权限"
+        />
       </div>
     )
   }
@@ -73,28 +109,20 @@ export function BookmarksTree() {
   if (tree.length === 0) {
     return (
       <div className="flex h-full flex-col">
-        <span className="mb-2 text-xs font-medium uppercase tracking-wide text-text-tertiary">
-          书签
-        </span>
-        <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <div className="bg-surface-strong/30 mb-2.5 flex h-10 w-10 items-center justify-center rounded-full text-text-tertiary">
-            <BookOpen size={18} className="stroke-[1.5]" />
-          </div>
-          <p className="text-xs font-medium text-text-secondary">无书签数据</p>
-          <p className="mt-0.5 px-4 text-[11px] text-text-tertiary">
-            无法读取 Chrome 书签，请检查扩展程序权限设置
-          </p>
-        </div>
+        <WidgetHeader title="书签" />
+        <WidgetEmpty
+          icon={<BookOpen size={18} className="stroke-[1.5]" />}
+          title="暂无书签"
+          description="在 Chrome 中添加书签后会出现在这里"
+        />
       </div>
     )
   }
 
   return (
     <div className="flex h-full flex-col">
-      <span className="mb-2 text-xs font-medium uppercase tracking-wide text-text-tertiary">
-        书签
-      </span>
-      <ul className="-mx-1.5 flex-1 overflow-y-auto">
+      <WidgetHeader title="书签" />
+      <ul className="-mx-1 flex-1 overflow-y-auto">
         {tree.map((n) => (
           <Row key={n.id} node={n} />
         ))}

@@ -127,21 +127,34 @@ body {
   }
 
   /* Text shadow for transparent widgets over wallpaper.
-     Multiple layers create a soft "halo" that survives any wallpaper hue. */
+     Two soft layers — enough contrast without a greasy halo. */
   .text-shadow-wallpaper {
     text-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.45),
-      0 2px 10px rgba(0, 0, 0, 0.32),
-      0 4px 24px rgba(0, 0, 0, 0.22),
-      0 0 1px rgba(0, 0, 0, 0.5);
+      0 1px 2px rgba(0, 0, 0, 0.35),
+      0 4px 18px rgba(0, 0, 0, 0.22);
   }
 
   .glass-mode .text-shadow-wallpaper {
     text-shadow:
-      0 1px 4px rgba(0, 0, 0, 0.5),
-      0 2px 14px rgba(0, 0, 0, 0.36),
-      0 4px 28px rgba(0, 0, 0, 0.24),
-      0 0 1px rgba(0, 0, 0, 0.55);
+      0 1px 3px rgba(0, 0, 0, 0.4),
+      0 6px 22px rgba(0, 0, 0, 0.26);
+  }
+
+  /* Type scale utilities */
+  .text-display {
+    font-size: var(--text-display);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .text-caption {
+    font-size: var(--text-caption);
+    line-height: 1.35;
+  }
+
+  .text-micro {
+    font-size: var(--text-micro);
+    line-height: 1.35;
   }
 }
 
@@ -161,5 +174,133 @@ body {
 }
 
 .animate-spring-in {
-  animation: spring-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: spring-in 0.25s var(--ease-spring) forwards;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-toast-in {
+  animation: toast-in 0.28s var(--ease-out) forwards;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.45s var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up {
+    animation: none;
+  }
+}
+
+.reduce-motion .animate-fade-up {
+  animation: none;
+}
+
+/* Refined range input used in settings */
+input[type='range'].range-slider {
+  height: 6px;
+  width: 100%;
+  cursor: pointer;
+  appearance: none;
+  border-radius: 9999px;
+  background: var(--surface-strong);
+  outline: none;
+}
+
+input[type='range'].range-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: var(--accent);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform var(--transition-duration) ease;
+}
+
+input[type='range'].range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.08);
+}
+
+input[type='range'].range-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: var(--accent);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Deterministic 1s colon blink — not a breathing pulse */
+@keyframes colon-blink {
+  0%,
+  48% {
+    opacity: 0.55;
+  }
+  52%,
+  100% {
+    opacity: 0.12;
+  }
+}
+
+.animate-colon-blink {
+  animation: colon-blink 1s steps(1, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-colon-blink {
+    animation: none;
+    opacity: 0.45;
+  }
+}
+
+.reduce-motion .animate-colon-blink {
+  animation: none;
+  opacity: 0.45;
+}
+
+/* Shared widget chrome */
+.widget-title {
+  font-size: var(--text-caption);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.widget-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 8px;
+  padding: 0.3rem 0.4rem;
+  font-size: var(--text-caption);
+  color: var(--text-primary);
+  transition: background-color var(--transition-duration) ease;
+}
+
+.widget-row:hover {
+  background: var(--surface);
 }
