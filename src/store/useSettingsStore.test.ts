@@ -117,3 +117,19 @@ describe('useSettingsStore', () => {
     expect(useSettingsStore.getState().showSeconds).toBe(false)
   })
 })
+
+describe('useSettingsStore migrations', () => {
+  const migrate = useSettingsStore.persist.getOptions().migrate!
+
+  it('drops a tint read the old way so it is read again, keeping the rest', async () => {
+    const saved = {
+      wallpaper: 'https://example.com/forest.jpg',
+      wallpaperTint: 'rgb(0, 0, 179)',
+      wallpaperLuminance: 0.1,
+      glassTint: 0.7,
+      showSeconds: true,
+      onboardingDone: true,
+    }
+    expect(await migrate({ ...saved }, 6)).toEqual({ ...saved, wallpaperTint: null })
+  })
+})

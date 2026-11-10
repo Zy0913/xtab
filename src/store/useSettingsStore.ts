@@ -77,7 +77,7 @@ export const useSettingsStore = create<SettingsState>()(
       name: 'tab:settings',
       storage: createJSONStorage(() => chromeStorage),
       skipHydration: true,
-      version: 6,
+      version: 7,
       migrate: (persisted, fromVersion) => {
         const data = (persisted ?? {}) as Record<string, unknown>
         // v1 → v2: introduce wallpaperDimming with a sensible default.
@@ -105,6 +105,11 @@ export const useSettingsStore = create<SettingsState>()(
         if (fromVersion < 6) {
           if (typeof data.glassTint !== 'number') data.glassTint = 0.5
           if (typeof data.showSeconds !== 'boolean') data.showSeconds = false
+        }
+        // v6 → v7: the tint is read a new way (softer, true to the picture).
+        // Drop the stored one so it is read again on the next load.
+        if (fromVersion < 7) {
+          data.wallpaperTint = null
         }
         return data as unknown as SettingsState
       },
