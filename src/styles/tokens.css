@@ -1,279 +1,301 @@
+/*
+ * Design tokens — modelled on macOS 27.
+ *
+ * Two materials share one geometry, one type scale and one label/fill palette:
+ *   - Classic: Sequoia-style vibrancy. Frosted and fairly opaque; its
+ *     transparency slider trades see-through for opacity.
+ *   - Liquid Glass (`.glass-mode`): glass you can see through. The slider is
+ *     the macOS 27 one and only frosts it, from clear (no blur, the wallpaper
+ *     stays sharp) to fully frosted; the fill hardly moves. Edges refract what
+ *     is behind them (liquidGlass.ts) and catch a specular rim
+ *     (`.material::after` in globals.css).
+ *
+ * `--glass-tint` (0 → 1) is that slider. theme.ts writes it inline on <html>.
+ *
+ * Ink. Classic materials are dense enough to keep the appearance's ink, as on
+ * macOS. Clear glass is not, so in Liquid Glass the surfaces that sit on the
+ * wallpaper (`.on-wallpaper`: the toolbar and the dashboard) take their ink
+ * from the wallpaper luminance class, like macOS 27 desktop widgets: white
+ * labels over glass that dims a dark or mid-tone wallpaper a little, dark
+ * labels over glass that lifts a light one. Menus that open from them are
+ * frosted and follow the appearance again. Without a luminance class
+ * everything follows the appearance.
+ *
+ * Content straight on the wallpaper (clock, shortcut labels) has no material
+ * behind it and uses the `--wp-*` tokens, which always follow the luminance
+ * class.
+ *
+ * Only <html> declares the tokens in the first two blocks; theme.ts overrides
+ * some of them inline (--glass-tint, --accent, --accent-hover), so a
+ * descendant must never redeclare them.
+ */
+
 :root {
-  /* ===== Shape System ===== */
-  --radius-card: 20px;
-  --radius-btn: 10px;
-  --radius-tile: 16px;
+  /* ===== Geometry: one radius family, kept concentric ===== */
+  --radius-widget: 22px;
+  --radius-panel: 26px;
+  --radius-menu: 12px;
+  --radius-field: 10px;
+  --radius-row: 7px;
+  --radius-tile: 14px;
+  --radius-control: 8px; /* push buttons; capsules in Liquid Glass */
   --radius-pill: 9999px;
 
-  /* ===== Type Scale ===== */
-  --text-display: clamp(2.75rem, 5.5vw, 4.25rem);
-  --text-title: 1rem;
-  --text-body: 0.875rem;
-  --text-caption: 0.75rem;
-  --text-micro: 0.6875rem;
+  /* ===== Type (SF Pro, fixed scale; only the clock is fluid) ===== */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'PingFang SC', 'Hiragino Sans GB',
+    'Helvetica Neue', 'Microsoft YaHei', sans-serif;
+  --text-micro: 0.6875rem; /* 11px */
+  --text-caption: 0.75rem; /* 12px */
+  --text-body: 0.8125rem; /* 13px — macOS body */
+  --text-callout: 0.9375rem; /* 15px */
+  --text-title: 1.0625rem; /* 17px */
+  --text-display: clamp(4.5rem, 2.5rem + 5vw, 6rem);
 
   /* ===== Motion ===== */
-  --transition-duration: 150ms;
-  --transition-duration-slow: 300ms;
-  --transition-duration-cinematic: 700ms;
-  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 120ms;
+  --dur: 180ms;
+  --dur-slow: 260ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --transition-duration: var(--dur);
+  --transition-duration-slow: var(--dur-slow);
 
-  /* ===== Sequoia Light — precise macOS system material ===== */
-  --blur-widget: 40px;
-  --blur-pop: 60px;
-  --saturate-widget: 1;
+  /* ===== Transparency slider (overridden inline) ===== */
+  --glass-tint: 0.5;
 
-  /* Surface: tinted gray with enough opacity for card structure over wallpapers */
-  --surface: rgba(120, 120, 128, 0.48);
-  --surface-strong: rgba(120, 120, 128, 0.7);
-  --surface-hover: rgba(120, 120, 128, 0.58);
+  /* ===== Semantic colour ===== */
+  --accent: rgb(0 122 255);
+  --accent-hover: rgb(0 108 230);
+  --on-accent: #fff;
+  --danger: rgb(255 59 48);
+  --danger-soft: rgb(255 59 48 / 0.12);
+  --success: rgb(52 199 89);
+  --focus-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  --selection-bg: color-mix(in srgb, var(--accent) 24%, transparent);
+  --scrim: rgb(0 0 0 / 0.16);
 
-  --text-primary: rgba(0, 0, 0, 0.88);
-  --text-secondary: rgba(0, 0, 0, 0.58);
-  --text-tertiary: rgba(0, 0, 0, 0.38);
-  --text-on-dark: rgba(255, 255, 255, 0.95);
-
-  --border: rgba(0, 0, 0, 0.1);
-  --accent: rgb(0, 122, 255);
-  --accent-hover: rgb(0, 113, 235);
-  --danger: rgb(255, 69, 58);
-  --danger-soft: rgba(255, 69, 58, 0.14);
-  --danger-border: rgba(255, 69, 58, 0.28);
-  --scrollbar-thumb: rgba(0, 0, 0, 0.12);
-  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.2);
-
-  --shadow-card:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.35), 0 0 0 0.5px rgba(0, 0, 0, 0.03),
-    0 6px 24px rgba(0, 0, 0, 0.08);
-  --shadow-pop:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.4), 0 0 0 0.5px rgba(0, 0, 0, 0.05),
-    0 16px 48px rgba(0, 0, 0, 0.14);
-  --shadow-glow: 0 0 0 3px rgba(0, 122, 255, 0.22);
-
-  --selection-bg: rgba(0, 122, 255, 0.22);
-  --overlay: rgba(0, 0, 0, 0.06);
-
-  /* Noise texture for glass surfaces */
-  --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.018'/%3E%3C/svg%3E");
+  /* ===== On-wallpaper content (dark / mid wallpapers) ===== */
+  --wp-fg: rgb(255 255 255 / 0.98);
+  --wp-fg-secondary: rgb(255 255 255 / 0.84);
+  --wp-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 16px rgb(0 0 0 / 0.24);
+  --wp-vignette: rgb(0 0 0 / 0.18);
 }
 
 .dark {
-  /* ===== Sequoia Dark — neutral-cool gray ===== */
-  --surface: rgba(28, 28, 30, 0.72);
-  --surface-strong: rgba(44, 44, 50, 0.88);
-  --surface-hover: rgba(55, 55, 62, 0.92);
-
-  --text-primary: rgba(255, 255, 255, 0.94);
-  --text-secondary: rgba(255, 255, 255, 0.6);
-  --text-tertiary: rgba(255, 255, 255, 0.38);
-  --text-on-dark: rgba(255, 255, 255, 0.95);
-
-  --border: rgba(255, 255, 255, 0.07);
-  --accent: rgb(10, 132, 255);
-  --accent-hover: rgb(20, 140, 255);
-  --danger: rgb(255, 69, 58);
-  --danger-soft: rgba(255, 69, 58, 0.18);
-  --danger-border: rgba(255, 69, 58, 0.32);
-  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.22);
-
-  --shadow-card:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.12), 0 0 0 0.5px rgba(255, 255, 255, 0.04),
-    0 6px 24px rgba(0, 0, 0, 0.25);
-  --shadow-pop:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.14), 0 0 0 0.5px rgba(255, 255, 255, 0.06),
-    0 16px 48px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 0 3px rgba(10, 132, 255, 0.28);
-
-  --selection-bg: rgba(10, 132, 255, 0.25);
-  --overlay: rgba(0, 0, 0, 0.35);
+  --accent: rgb(10 132 255);
+  --accent-hover: rgb(64 156 255);
+  --danger: rgb(255 69 58);
+  --danger-soft: rgb(255 69 58 / 0.16);
+  --success: rgb(48 209 88);
+  --scrim: rgb(0 0 0 / 0.36);
 }
 
-/* ===== Liquid Glass (Tahoe) overrides ===== */
 .glass-mode {
-  --radius-card: 26px;
-  --radius-btn: 16px;
-
-  --blur-widget: 100px;
-  --blur-pop: 120px;
-  --saturate-widget: 1.35;
-
-  /* Extreme transparency — glass lets almost everything through */
-  --surface: rgba(255, 255, 255, 0.1);
-  --surface-strong: rgba(255, 255, 255, 0.2);
-  --surface-hover: rgba(255, 255, 255, 0.28);
-
-  /* Higher contrast text because background is so transparent */
-  --text-primary: rgba(0, 0, 0, 0.9);
-  --text-secondary: rgba(0, 0, 0, 0.62);
-  --text-tertiary: rgba(0, 0, 0, 0.38);
-  --text-on-dark: rgba(255, 255, 255, 0.97);
-
-  /* Subtle light-border for optical edge refraction */
-  --border: rgba(255, 255, 255, 0.2);
-  --accent: rgb(0, 122, 255);
-  --accent-hover: rgb(0, 113, 235);
-
-  /* 
-    Optical edge system for true glass feel:
-    1. Top: bright refraction highlight (light entering glass)
-    2. Bottom: subtle thickness shadow (glass has physical depth)
-    3. Outer: ultra-soft diffusion shadow
-  */
-  --shadow-card:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -0.5px 0 rgba(0, 0, 0, 0.02),
-    0 0 0 0.5px rgba(255, 255, 255, 0.12), 0 14px 40px rgba(0, 0, 0, 0.05);
-  --shadow-pop:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -0.5px 0 rgba(0, 0, 0, 0.03),
-    0 0 0 0.5px rgba(255, 255, 255, 0.15), 0 24px 64px rgba(0, 0, 0, 0.08);
-  --shadow-glow: 0 0 0 3px rgba(0, 122, 255, 0.18);
-
-  --selection-bg: rgba(0, 122, 255, 0.18);
-  --overlay: rgba(0, 0, 0, 0.1);
-
-  /* Stronger noise in light mode for glass texture */
-  --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  --radius-control: 9999px;
 }
 
-/* ===== Wallpaper-aware light-theme override =====
-   When the active theme is light (i.e. no .dark) but the wallpaper's dominant
-   tone is dark, flip text to white and use a darker translucent surface so cards
-   stay legible. Specificity 0,3,0 beats the 0,1,0 rules for :root and .glass-mode,
-   while :not(.dark) keeps the dark theme paths untouched. */
-:root.wallpaper-dark:not(.dark) {
-  --surface: rgba(40, 40, 46, 0.55);
-  --surface-strong: rgba(48, 48, 56, 0.78);
-  --surface-hover: rgba(58, 58, 66, 0.86);
+/* ===== Ink · Light, with the Classic light material ===== */
+:root,
+.glass-mode.wallpaper-light .on-wallpaper,
+.glass-mode:not(.dark) .on-wallpaper .material-pop {
+  color-scheme: light;
 
-  --text-primary: rgba(255, 255, 255, 0.96);
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --text-tertiary: rgba(255, 255, 255, 0.45);
-  --text-on-dark: rgba(255, 255, 255, 0.97);
+  --mat-rgb: 246 246 248;
+  --mat-alpha: calc(0.6 + 0.32 * var(--glass-tint));
+  --mat-pop-alpha: calc(0.8 + 0.16 * var(--glass-tint));
+  --mat-blur: calc(22px + 18px * var(--glass-tint));
+  --mat-saturate: 1.8;
+  --mat-brightness: 1;
+  --mat-edge: inset 0 0.5px 0 rgb(255 255 255 / 0.75), inset 0 0 0 0.5px rgb(255 255 255 / 0.3);
+  --mat-outline: 0 0 0 0.5px rgb(0 0 0 / 0.1);
+  --mat-shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 10px 28px -8px rgb(0 0 0 / 0.22);
+  --pop-shadow: 0 2px 8px rgb(0 0 0 / 0.08), 0 22px 56px -12px rgb(0 0 0 / 0.34);
+  --rim-opacity: 0;
 
-  --border: rgba(255, 255, 255, 0.1);
-  --overlay: rgba(0, 0, 0, 0.3);
-  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.22);
+  /* App-icon style tiles (shortcuts) */
+  --tile: rgb(255 255 255 / 0.94);
+  --tile-shadow:
+    inset 0 0 0 0.5px rgb(0 0 0 / 0.06), 0 1px 2px rgb(0 0 0 / 0.1),
+    0 6px 14px -4px rgb(0 0 0 / 0.22);
 
-  /* Mirror .dark shadows — light inset highlight, deeper drop on dark surface. */
-  --shadow-card:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.12), 0 0 0 0.5px rgba(255, 255, 255, 0.04),
-    0 6px 24px rgba(0, 0, 0, 0.25);
-  --shadow-pop:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.14), 0 0 0 0.5px rgba(255, 255, 255, 0.06),
-    0 16px 48px rgba(0, 0, 0, 0.4);
+  /* Labels, separators, fills */
+  --text-primary: rgb(0 0 0 / 0.86);
+  --text-secondary: rgb(0 0 0 / 0.6);
+  --text-tertiary: rgb(0 0 0 / 0.42);
+  /* Placeholders still need 4.5:1, so they sit between secondary and tertiary. */
+  --text-placeholder: rgb(0 0 0 / 0.55);
+  --border: rgb(0 0 0 / 0.1);
+  --fill: rgb(0 0 0 / 0.05);
+  --fill-strong: rgb(0 0 0 / 0.1);
+  --fill-group: rgb(0 0 0 / 0.035);
+  --group-border: rgb(0 0 0 / 0.07);
+
+  /* Controls */
+  --control: rgb(255 255 255 / 0.7);
+  --control-border: rgb(0 0 0 / 0.12);
+  --control-selected: rgb(255 255 255 / 0.98);
+  --control-selected-shadow:
+    0 0 0 0.5px rgb(0 0 0 / 0.06), 0 1px 2px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.06);
+  --btn: rgb(255 255 255 / 0.92);
+  --btn-hover: rgb(255 255 255);
+  --btn-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 1px 1.5px rgb(0 0 0 / 0.1);
+  --switch-off: rgb(0 0 0 / 0.11);
+  --knob: #fff;
+  --knob-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.08), 0 1px 3px rgb(0 0 0 / 0.22);
+  --scrollbar-thumb: rgb(0 0 0 / 0.2);
+  --scrollbar-thumb-hover: rgb(0 0 0 / 0.32);
 }
 
-.glass-mode.wallpaper-dark:not(.dark) {
-  --surface: rgba(28, 28, 36, 0.22);
-  --surface-strong: rgba(40, 40, 50, 0.4);
-  --surface-hover: rgba(54, 54, 64, 0.5);
+/* ===== Ink · Dark, with the Classic dark material: macOS dark windows, an
+   inner light hairline and a black outline ===== */
+.dark,
+.glass-mode.wallpaper-dark .on-wallpaper,
+.glass-mode.wallpaper-mid .on-wallpaper,
+.glass-mode.dark .on-wallpaper .material-pop {
+  color-scheme: dark;
 
-  --text-primary: rgba(255, 255, 255, 0.96);
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --text-tertiary: rgba(255, 255, 255, 0.45);
-  --text-on-dark: rgba(255, 255, 255, 0.97);
+  --mat-rgb: 38 38 40;
+  --mat-alpha: calc(0.56 + 0.34 * var(--glass-tint));
+  --mat-pop-alpha: calc(0.78 + 0.16 * var(--glass-tint));
+  --mat-saturate: 1.6;
+  --mat-edge: inset 0 0 0 0.5px rgb(255 255 255 / 0.13);
+  --mat-outline: 0 0 0 0.5px rgb(0 0 0 / 0.6);
+  --mat-shadow: 0 2px 6px rgb(0 0 0 / 0.22), 0 14px 36px -8px rgb(0 0 0 / 0.5);
+  --pop-shadow: 0 4px 12px rgb(0 0 0 / 0.3), 0 26px 60px -12px rgb(0 0 0 / 0.6);
 
-  --border: rgba(255, 255, 255, 0.1);
-  --overlay: rgba(0, 0, 0, 0.2);
+  --tile: rgb(52 52 56 / 0.86);
+  --tile-shadow:
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.12), 0 1px 2px rgb(0 0 0 / 0.3),
+    0 6px 14px -4px rgb(0 0 0 / 0.45);
 
-  /* Mirror .glass-mode.dark — refractive top highlight + interior shadow. */
-  --shadow-card:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -0.5px 0 rgba(0, 0, 0, 0.18),
-    0 0 0 0.5px rgba(255, 255, 255, 0.03), 0 14px 40px rgba(0, 0, 0, 0.28);
-  --shadow-pop:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -0.5px 0 rgba(0, 0, 0, 0.22),
-    0 0 0 0.5px rgba(255, 255, 255, 0.04), 0 24px 64px rgba(0, 0, 0, 0.42);
+  --text-primary: rgb(255 255 255 / 0.92);
+  --text-secondary: rgb(255 255 255 / 0.64);
+  --text-tertiary: rgb(255 255 255 / 0.42);
+  --text-placeholder: rgb(255 255 255 / 0.5);
+  --border: rgb(255 255 255 / 0.1);
+  --fill: rgb(255 255 255 / 0.08);
+  --fill-strong: rgb(255 255 255 / 0.14);
+  --fill-group: rgb(255 255 255 / 0.045);
+  --group-border: rgb(255 255 255 / 0.07);
+
+  --control: rgb(255 255 255 / 0.07);
+  --control-border: rgb(255 255 255 / 0.12);
+  --control-selected: rgb(255 255 255 / 0.22);
+  --control-selected-shadow: inset 0 0.5px 0 rgb(255 255 255 / 0.14), 0 1px 3px rgb(0 0 0 / 0.3);
+  --btn: rgb(255 255 255 / 0.14);
+  --btn-hover: rgb(255 255 255 / 0.2);
+  --btn-shadow:
+    inset 0 0.5px 0 rgb(255 255 255 / 0.12), 0 0 0 0.5px rgb(0 0 0 / 0.35),
+    0 1px 1.5px rgb(0 0 0 / 0.25);
+  --switch-off: rgb(255 255 255 / 0.16);
+  --knob: rgb(236 236 236);
+  --knob-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+  --scrollbar-thumb: rgb(255 255 255 / 0.22);
+  --scrollbar-thumb-hover: rgb(255 255 255 / 0.34);
 }
 
-/* ===== Mid-tone wallpaper: adaptive text =====
-   When the wallpaper luminance is in the mid-range (0.35–0.55), dark text can
-   blend into the background even with a shadow. We flip to white text (same as
-   wallpaper-dark) and layer a subtle shadow underneath. */
-:root.wallpaper-mid:not(.dark) {
-  --surface: rgba(40, 40, 46, 0.45);
-  --surface-strong: rgba(48, 48, 56, 0.65);
-  --surface-hover: rgba(58, 58, 66, 0.75);
+/* ===== Material · Liquid Glass · Light =====
+   Every property here is redeclared by the dark block below unless it is the
+   same in both. */
+.glass-mode,
+.glass-mode.wallpaper-light .on-wallpaper,
+.glass-mode:not(.dark) .on-wallpaper .material-pop {
+  --mat-rgb: 255 255 255;
+  --mat-alpha: calc(0.3 + 0.12 * var(--glass-tint));
+  --mat-pop-alpha: calc(0.58 + 0.1 * var(--glass-tint));
+  /* The slider is a frost control: no blur at all at the clear end, and finer
+     steps there, where the eye notices them most. */
+  --mat-blur: calc(26px * var(--glass-tint) * var(--glass-tint));
+  --tile-blur: calc(16px * var(--glass-tint) * var(--glass-tint));
+  /* Menus, sheets and the settings panel carry text over whatever is behind
+     them, so they keep some frost even at the clearest setting. */
+  --mat-pop-blur: calc(14px + 18px * var(--glass-tint));
+  --mat-saturate: 1.6;
+  --mat-brightness: 1.04;
+  /* Lit top edge, faint bottom bounce, and the darker inner falloff macOS 27
+     added at glass edges. */
+  --mat-edge:
+    inset 0 1px 0.5px rgb(255 255 255 / 0.7), inset 0 -0.5px 0.5px rgb(255 255 255 / 0.35),
+    inset 0 0 18px -4px rgb(0 0 0 / 0.12);
+  --mat-outline: 0 0 0 0.5px rgb(0 0 0 / 0.14);
+  --mat-shadow: 0 1px 3px rgb(0 0 0 / 0.08), 0 12px 32px -10px rgb(0 0 0 / 0.28);
+  --pop-shadow: 0 2px 10px rgb(0 0 0 / 0.1), 0 26px 60px -14px rgb(0 0 0 / 0.36);
+  --rim-opacity: 1;
 
-  --text-primary: rgba(255, 255, 255, 0.92);
-  --text-secondary: rgba(255, 255, 255, 0.64);
-  --text-tertiary: rgba(255, 255, 255, 0.4);
-  --text-on-dark: rgba(255, 255, 255, 0.95);
+  --tile: rgb(255 255 255 / calc(0.28 + 0.1 * var(--glass-tint)));
+  --tile-shadow:
+    inset 0 1px 0.5px rgb(255 255 255 / 0.7), inset 0 0 10px -2px rgb(0 0 0 / 0.1),
+    0 0 0 0.5px rgb(0 0 0 / 0.12), 0 6px 14px -4px rgb(0 0 0 / 0.24);
 
-  --border: rgba(255, 255, 255, 0.08);
-  --overlay: rgba(0, 0, 0, 0.2);
-  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.22);
-
-  --text-shadow-adaptive: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(0, 0, 0, 0.15);
-
-  --shadow-card:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.1), 0 0 0 0.5px rgba(255, 255, 255, 0.03),
-    0 6px 20px rgba(0, 0, 0, 0.22);
-  --shadow-pop:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.12), 0 0 0 0.5px rgba(255, 255, 255, 0.05),
-    0 16px 44px rgba(0, 0, 0, 0.36);
+  --control: rgb(255 255 255 / 0.42);
+  --btn: rgb(255 255 255 / 0.6);
+  --btn-hover: rgb(255 255 255 / 0.8);
+  --btn-shadow:
+    inset 0 1px 0.5px rgb(255 255 255 / 0.8), 0 0 0 0.5px rgb(0 0 0 / 0.1),
+    0 1px 3px rgb(0 0 0 / 0.1);
 }
 
-.glass-mode.wallpaper-mid:not(.dark) {
-  --surface: rgba(28, 28, 36, 0.18);
-  --surface-strong: rgba(40, 40, 50, 0.35);
-  --surface-hover: rgba(54, 54, 64, 0.45);
+/* ===== Material · Liquid Glass · Dark ===== */
+.glass-mode.dark,
+.glass-mode.wallpaper-dark .on-wallpaper,
+.glass-mode.wallpaper-mid .on-wallpaper,
+.glass-mode.dark .on-wallpaper .material-pop {
+  --mat-rgb: 24 24 28;
+  --mat-alpha: calc(0.34 + 0.12 * var(--glass-tint));
+  --mat-pop-alpha: calc(0.62 + 0.1 * var(--glass-tint));
+  --mat-saturate: 1.5;
+  --mat-brightness: 0.92;
+  --mat-edge:
+    inset 0 1px 0.5px rgb(255 255 255 / 0.22), inset 0 -0.5px 0.5px rgb(255 255 255 / 0.1),
+    inset 0 0 18px -4px rgb(0 0 0 / 0.4);
+  --mat-outline: 0 0 0 0.5px rgb(0 0 0 / 0.5);
+  --mat-shadow: 0 2px 6px rgb(0 0 0 / 0.24), 0 16px 40px -10px rgb(0 0 0 / 0.55);
+  --pop-shadow: 0 4px 14px rgb(0 0 0 / 0.32), 0 28px 64px -14px rgb(0 0 0 / 0.62);
+  --rim-opacity: 0.55;
 
-  --text-primary: rgba(255, 255, 255, 0.92);
-  --text-secondary: rgba(255, 255, 255, 0.64);
-  --text-tertiary: rgba(255, 255, 255, 0.4);
-  --text-on-dark: rgba(255, 255, 255, 0.95);
+  --tile: rgb(255 255 255 / calc(0.1 + 0.08 * var(--glass-tint)));
+  --tile-shadow:
+    inset 0 1px 0.5px rgb(255 255 255 / 0.22), inset 0 0 10px -2px rgb(0 0 0 / 0.35),
+    0 0 0 0.5px rgb(0 0 0 / 0.4), 0 6px 14px -4px rgb(0 0 0 / 0.45);
 
-  --border: rgba(255, 255, 255, 0.08);
-  --overlay: rgba(0, 0, 0, 0.14);
-
-  --text-shadow-adaptive: 0 1px 3px rgba(0, 0, 0, 0.35), 0 0 0 0.5px rgba(0, 0, 0, 0.18);
-
-  --shadow-card:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -0.5px 0 rgba(0, 0, 0, 0.15),
-    0 0 0 0.5px rgba(255, 255, 255, 0.02), 0 12px 36px rgba(0, 0, 0, 0.24);
-  --shadow-pop:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -0.5px 0 rgba(0, 0, 0, 0.18),
-    0 0 0 0.5px rgba(255, 255, 255, 0.03), 0 22px 60px rgba(0, 0, 0, 0.38);
+  --control: rgb(255 255 255 / 0.08);
+  --btn: rgb(255 255 255 / 0.12);
+  --btn-hover: rgb(255 255 255 / 0.18);
+  --btn-shadow:
+    inset 0 1px 0.5px rgb(255 255 255 / 0.16), 0 0 0 0.5px rgb(0 0 0 / 0.4),
+    0 1px 3px rgb(0 0 0 / 0.25);
 }
 
-/* Light wallpaper — no shadow needed, but define the variable for completeness. */
-:root.wallpaper-light:not(.dark) {
-  --text-shadow-adaptive: none;
+/* ===== Liquid Glass on the wallpaper =====
+   The ink already follows the wallpaper, so the glass only shades it as much
+   as the labels need: a little darker under white ink (mid-tone wallpapers
+   need the most), a little lighter under dark ink. The slider still only
+   frosts it. Popovers redeclare all of these. */
+.glass-mode.wallpaper-dark .on-wallpaper {
+  --mat-rgb: 0 0 0;
+  --mat-alpha: calc(0.14 + 0.08 * var(--glass-tint));
+  --mat-brightness: 0.94;
+  --rim-opacity: 0.7;
 }
 
-.glass-mode.wallpaper-light:not(.dark) {
-  --text-shadow-adaptive: none;
+.glass-mode.wallpaper-mid .on-wallpaper {
+  --mat-rgb: 0 0 0;
+  --mat-alpha: calc(0.24 + 0.08 * var(--glass-tint));
+  --mat-brightness: 0.88;
+  --rim-opacity: 0.7;
 }
 
-.glass-mode.dark {
-  /* ===== Tahoe Dark — deep refractive glass ===== */
-  --surface: rgba(18, 18, 24, 0.18);
-  --surface-strong: rgba(32, 32, 40, 0.32);
-  --surface-hover: rgba(42, 42, 52, 0.42);
+.glass-mode.wallpaper-light .on-wallpaper {
+  --mat-rgb: 255 255 255;
+  --mat-alpha: calc(0.16 + 0.1 * var(--glass-tint));
+  --mat-brightness: 1.06;
+}
 
-  --text-primary: rgba(255, 255, 255, 0.96);
-  --text-secondary: rgba(255, 255, 255, 0.68);
-  --text-tertiary: rgba(255, 255, 255, 0.42);
-  --text-on-dark: rgba(255, 255, 255, 0.97);
-
-  --border: rgba(255, 255, 255, 0.05);
-  --accent: rgb(41, 151, 255);
-  --accent-hover: rgb(50, 160, 255);
-
-  --shadow-card:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -0.5px 0 rgba(0, 0, 0, 0.18),
-    0 0 0 0.5px rgba(255, 255, 255, 0.03), 0 14px 40px rgba(0, 0, 0, 0.28);
-  --shadow-pop:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -0.5px 0 rgba(0, 0, 0, 0.22),
-    0 0 0 0.5px rgba(255, 255, 255, 0.04), 0 24px 64px rgba(0, 0, 0, 0.42);
-  --shadow-glow: 0 0 0 3px rgba(41, 151, 255, 0.22);
-
-  --selection-bg: rgba(41, 151, 255, 0.22);
-  --overlay: rgba(0, 0, 0, 0.45);
-
-  /* Dark noise */
-  --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+/* ===== On-wallpaper content on light wallpapers ===== */
+.wallpaper-light {
+  --wp-fg: rgb(0 0 0 / 0.84);
+  --wp-fg-secondary: rgb(0 0 0 / 0.62);
+  --wp-shadow: 0 0 1px rgb(255 255 255 / 0.5), 0 1px 14px rgb(255 255 255 / 0.35);
+  --wp-vignette: transparent;
 }

@@ -10,9 +10,12 @@ interface DialogProps {
   title?: string
   children: ReactNode
   className?: string
+  /** The key that opens the dialog. It keeps working while the dialog is
+   *  open, so it closes it again; other page shortcuts wait (useShortcut). */
+  shortcut?: string
 }
 
-export function Dialog({ open, onClose, title, children, className }: DialogProps) {
+export function Dialog({ open, onClose, title, children, className, shortcut }: DialogProps) {
   const trapRef = useFocusTrap(open)
   const [shouldRender, setShouldRender] = useState(open)
   const [animateIn, setAnimateIn] = useState(open)
@@ -54,40 +57,44 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
 
   if (!shouldRender) return null
 
+  // The scrim is a sibling of the panel, not its parent: a fading ancestor
+  // (opacity < 1) would cut the panel's backdrop blur off from the page.
   return createPortal(
-    <div
-      className={cn(
-        'fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-md transition-all duration-200 ease-out',
-        animateIn ? 'opacity-100 backdrop-blur-sm' : 'opacity-0 backdrop-blur-none',
-      )}
-      style={{ backgroundColor: 'var(--overlay)' }}
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-modal flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        aria-hidden
+        className={cn(
+          'absolute inset-0 transition-opacity',
+          animateIn ? 'opacity-100' : 'opacity-0',
+        )}
+        style={{ backgroundColor: 'var(--scrim)' }}
+      />
       <div
         ref={trapRef}
         role="dialog"
-        aria-modal="true"
+        // Modal only while open: fading out, it no longer holds the keyboard.
+        aria-modal={open ? 'true' : undefined}
+        aria-keyshortcuts={shortcut}
         aria-label={title}
         className={cn(
-          'backdrop-blur-glass glass-noise relative w-full max-w-md rounded-card border border-border bg-surface-strong p-6 shadow-pop transition-all duration-200 ease-out',
-          animateIn ? 'scale-100 opacity-100' : 'scale-95 opacity-0',
+          'material-pop w-full max-w-md rounded-panel p-5 outline-none transition-[opacity,transform]',
+          animateIn ? 'scale-100 opacity-100' : 'scale-[0.97] opacity-0',
           className,
         )}
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          className="absolute right-3.5 top-3.5 z-[2] rounded-full p-1.5 text-text-secondary transition hover:bg-surface hover:text-text-primary"
+          type="button"
+          className="absolute right-3.5 top-3.5 flex h-6 w-6 items-center justify-center rounded-full bg-fill text-text-secondary transition-colors hover:bg-fill-strong hover:text-text-primary"
           onClick={onClose}
           aria-label="关闭"
         >
-          <X size={16} />
+          <X size={13} strokeWidth={2.25} />
         </button>
         {title && (
-          <h2 className="relative z-[2] mb-5 pr-8 text-[15px] font-semibold tracking-tight text-text-primary">
-            {title}
-          </h2>
+          <h2 className="mb-4 pr-9 text-callout font-semibold text-text-primary">{title}</h2>
         )}
-        <div className="relative z-[2]">{children}</div>
+        {children}
       </div>
     </div>,
     document.getElementById('portal-root') || document.body,

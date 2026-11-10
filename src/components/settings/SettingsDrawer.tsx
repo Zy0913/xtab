@@ -2,6 +2,7 @@ import { Drawer } from '@/components/ui/Drawer'
 import { ThemeSection } from './ThemeSection'
 import { WallpaperPicker } from './WallpaperPicker'
 import { LayoutSection } from './LayoutSection'
+import { GeneralSection } from './GeneralSection'
 
 interface Props {
   open: boolean
@@ -10,13 +11,12 @@ interface Props {
 
 export function SettingsDrawer({ open, onClose }: Props) {
   return (
-    <Drawer open={open} onClose={onClose} title="设置">
+    <Drawer open={open} onClose={onClose} title="设置" shortcut=",">
       <div className="space-y-6">
         <ThemeSection />
-        <div className="bg-border/70 h-px" />
         <WallpaperPicker />
-        <div className="bg-border/70 h-px" />
-        <LayoutSection onRequestClose={onClose} />
+        <LayoutSection />
+        <GeneralSection onRequestClose={onClose} />
       </div>
     </Drawer>
   )

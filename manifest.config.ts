@@ -36,6 +36,10 @@ export default defineManifest({
     'https://wallhaven.cc/*',
     'https://w.wallhaven.cc/*',
     'https://th.wallhaven.cc/*',
+    'https://www.bing.com/HPImageArchive.aspx*',
+    'https://cn.bing.com/HPImageArchive.aspx*',
+    'https://www.bing.com/th?*',
+    'https://cn.bing.com/th?*',
   ],
   // Defense in depth: make MV3's safe default explicit and constrain
   // connect/img sources. img-src stays open to https: because favicons and

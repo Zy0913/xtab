@@ -23,15 +23,20 @@ export function ShortcutsGrid() {
             editable={editMode}
           />
         ))}
-        <div className="flex w-full flex-col items-center gap-1">
+        <div className="flex w-full flex-col items-center gap-1.5">
           <button
+            type="button"
             onClick={() => setDialogOpen(true)}
-            className="border-border/80 bg-surface/40 backdrop-blur-glass group flex h-12 w-12 items-center justify-center rounded-[14px] border border-dashed text-text-tertiary transition hover:border-border hover:bg-surface hover:text-text-primary sm:h-[3.15rem] sm:w-[3.15rem]"
             aria-label="添加快捷方式"
+            title="添加快捷方式（⇧T）"
+            className="tile flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-tile text-text-secondary transition-[transform,color] duration-fast hover:-translate-y-0.5 hover:text-text-primary active:translate-y-0 active:scale-95"
           >
-            <Plus size={20} strokeWidth={1.5} />
+            <Plus size={22} strokeWidth={1.75} aria-hidden />
           </button>
-          <span className="h-4 text-micro opacity-0 sm:text-[11px]" aria-hidden>
+          <span
+            aria-hidden
+            className="text-shadow-wallpaper text-caption font-medium text-wp-secondary"
+          >
             添加
           </span>
         </div>

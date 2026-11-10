@@ -152,6 +152,51 @@ describe('useShortcut', () => {
     expect(handler).not.toHaveBeenCalled()
   })
 
+  describe('while a modal is open', () => {
+    const openModal = (shortcut?: string) => {
+      const modal = document.createElement('div')
+      modal.setAttribute('role', 'dialog')
+      modal.setAttribute('aria-modal', 'true')
+      if (shortcut) modal.setAttribute('aria-keyshortcuts', shortcut)
+      document.body.appendChild(modal)
+      return modal
+    }
+
+    it('ignores the shortcuts of the page behind it', () => {
+      const handler = vi.fn()
+      renderHook(() => useShortcut('e', handler))
+      openModal(',')
+      const event = fireKeyDown('e')
+      expect(handler).not.toHaveBeenCalled()
+      expect(event.defaultPrevented).toBe(false)
+    })
+
+    it('still fires the modal’s own shortcut, so the key closes it again', () => {
+      const handler = vi.fn()
+      renderHook(() => useShortcut(',', handler))
+      openModal(',')
+      fireKeyDown(',')
+      expect(handler).toHaveBeenCalledTimes(1)
+    })
+
+    it('listens to the topmost modal only', () => {
+      const handler = vi.fn()
+      renderHook(() => useShortcut(',', handler))
+      openModal(',')
+      openModal()
+      fireKeyDown(',')
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('fires again once the dialog is no longer modal', () => {
+      const handler = vi.fn()
+      renderHook(() => useShortcut('e', handler))
+      openModal().removeAttribute('aria-modal')
+      fireKeyDown('e')
+      expect(handler).toHaveBeenCalledTimes(1)
+    })
+  })
+
   it('updates handler via ref without re-subscribing', () => {
     let current = vi.fn()
     const { rerender } = renderHook(() => useShortcut('e', current))

@@ -49,6 +49,9 @@ export function SearchBar() {
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // While pinyin is being composed, Enter and the arrows drive the input
+    // method's candidate list; submitting then would search half a word.
+    if (e.nativeEvent.isComposing) return
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       setActiveIndex((i) => Math.min(i + 1, suggestions.length - 1))
@@ -68,59 +71,71 @@ export function SearchBar() {
     blurTimerRef.current = setTimeout(() => setFocused(false), 120)
   }
 
+  const expanded = focused && suggestions.length > 0
+
   return (
-    <div className="relative w-full">
-      <div
-        className={cn(
-          'backdrop-blur-glass glass-noise focus-within:border-accent/25 focus-within:ring-accent/25 relative mx-auto flex h-12 max-w-xl items-center gap-2 border border-border bg-surface px-4 shadow-card transition-all duration-200 focus-within:shadow-pop focus-within:ring-2 hover:shadow-pop sm:h-[3.25rem] sm:max-w-2xl sm:gap-2.5 sm:px-5',
-          focused && 'bg-surface-strong/80',
+    <div className="flex flex-1 items-center">
+      <div className="relative mx-auto w-full max-w-2xl">
+        {/* A Spotlight capsule. The ring follows the field's own focus, not
+            the engine button's. */}
+        <div className="relative h-[3.25rem] rounded-full has-[input:focus-visible]:outline has-[input:focus-visible]:outline-[3px] has-[input:focus-visible]:outline-[color:var(--focus-color)]">
+          <div
+            aria-hidden
+            className="material pointer-events-none absolute inset-0 rounded-[inherit]"
+          />
+          <div className="relative flex h-full items-center gap-2.5 pl-[1.125rem] pr-2.5">
+            <SearchIcon
+              size={18}
+              strokeWidth={2}
+              className="shrink-0 text-text-secondary"
+              aria-hidden
+            />
+            <input
+              ref={inputRef}
+              type="text"
+              role="combobox"
+              aria-expanded={expanded}
+              aria-controls={expanded ? 'search-suggestions' : undefined}
+              aria-activedescendant={activeIndex >= 0 ? `suggestion-${activeIndex}` : undefined}
+              aria-autocomplete="list"
+              aria-label="搜索"
+              value={query}
+              onChange={(e) => {
+                const next = e.target.value
+                setQuery(next)
+                if (!next.trim()) {
+                  setSuggestions([])
+                  setActiveIndex(-1)
+                }
+              }}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setFocused(true)}
+              onBlur={handleBlur}
+              placeholder={ENGINES[engine].placeholder}
+              className="h-full min-w-0 flex-1 bg-transparent text-title text-text-primary outline-none"
+            />
+            <kbd
+              aria-hidden
+              title="按 / 聚焦搜索"
+              className={cn(
+                'keycap hidden transition-opacity duration-fast sm:inline-flex',
+                (focused || query) && 'opacity-0',
+              )}
+            >
+              /
+            </kbd>
+            <EngineSelector />
+          </div>
+        </div>
+        {expanded && (
+          <Suggestions
+            items={suggestions}
+            activeIndex={activeIndex}
+            onPick={(text, newTab) => submit(text, newTab)}
+            onHover={setActiveIndex}
+          />
         )}
-        style={{ borderRadius: 'var(--radius-pill)' }}
-      >
-        <EngineSelector />
-        <div className="h-4 w-px shrink-0 bg-border" aria-hidden />
-        <SearchIcon size={16} className="shrink-0 text-text-tertiary" strokeWidth={1.75} />
-        <input
-          ref={inputRef}
-          type="text"
-          role="combobox"
-          aria-expanded={focused && suggestions.length > 0}
-          aria-controls={focused && suggestions.length > 0 ? 'search-suggestions' : undefined}
-          aria-activedescendant={activeIndex >= 0 ? `suggestion-${activeIndex}` : undefined}
-          aria-autocomplete="list"
-          aria-label="搜索"
-          value={query}
-          onChange={(e) => {
-            const next = e.target.value
-            setQuery(next)
-            if (!next.trim()) {
-              setSuggestions([])
-              setActiveIndex(-1)
-            }
-          }}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setFocused(true)}
-          onBlur={handleBlur}
-          placeholder={ENGINES[engine].placeholder}
-          className="relative z-[2] flex-1 bg-transparent text-sm text-text-primary outline-none placeholder:text-text-tertiary sm:text-[15px]"
-        />
-        <kbd
-          className={cn(
-            'bg-surface-strong/90 relative z-[2] hidden rounded-md px-1.5 py-0.5 text-micro text-text-tertiary transition sm:inline',
-            focused && 'opacity-40',
-          )}
-        >
-          /
-        </kbd>
       </div>
-      {focused && suggestions.length > 0 && (
-        <Suggestions
-          items={suggestions}
-          activeIndex={activeIndex}
-          onPick={(text, newTab) => submit(text, newTab)}
-          onHover={setActiveIndex}
-        />
-      )}
     </div>
   )
 }

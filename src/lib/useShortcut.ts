@@ -11,6 +11,18 @@ function requiresShift(key: string): boolean {
     : /^[?!@#$%^&*()_+{}|:"<>~]$/.test(key)
 }
 
+/**
+ * A modal makes the page behind it inert, so the page's shortcuts are inert
+ * too. Only the topmost modal's own key (its aria-keyshortcuts, such as "," on
+ * the settings panel) still works, so the key that opened a panel closes it.
+ */
+function blockedByModal(key: string): boolean {
+  const modals = document.querySelectorAll('[aria-modal="true"]')
+  const top = modals[modals.length - 1]
+  if (!top) return false
+  return !(top.getAttribute('aria-keyshortcuts')?.split(' ') ?? []).includes(key)
+}
+
 export function useShortcut(key: string, handler: Handler) {
   const handlerRef = useRef(handler)
 
@@ -39,6 +51,7 @@ export function useShortcut(key: string, handler: Handler) {
         role === 'combobox'
       )
         return
+      if (blockedByModal(key)) return
       e.preventDefault()
       handlerRef.current(e)
     }

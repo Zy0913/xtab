@@ -1,3 +1,5 @@
+import { accentFromTint } from './accent'
+
 type ThemeMode = 'light' | 'dark' | 'system'
 
 /**
@@ -20,6 +22,16 @@ export function applyGlassMode(mode: 'sequoia' | 'tahoe') {
 }
 
 /**
+ * The transparency slider, 0 → 1. Liquid Glass: clear → frosted, as in
+ * macOS 27 (only the blur changes). Classic: see-through → nearly opaque.
+ * Every material in tokens.css derives from `--glass-tint`.
+ */
+export function applyGlassTint(tint: number) {
+  const v = Math.max(0, Math.min(1, tint))
+  document.documentElement.style.setProperty('--glass-tint', v.toFixed(2))
+}
+
+/**
  * Write tint-derived CSS custom properties.
  *
  * Pass `isDark` explicitly when called as part of a theme transition so the
@@ -31,11 +43,15 @@ export function applyWallpaperTint(tint: string | null, isDark?: boolean) {
   const root = document.documentElement
   if (tint) {
     const dark = isDark ?? root.classList.contains('dark')
+    // The raw tint is often too pale to carry white text.
+    const accent = accentFromTint(tint)
     root.style.setProperty('--wallpaper-tint', tint)
-    root.style.setProperty('--accent', tint)
+    root.style.setProperty('--accent', accent)
     root.style.setProperty(
       '--accent-hover',
-      dark ? `color-mix(in srgb, ${tint} 85%, white)` : `color-mix(in srgb, ${tint} 85%, black)`,
+      dark
+        ? `color-mix(in srgb, ${accent} 85%, white)`
+        : `color-mix(in srgb, ${accent} 85%, black)`,
     )
   } else {
     root.style.removeProperty('--wallpaper-tint')
@@ -64,19 +80,23 @@ export function applyThemeAndTint(theme: ThemeMode, tint: string | null) {
   root.classList.toggle('dark', isDark)
 }
 
-export function applyWallpaperLuminance(lum: number | null) {
+/**
+ * Classify the wallpaper so text placed straight on it (clock, shortcut
+ * labels) can pick light or dark ink. The dimming scrim darkens what the eye
+ * actually sees, so the class follows the dimmed luminance; the CSS variable
+ * keeps the raw value.
+ */
+export function applyWallpaperLuminance(lum: number | null, dimming = 0) {
   // null means "unknown" — we don't apply any class or variable.
-  // Otherwise we set a CSS custom property so styles can react to the exact value.
   const root = document.documentElement
+  root.classList.remove('wallpaper-dark', 'wallpaper-mid', 'wallpaper-light')
   if (lum === null) {
-    root.classList.remove('wallpaper-dark', 'wallpaper-mid', 'wallpaper-light')
     root.style.removeProperty('--wallpaper-luminance')
     return
   }
-  // Classify for backward-compatible CSS selectors, but also expose the raw value.
-  root.classList.remove('wallpaper-dark', 'wallpaper-mid', 'wallpaper-light')
-  if (lum < 0.35) root.classList.add('wallpaper-dark')
-  else if (lum < 0.55) root.classList.add('wallpaper-mid')
+  const seen = lum * (1 - Math.max(0, Math.min(1, dimming)))
+  if (seen < 0.35) root.classList.add('wallpaper-dark')
+  else if (seen < 0.55) root.classList.add('wallpaper-mid')
   else root.classList.add('wallpaper-light')
   root.style.setProperty('--wallpaper-luminance', lum.toFixed(3))
 }

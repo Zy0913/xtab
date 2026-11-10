@@ -95,12 +95,17 @@ describe('useWallpaper', () => {
 
     // Flush microtask (Image onload) + setTimeout (rAF mock)
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 10))
+      await new Promise((r) => setTimeout(r, 20))
     })
 
     expect(result.current.loadedUrl).not.toBeNull()
     expect(result.current.visible).toBe(true)
     expect(resolveWallpaperMock).toHaveBeenCalledWith('https://example.com/wall.jpg')
+
+    // Cache eviction is deferred so the active frame isn't interrupted.
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 2_100))
+    })
     expect(evictOthersMock).toHaveBeenCalledWith('https://example.com/wall.jpg')
   })
 
@@ -117,7 +122,7 @@ describe('useWallpaper', () => {
       await new Promise((r) => setTimeout(r, 10))
     })
 
-    // After error, visible=true with loadedUrl=null (no prev existed)
+    // Keep prior frame; no successful load so loadedUrl stays null
     expect(result.current.visible).toBe(true)
     expect(result.current.loadedUrl).toBeNull()
   })
@@ -149,6 +154,7 @@ describe('useWallpaper', () => {
     expect(result.current.prevUrl).toBe(firstUrl)
     expect(result.current.loadedUrl).not.toBeNull()
     expect(result.current.loadedUrl).not.toBe(firstUrl)
+    expect(result.current.visible).toBe(true)
   })
 
   it('clears wallpaper and moves loadedUrl to prevUrl', async () => {

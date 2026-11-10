@@ -4,6 +4,8 @@ import { useWeatherCityStore, type SelectedCity } from '@/store/useWeatherCitySt
 export interface CitySearchResult {
   name: string
   country: string
+  /** Province or state; tells apart places that share a name. */
+  region: string
   latitude: number
   longitude: number
 }
@@ -12,6 +14,8 @@ interface HourlyForecast {
   time: string
   temperature: number
   weatherCode: number
+  /** Missing from forecasts cached before night icons existed. */
+  isDay?: boolean
 }
 
 interface DailyForecast {
@@ -84,9 +88,16 @@ export async function searchCities(
     if (!res.ok) return []
     const data = await res.json()
     return (data.results ?? []).map(
-      (r: { name: string; country?: string; latitude: number; longitude: number }) => ({
+      (r: {
+        name: string
+        country?: string
+        admin1?: string
+        latitude: number
+        longitude: number
+      }) => ({
         name: r.name,
         country: r.country ?? '',
+        region: r.admin1 ?? '',
         latitude: r.latitude,
         longitude: r.longitude,
       }),
@@ -97,7 +108,7 @@ export async function searchCities(
 }
 
 async function fetchWeather(city: SelectedCity, signal?: AbortSignal): Promise<WeatherData> {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&current_weather=true&hourly=temperature_2m,weathercode&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&forecast_days=5`
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&current_weather=true&hourly=temperature_2m,weathercode,is_day&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&forecast_days=5`
   const res = await fetch(url, { signal })
   if (!res.ok) throw new Error(`天气服务不可用 (HTTP ${res.status})`)
   const data = await res.json()
@@ -121,6 +132,7 @@ async function fetchWeather(city: SelectedCity, signal?: AbortSignal): Promise<W
           time: data.hourly.time[idx],
           temperature: Math.round(data.hourly.temperature_2m[idx]),
           weatherCode: data.hourly.weathercode[idx],
+          isDay: data.hourly.is_day ? data.hourly.is_day[idx] === 1 : undefined,
         })
       }
     }

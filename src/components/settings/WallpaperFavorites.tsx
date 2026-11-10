@@ -1,7 +1,7 @@
-import { X, Check } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { useFavoriteWallpapersStore } from '@/store/useFavoriteWallpapersStore'
-import { cn } from '@/lib/cn'
+import { WallpaperThumb } from './WallpaperThumb'
 
 export function WallpaperFavorites() {
   const items = useFavoriteWallpapersStore((s) => s.items)
@@ -12,51 +12,33 @@ export function WallpaperFavorites() {
   if (items.length === 0) return null
 
   return (
-    <div className="space-y-1.5 pt-1">
-      <div className="flex items-center justify-between">
-        <h4 className="text-micro font-medium text-text-secondary">我的收藏</h4>
-        <span className="text-micro text-text-tertiary">{items.length}</span>
+    <div className="space-y-2 pt-1">
+      <div className="flex items-baseline justify-between px-1 text-caption text-text-secondary">
+        <h4 className="font-medium">我的收藏</h4>
+        <span className="tabular-nums">{items.length}</span>
       </div>
-      <div className="grid grid-cols-3 gap-2">
-        {items.map((item) => {
-          const active = current === item.url
-          return (
-            <div key={item.id} className="group relative aspect-video">
-              <button
-                onClick={() => setWallpaper(item.url)}
-                className={cn(
-                  'h-full w-full overflow-hidden rounded-btn border-2 transition',
-                  active ? 'border-accent' : 'border-transparent hover:border-border',
-                )}
-                aria-label={`使用收藏壁纸 ${item.id}`}
-                title={item.resolution ? `${item.id} · ${item.resolution}` : item.id}
-              >
-                <img
-                  src={item.thumb}
-                  alt={item.id}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              </button>
-              {active && (
-                <span className="pointer-events-none absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-white">
-                  <Check size={10} />
-                </span>
-              )}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  remove(item.id)
-                }}
-                className="absolute left-1 top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80 group-hover:flex"
-                aria-label="移除收藏"
-                title="移除收藏"
-              >
-                <X size={10} />
-              </button>
-            </div>
-          )
-        })}
+      <div className="grid grid-cols-3 gap-2.5">
+        {items.map((item) => (
+          <WallpaperThumb
+            key={item.id}
+            src={item.thumb}
+            label={`使用收藏壁纸 ${item.id}`}
+            title={item.resolution ? `${item.id} · ${item.resolution}` : item.id}
+            selected={current === item.url}
+            onSelect={() => setWallpaper(item.url)}
+          >
+            {/* Launchpad-style delete badge: shown on hover or keyboard focus. */}
+            <button
+              type="button"
+              onClick={() => remove(item.id)}
+              className="absolute -left-1.5 -top-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[rgb(118_118_124)] text-white opacity-0 shadow-[0_0_0_0.5px_rgb(0_0_0/0.2),0_1px_3px_rgb(0_0_0/0.3)] transition-opacity duration-fast hover:bg-[rgb(96_96_102)] focus-visible:opacity-100 group-focus-within:opacity-100 group-hover:opacity-100"
+              aria-label="移除收藏"
+              title="移除收藏"
+            >
+              <X size={10} strokeWidth={3} />
+            </button>
+          </WallpaperThumb>
+        ))}
       </div>
     </div>
   )

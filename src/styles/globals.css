@@ -4,70 +4,595 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Set inline per glass surface by liquidGlass.ts. Each filter is drawn for
+   one size, so a nested surface must never inherit its parent's. */
+@property --lens {
+  syntax: '*';
+  inherits: false;
+}
+
+/* ─────────────────────────────── Base ─────────────────────────────── */
+
 @layer base {
-  body {
-    @apply text-text-primary antialiased;
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    font-size: var(--text-body);
+    line-height: 1.4;
+    color: var(--text-primary);
+    /* Only visible until the wallpaper paints. */
+    background-color: #e8e8ed;
+    transition:
+      background-color var(--dur-slow) var(--ease-out),
+      color var(--dur-slow) var(--ease-out);
+  }
+
+  .dark body {
+    background-color: #000;
+  }
+
+  /* Some extensions inject nodes into <body>; keep the new tab clean. */
   body > *:not(#root):not(#portal-root):not(script):not(style) {
     display: none !important;
   }
+
+  ::selection {
+    background-color: var(--selection-bg);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-placeholder);
+    opacity: 1;
+  }
+
+  /* macOS focus ring: a soft accent halo that follows the control's radius. */
+  :focus-visible {
+    outline: 3px solid var(--focus-color);
+    outline-offset: 1px;
+  }
+
+  /* Slim rounded scrollbars, close to the macOS overlay bars. */
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background-color: var(--scrollbar-thumb);
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
+  }
 }
 
-html,
-body,
-#root {
-  height: 100%;
+/* ───────────────────────────── Components ───────────────────────────── */
+
+@layer components {
+  /*
+   * Materials. `.material` is the widget / window surface; `.material-pop` is
+   * the denser one for menus, popovers, dialogs and the settings panel.
+   *
+   * An element with backdrop-filter becomes a backdrop root, so popovers
+   * nested inside it can only blur what is inside it. Put the material on its
+   * own background layer (`absolute inset-0`) next to the content instead of
+   * on the content's container.
+   */
+  .material,
+  .material-pop {
+    position: relative;
+    background-color: rgb(var(--mat-rgb) / var(--mat-alpha));
+    -webkit-backdrop-filter: blur(var(--mat-blur)) saturate(var(--mat-saturate))
+      brightness(var(--mat-brightness));
+    backdrop-filter: blur(var(--mat-blur)) saturate(var(--mat-saturate))
+      brightness(var(--mat-brightness));
+    box-shadow: var(--mat-edge), var(--mat-outline), var(--mat-shadow);
+  }
+
+  .material-pop {
+    /* Inherited colour was computed against the surroundings' ink, which can
+       differ from a popover's own (tokens.css, "Ink"). */
+    color: var(--text-primary);
+    background-color: rgb(var(--mat-rgb) / var(--mat-pop-alpha));
+    -webkit-backdrop-filter: blur(var(--mat-pop-blur, var(--mat-blur)))
+      saturate(var(--mat-saturate)) brightness(var(--mat-brightness));
+    backdrop-filter: blur(var(--mat-pop-blur, var(--mat-blur))) saturate(var(--mat-saturate))
+      brightness(var(--mat-brightness));
+    box-shadow: var(--mat-edge), var(--mat-outline), var(--pop-shadow);
+  }
+
+  /* The toolbar and the dashboard. In Liquid Glass their ink follows the
+     wallpaper rather than the appearance, so restate the text colour here
+     instead of inheriting the one <body> computed. */
+  .on-wallpaper {
+    color: var(--text-primary);
+  }
+
+  /* App-icon tile behind each shortcut favicon (Safari Favorites style). */
+  .tile {
+    position: relative;
+    background-color: var(--tile);
+    box-shadow: var(--tile-shadow);
+  }
+
+  /*
+   * Liquid Glass. The transparency slider only changes how frosted the glass
+   * is (--mat-blur, --tile-blur). liquidGlass.ts adds the edge refraction as
+   * --lens, an SVG displacement filter that Chrome runs inside
+   * backdrop-filter; until it is set the step is simply left out.
+   */
+  .glass-mode .material {
+    -webkit-backdrop-filter: blur(var(--mat-blur)) saturate(var(--mat-saturate))
+      brightness(var(--mat-brightness));
+    backdrop-filter: blur(var(--mat-blur)) var(--lens,) saturate(var(--mat-saturate))
+      brightness(var(--mat-brightness));
+  }
+
+  .glass-mode .tile {
+    -webkit-backdrop-filter: blur(var(--tile-blur)) saturate(var(--mat-saturate))
+      brightness(var(--mat-brightness));
+    backdrop-filter: blur(var(--tile-blur)) var(--lens,) saturate(var(--mat-saturate))
+      brightness(var(--mat-brightness));
+  }
+
+  /* Liquid Glass specular rim: a 1px ring that is brightest where the light
+     lands (top-left), with a softer bounce on the opposite corner. */
+  .glass-mode .material::after,
+  .glass-mode .material-pop::after,
+  .glass-mode .tile::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      rgb(255 255 255 / 0.95),
+      rgb(255 255 255 / 0.18) 26%,
+      rgb(255 255 255 / 0.06) 50%,
+      rgb(255 255 255 / 0.16) 74%,
+      rgb(255 255 255 / 0.6)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    opacity: var(--rim-opacity);
+    pointer-events: none;
+  }
+
+  /* NSSwitch. Classic: round knob. Liquid Glass: wider capsule knob. The knob
+     stretches a little while pressed, anchored to the side it rests on. */
+  .switch {
+    --switch-w: 34px;
+    --switch-h: 20px;
+    --knob-w: 16px;
+    --knob-h: 16px;
+    --knob-grow: 0px;
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    width: var(--switch-w);
+    height: var(--switch-h);
+    border-radius: 9999px;
+    background-color: var(--switch-off);
+    transition: background-color var(--dur) var(--ease-out);
+  }
+
+  .glass-mode .switch {
+    --switch-w: 40px;
+    --switch-h: 22px;
+    --knob-w: 24px;
+    --knob-h: 18px;
+  }
+
+  .switch::before {
+    content: '';
+    position: absolute;
+    top: calc((var(--switch-h) - var(--knob-h)) / 2);
+    left: calc((var(--switch-h) - var(--knob-h)) / 2);
+    width: calc(var(--knob-w) + var(--knob-grow));
+    height: var(--knob-h);
+    border-radius: 9999px;
+    background-color: var(--knob);
+    box-shadow: var(--knob-shadow);
+    transition:
+      translate var(--dur) var(--ease-out),
+      width var(--dur-fast) var(--ease-out);
+  }
+
+  .switch:active:not(:disabled) {
+    --knob-grow: 4px;
+  }
+
+  .switch[aria-checked='true'] {
+    background-color: var(--accent);
+  }
+
+  .switch[aria-checked='true']::before {
+    translate: calc(
+        var(--switch-w) - var(--switch-h) + var(--knob-h) - var(--knob-w) - var(--knob-grow)
+      )
+      0;
+  }
+
+  .switch:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  /* NSSegmentedControl: a recessed track with a raised selected segment. */
+  .segmented {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 8px;
+    background-color: var(--fill);
+  }
+
+  .segmented > [role='radio'] {
+    display: inline-flex;
+    height: 24px;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: var(--text-body);
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out);
+  }
+
+  .segmented > [role='radio']:hover {
+    color: var(--text-primary);
+  }
+
+  .segmented > [aria-checked='true'] {
+    background-color: var(--control-selected);
+    color: var(--text-primary);
+    box-shadow: var(--control-selected-shadow);
+  }
+
+  .segmented[aria-disabled='true'] {
+    opacity: 0.5;
+  }
+
+  .glass-mode .segmented,
+  .glass-mode .segmented > [role='radio'] {
+    border-radius: 9999px;
+  }
+
+  /* System Settings grouped box. Set --row-inset to align the separators
+     with the label when rows lead with an icon. */
+  .form-group {
+    border-radius: var(--radius-field);
+    background-color: var(--fill-group);
+    box-shadow: inset 0 0 0 0.5px var(--group-border);
+  }
+
+  .form-row {
+    position: relative;
+    display: flex;
+    min-height: 40px;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    font-size: var(--text-body);
+    color: var(--text-primary);
+  }
+
+  .form-row + .form-row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 12px;
+    left: var(--row-inset, 12px);
+    border-top: 0.5px solid var(--border);
+  }
+
+  /* NSMenu item. Simple menus highlight on hover; listboxes that track the
+     active option themselves set data-active on every item instead. */
+  .menu-item {
+    display: flex;
+    width: 100%;
+    min-height: 26px;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: var(--text-body);
+    line-height: 1.3;
+    color: var(--text-primary);
+    text-align: left;
+    cursor: default;
+  }
+
+  .menu-item:not([data-active]):hover,
+  .menu-item[data-active='true'] {
+    background-color: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .menu-item-meta {
+    color: var(--text-secondary);
+  }
+
+  .menu-item:not([data-active]):hover .menu-item-meta,
+  .menu-item[data-active='true'] .menu-item-meta {
+    color: rgb(255 255 255 / 0.82);
+  }
+
+  .keycap {
+    display: inline-flex;
+    height: 20px;
+    min-width: 20px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    border-radius: 5px;
+    font-size: var(--text-micro);
+    font-weight: 500;
+    line-height: 1;
+    color: var(--text-secondary);
+    background-color: var(--control);
+    box-shadow:
+      inset 0 -1px 0 var(--border),
+      0 0 0 0.5px var(--control-border);
+  }
+}
+
+/* ───────────────────────────── Utilities ───────────────────────────── */
+
+@layer utilities {
+  /* Legible text straight on the wallpaper (clock, shortcut labels). */
+  .text-shadow-wallpaper {
+    text-shadow: var(--wp-shadow);
+  }
+}
+
+/* ─────────────────────────────── Motion ─────────────────────────────── */
+/* Individual transform properties, so these compose with Tailwind transforms. */
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    scale: 0.97;
+    translate: 0 -4px;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+@keyframes check-in {
+  from {
+    opacity: 0;
+    scale: 0.5;
+  }
+}
+
+.animate-pop-in {
+  animation: pop-in var(--dur) var(--ease-out) both;
+}
+
+.animate-fade-in {
+  animation: fade-in var(--dur) var(--ease-out) both;
+}
+
+.animate-rise-in {
+  animation: rise-in var(--dur-slow) var(--ease-out) both;
+}
+
+.animate-check-in {
+  animation: check-in var(--dur) var(--ease-out) both;
+}
+
+/* ─────────────────────────────── Slider ─────────────────────────────── */
+/* NSSlider: thin accent-filled track and a white knob (a capsule in Liquid
+   Glass). The component sets --range-fill (0..1) inline. */
+
+input[type='range'].range-slider {
+  --thumb-w: 20px;
+  --thumb-h: 20px;
+  display: block;
+  width: 100%;
+  height: var(--thumb-h);
   margin: 0;
-}
-
-body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'PingFang SC',
-    'Helvetica Neue', Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: var(--text-primary);
-  background: #f2f2f7;
-  /* Smooth out theme switches so colour-driven CSS variables fade rather
-     than snap. The wallpaper layer in App.tsx already covers most of the
-     viewport, so this only affects the bare backdrop and root text colour
-     during a light/dark flip. The blanket reduce-motion overrides below
-     (and the `.reduce-motion` class) automatically disable this. */
-  transition:
-    background-color var(--transition-duration-slow) ease,
-    color var(--transition-duration-slow) ease;
-}
-
-.dark body {
-  background: #000;
-}
-
-/* ===== Selection ===== */
-::selection {
-  background: var(--selection-bg);
-}
-
-/* ===== Scrollbar ===== */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
   background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 3px;
+.glass-mode input[type='range'].range-slider {
+  --thumb-w: 30px;
+  --thumb-h: 18px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
+input[type='range'].range-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    var(--accent) calc(var(--thumb-w) / 2 + (100% - var(--thumb-w)) * var(--range-fill, 0.5)),
+    var(--fill-strong) 0
+  );
 }
 
-/* ===== Reduce Motion ===== */
+input[type='range'].range-slider::-webkit-slider-thumb {
+  width: var(--thumb-w);
+  height: var(--thumb-h);
+  margin-top: calc((4px - var(--thumb-h)) / 2);
+  border: 0;
+  border-radius: 9999px;
+  background-color: var(--knob);
+  box-shadow: var(--knob-shadow);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type='range'].range-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background-color: var(--fill-strong);
+}
+
+input[type='range'].range-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 9999px;
+  background-color: var(--accent);
+}
+
+input[type='range'].range-slider::-moz-range-thumb {
+  width: var(--thumb-w);
+  height: var(--thumb-h);
+  border: 0;
+  border-radius: 9999px;
+  background-color: var(--knob);
+  box-shadow: var(--knob-shadow);
+}
+
+input[type='range'].range-slider:focus-visible {
+  outline: none;
+}
+
+input[type='range'].range-slider:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    var(--knob-shadow),
+    0 0 0 3px var(--focus-color);
+}
+
+input[type='range'].range-slider:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* ─────────────────────────────── Widgets ─────────────────────────────── */
+
+.widget-title {
+  font-size: var(--text-body);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.widget-row {
+  display: flex;
+  width: 100%;
+  min-height: 1.75rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-row);
+  font-size: var(--text-body);
+  line-height: 1.3;
+  color: var(--text-primary);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.widget-row:hover {
+  background-color: var(--fill);
+}
+
+.widget-row:active {
+  background-color: var(--fill-strong);
+}
+
+/* Shortcuts: Safari Favorites. Fixed columns centred as a block, never
+   stretched apart; the rows sit in the middle of the widget. Two rows fit the
+   default two-unit height exactly; taller sets spill below until the widget
+   is resized. */
+.shortcut-grid {
+  display: grid;
+  flex: 1;
+  /* As many tiles as fit. A stacked layout fixes the number per row instead
+     (--shortcut-columns, set by DashboardGrid) so the widget can be given a
+     grid row for each row of tiles. */
+  grid-template-columns: repeat(var(--shortcut-columns, auto-fit), minmax(0, 4.75rem));
+  justify-content: center;
+  align-content: center;
+  align-content: safe center;
+  gap: 0.375rem 0.75rem;
+}
+
+/* Weather: Apple Weather medium-widget layout. Summary on top, hourly strip
+   at the bottom; side by side once the card is wide enough. */
+.weather {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+
+.weather-hourly {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+@container (min-width: 38rem) {
+  .weather {
+    flex-direction: row;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .weather-head {
+    flex: 0 0 16rem;
+  }
+
+  .weather-hourly {
+    max-width: 28rem;
+    flex: 1;
+    margin: 0 0 0 auto;
+    padding-top: 0;
+  }
+}
+
+/* ─────────────────────────── Reduced motion ─────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -86,221 +611,4 @@ body {
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
-}
-
-/* ===== Adaptive text shadow for mid-tone wallpapers =====
-   Ensures readable contrast when wallpaper luminance falls in the 0.35–0.55 band. */
-:root.wallpaper-mid:not(.dark) body,
-:root.wallpaper-mid:not(.dark) .text-text-primary {
-  text-shadow: var(--text-shadow-adaptive);
-}
-
-.glass-mode.wallpaper-mid:not(.dark) body,
-.glass-mode.wallpaper-mid:not(.dark) .text-text-primary {
-  text-shadow: var(--text-shadow-adaptive);
-}
-
-/* ===== Glass Utilities ===== */
-@layer utilities {
-  .backdrop-blur-glass {
-    backdrop-filter: blur(var(--blur-widget)) saturate(var(--saturate-widget));
-    -webkit-backdrop-filter: blur(var(--blur-widget)) saturate(var(--saturate-widget));
-  }
-
-  .backdrop-blur-pop {
-    backdrop-filter: blur(var(--blur-pop)) saturate(var(--saturate-widget));
-    -webkit-backdrop-filter: blur(var(--blur-pop)) saturate(var(--saturate-widget));
-  }
-
-  /* Noise texture overlay for glass realism */
-  .glass-noise::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background-image: var(--noise-texture);
-    background-size: 128px 128px;
-    pointer-events: none;
-    opacity: 0.6;
-    mix-blend-mode: overlay;
-    z-index: 1;
-  }
-
-  /* Text shadow for transparent widgets over wallpaper.
-     Two soft layers — enough contrast without a greasy halo. */
-  .text-shadow-wallpaper {
-    text-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.35),
-      0 4px 18px rgba(0, 0, 0, 0.22);
-  }
-
-  .glass-mode .text-shadow-wallpaper {
-    text-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.4),
-      0 6px 22px rgba(0, 0, 0, 0.26);
-  }
-
-  /* Type scale utilities */
-  .text-display {
-    font-size: var(--text-display);
-    line-height: 1;
-    letter-spacing: -0.03em;
-  }
-
-  .text-caption {
-    font-size: var(--text-caption);
-    line-height: 1.35;
-  }
-
-  .text-micro {
-    font-size: var(--text-micro);
-    line-height: 1.35;
-  }
-}
-
-/* ===== Micro-animations ===== */
-@keyframes spring-in {
-  0% {
-    transform: scale(0.6);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.15);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.animate-spring-in {
-  animation: spring-in 0.25s var(--ease-spring) forwards;
-}
-
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.animate-toast-in {
-  animation: toast-in 0.28s var(--ease-out) forwards;
-}
-
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-up {
-  animation: fade-up 0.45s var(--ease-out) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-fade-up {
-    animation: none;
-  }
-}
-
-.reduce-motion .animate-fade-up {
-  animation: none;
-}
-
-/* Refined range input used in settings */
-input[type='range'].range-slider {
-  height: 6px;
-  width: 100%;
-  cursor: pointer;
-  appearance: none;
-  border-radius: 9999px;
-  background: var(--surface-strong);
-  outline: none;
-}
-
-input[type='range'].range-slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 9999px;
-  background: var(--accent);
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  transition: transform var(--transition-duration) ease;
-}
-
-input[type='range'].range-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.08);
-}
-
-input[type='range'].range-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 9999px;
-  background: var(--accent);
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Deterministic 1s colon blink — not a breathing pulse */
-@keyframes colon-blink {
-  0%,
-  48% {
-    opacity: 0.55;
-  }
-  52%,
-  100% {
-    opacity: 0.12;
-  }
-}
-
-.animate-colon-blink {
-  animation: colon-blink 1s steps(1, end) infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-colon-blink {
-    animation: none;
-    opacity: 0.45;
-  }
-}
-
-.reduce-motion .animate-colon-blink {
-  animation: none;
-  opacity: 0.45;
-}
-
-/* Shared widget chrome */
-.widget-title {
-  font-size: var(--text-caption);
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.widget-row {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 0.375rem;
-  border-radius: 8px;
-  padding: 0.3rem 0.4rem;
-  font-size: var(--text-caption);
-  color: var(--text-primary);
-  transition: background-color var(--transition-duration) ease;
-}
-
-.widget-row:hover {
-  background: var(--surface);
 }

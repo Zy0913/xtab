@@ -42,6 +42,10 @@ vi.mock('@/lib/wallhaven', () => ({
   fetchRandomWallhaven: vi.fn(),
 }))
 
+vi.mock('@/lib/wallpaperCache', () => ({
+  warmWallpaperCache: vi.fn(() => Promise.resolve()),
+}))
+
 vi.mock('@/lib/toast', () => ({ showToast: vi.fn() }))
 vi.mock('@/lib/logger', () => ({ warn: vi.fn(), error: vi.fn() }))
 
@@ -135,9 +139,13 @@ describe('useWallpaperPicker', () => {
     expect(showToast).toHaveBeenCalledWith('月榜暂无符合条件的壁纸，已切换至周榜', 'info')
   })
 
-  // 4. handleRandom error
-  it('handleRandom catches error and shows toast with error message', async () => {
-    vi.mocked(fetchRandomWallhaven).mockRejectedValue(new Error('网络超时'))
+  it('handleRandom shows Bing toast and does not mark as favorite-able', async () => {
+    vi.mocked(fetchRandomWallhaven).mockResolvedValue(
+      makeWallhavenResult({
+        via: 'bing',
+        url: 'https://www.bing.com/th?id=OHR.x_1920x1080.jpg',
+      }),
+    )
 
     const { result } = renderHook(() => useWallpaperPicker())
 
@@ -145,9 +153,72 @@ describe('useWallpaperPicker', () => {
       await result.current.handleRandom()
     })
 
-    expect(logError).toHaveBeenCalled()
-    expect(showToast).toHaveBeenCalledWith('网络超时', 'error')
+    expect(storeState.setWallpaper).toHaveBeenCalledWith(
+      'https://www.bing.com/th?id=OHR.x_1920x1080.jpg',
+    )
+    expect(result.current.canFavoriteCurrent).toBe(false)
+    expect(showToast).toHaveBeenCalledWith('排行榜暂时连不上，已换一张必应壁纸', 'info')
+  })
+
+  // 4. handleRandom error
+  it('handleRandom falls back to a preset when Wallhaven fails', async () => {
+    vi.mocked(fetchRandomWallhaven).mockRejectedValue(new Error('请求超时，请稍后再试'))
+
+    const { result } = renderHook(() => useWallpaperPicker())
+
+    await act(async () => {
+      await result.current.handleRandom()
+    })
+
+    expect(logError).not.toHaveBeenCalled()
+    expect(storeState.setWallpaper).toHaveBeenCalled()
+    const url = storeState.setWallpaper.mock.calls[0][0]
+    expect(url).toEqual(expect.any(String))
+    expect(url as string).not.toHaveLength(0)
+    expect(showToast).toHaveBeenCalledWith('排行榜暂时连不上，已换一张备用壁纸', 'info')
     expect(result.current.randomLoading).toBe(false)
+  })
+
+  // 4b. Stale random result must not override a newer click
+  it('handleRandom ignores stale result when a newer request is in flight', async () => {
+    let resolveSlow: (v: WallhavenResult) => void
+    const slow = new Promise<WallhavenResult>((r) => {
+      resolveSlow = r
+    })
+    const fast = makeWallhavenResult({
+      id: 'fast',
+      url: 'https://w.wallhaven.cc/full/ff/wallhaven-fast.jpg',
+    })
+    const slowResult = makeWallhavenResult({
+      id: 'slow',
+      url: 'https://w.wallhaven.cc/full/ss/wallhaven-slow.jpg',
+    })
+
+    vi.mocked(fetchRandomWallhaven)
+      .mockImplementationOnce(() => slow)
+      .mockImplementationOnce(() => Promise.resolve(fast))
+
+    const { result } = renderHook(() => useWallpaperPicker())
+
+    let slowDone!: Promise<void>
+    act(() => {
+      slowDone = result.current.handleRandom()
+    })
+    await act(async () => {
+      await result.current.handleRandom()
+    })
+
+    expect(storeState.setWallpaper).toHaveBeenCalledTimes(1)
+    expect(storeState.setWallpaper).toHaveBeenCalledWith(fast.url)
+
+    await act(async () => {
+      resolveSlow!(slowResult)
+      await slowDone
+    })
+
+    // Slow response must not apply a second wallpaper.
+    expect(storeState.setWallpaper).toHaveBeenCalledTimes(1)
+    expect(storeState.setWallpaper).toHaveBeenLastCalledWith(fast.url)
   })
 
   // 5. handleFavorite when canFavoriteCurrent and not already favorited
@@ -259,8 +330,8 @@ describe('useWallpaperPicker', () => {
     expect(result.current.alreadyFavorited).toBe(true)
   })
 
-  // Extra: handleRandom with non-Error rejection shows default message
-  it('handleRandom shows default message for non-Error rejection', async () => {
+  // Extra: handleRandom with non-Error rejection still uses the fallback
+  it('handleRandom falls back for non-Error rejection', async () => {
     vi.mocked(fetchRandomWallhaven).mockRejectedValue('something weird')
 
     const { result } = renderHook(() => useWallpaperPicker())
@@ -269,6 +340,7 @@ describe('useWallpaperPicker', () => {
       await result.current.handleRandom()
     })
 
-    expect(showToast).toHaveBeenCalledWith('获取壁纸失败，请重试', 'error')
+    expect(storeState.setWallpaper).toHaveBeenCalled()
+    expect(showToast).toHaveBeenCalledWith('排行榜暂时连不上，已换一张备用壁纸', 'info')
   })
 })

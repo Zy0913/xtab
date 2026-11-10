@@ -1,15 +1,20 @@
-import { Upload, Shuffle, Check, Loader, Heart } from 'lucide-react'
+import { Upload, Shuffle, Loader, Heart } from 'lucide-react'
 import { PRESETS } from '@/lib/wallpapers'
 import { type WallhavenStrategy } from '@/lib/wallhaven'
 import { cn } from '@/lib/cn'
+import { Button } from '@/components/ui/Button'
+import { SegmentedControl, type SegmentOption } from '@/components/ui/SegmentedControl'
+import { Slider } from '@/components/ui/Slider'
 import { WallpaperFavorites } from './WallpaperFavorites'
+import { WallpaperThumb } from './WallpaperThumb'
+import { RowLabel, SettingsSection } from './SettingsSection'
 import { useWallpaperPicker } from './useWallpaperPicker'
 
-const STRATEGIES: { key: WallhavenStrategy; label: string }[] = [
-  { key: '1d', label: '日榜' },
-  { key: '1w', label: '周榜' },
-  { key: '1M', label: '月榜' },
-  { key: '1y', label: '年榜' },
+const STRATEGIES: SegmentOption<WallhavenStrategy>[] = [
+  { value: '1d', label: '日榜' },
+  { value: '1w', label: '周榜' },
+  { value: '1M', label: '月榜' },
+  { value: '1y', label: '年榜' },
 ]
 
 export function WallpaperPicker() {
@@ -29,86 +34,106 @@ export function WallpaperPicker() {
     handleFavorite,
   } = useWallpaperPicker()
 
-  return (
-    <section className="space-y-2.5">
-      <h3 className="widget-title">壁纸</h3>
+  const dimPercent = Math.round(dimming * 100)
 
-      <div className="grid grid-cols-3 gap-2">
+  return (
+    <SettingsSection title="壁纸">
+      <div className="grid grid-cols-3 gap-2.5">
         {PRESETS.map((p) => (
-          <button
+          <WallpaperThumb
             key={p.id}
-            onClick={() => setWallpaper(p.url)}
-            className={cn(
-              'group relative aspect-video overflow-hidden rounded-btn border-2 transition',
-              current === p.url ? 'border-accent' : 'border-transparent hover:border-border',
-            )}
-            aria-label={p.name}
-          >
-            <img src={p.thumb} alt={p.name} className="h-full w-full object-cover" loading="lazy" />
-            {current === p.url && (
-              <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-white">
-                <Check size={10} />
-              </span>
-            )}
-          </button>
+            src={p.thumb}
+            label={p.name}
+            selected={current === p.url}
+            onSelect={() => setWallpaper(p.url)}
+          />
         ))}
       </div>
 
       <WallpaperFavorites />
 
-      <div className="flex gap-1.5 pt-1">
-        {STRATEGIES.map((s) => (
-          <button
-            key={s.key}
-            onClick={() => setStrategy(s.key)}
+      <div className="form-group">
+        <div className="form-row">
+          <span className="flex-1">排行榜</span>
+          <SegmentedControl
+            aria-label="排行榜范围"
+            value={strategy}
+            options={STRATEGIES}
+            onChange={setStrategy}
             disabled={randomLoading}
+            className="w-52"
+          />
+        </div>
+        <div className="form-row">
+          <RowLabel label="随机壁纸" description="来自 Wallhaven 排行榜" />
+          <button
+            type="button"
+            onClick={handleFavorite}
+            disabled={!canFavoriteCurrent || alreadyFavorited}
+            aria-pressed={alreadyFavorited}
+            aria-label="收藏当前壁纸"
+            title={
+              !canFavoriteCurrent
+                ? '随机一张壁纸后可收藏'
+                : alreadyFavorited
+                  ? '已收藏'
+                  : '收藏当前壁纸'
+            }
             className={cn(
-              'rounded-btn px-2 py-1 text-micro transition',
-              strategy === s.key
-                ? 'bg-accent/20 ring-accent/30 text-text-primary ring-1'
-                : 'bg-surface text-text-secondary hover:text-text-primary',
+              'flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors duration-fast disabled:pointer-events-none',
+              alreadyFavorited
+                ? 'text-danger'
+                : 'text-text-secondary hover:bg-fill hover:text-text-primary',
+              !canFavoriteCurrent && 'opacity-40',
             )}
           >
-            {s.label}
+            <Heart size={15} fill={alreadyFavorited ? 'currentColor' : 'none'} />
           </button>
-        ))}
+          <Button
+            size="sm"
+            onClick={handleRandom}
+            disabled={randomLoading}
+            aria-busy={randomLoading || undefined}
+            className="disabled:opacity-100"
+          >
+            {randomLoading ? (
+              <Loader size={13} className="animate-spin" aria-hidden />
+            ) : (
+              <Shuffle size={13} aria-hidden />
+            )}
+            换一张
+          </Button>
+        </div>
+        <div className="form-row">
+          <RowLabel label="本地图片" description="不超过 5MB" />
+          <Button size="sm" onClick={() => fileRef.current?.click()}>
+            <Upload size={13} aria-hidden />
+            选取…
+          </Button>
+        </div>
       </div>
 
-      <div className="flex gap-2">
-        <button
-          onClick={() => fileRef.current?.click()}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-btn bg-surface py-2 text-xs text-text-primary transition hover:bg-surface-strong"
-        >
-          <Upload size={12} /> 上传
-        </button>
-        <button
-          onClick={handleRandom}
-          disabled={randomLoading}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-btn bg-surface py-2 text-xs text-text-primary transition hover:bg-surface-strong disabled:opacity-50"
-        >
-          {randomLoading ? <Loader size={12} className="animate-spin" /> : <Shuffle size={12} />}{' '}
-          随机排行榜
-        </button>
-        <button
-          onClick={handleFavorite}
-          disabled={!canFavoriteCurrent || alreadyFavorited}
-          title={
-            !canFavoriteCurrent
-              ? '随机一张壁纸后可收藏'
-              : alreadyFavorited
-                ? '已收藏'
-                : '收藏当前壁纸'
-          }
-          className={cn(
-            'flex items-center justify-center gap-1.5 rounded-btn px-3 py-2 text-xs transition',
-            'bg-surface text-text-primary hover:bg-surface-strong disabled:opacity-50',
-            alreadyFavorited && 'text-danger',
-          )}
-          aria-label="收藏当前壁纸"
-        >
-          <Heart size={12} fill={alreadyFavorited ? 'currentColor' : 'none'} />
-        </button>
+      <div className="form-group">
+        <div className="form-row flex-col items-stretch gap-1.5 pb-3 pt-2.5">
+          <span className="flex items-center justify-between" aria-hidden>
+            <span>暗化</span>
+            <span className="tabular-nums text-text-secondary">{dimPercent}%</span>
+          </span>
+          <Slider
+            aria-label="壁纸暗化强度"
+            aria-valuetext={`${dimPercent}%`}
+            min={0}
+            max={0.6}
+            step={0.05}
+            value={dimming}
+            onChange={setDimming}
+          />
+        </div>
       </div>
+      <p className="px-1 text-caption text-text-secondary">
+        壁纸偏亮或偏花时调高暗化，时钟和组件会更易读。图片缓存在本地，再次打开无需等待。
+      </p>
+
       <input
         ref={fileRef}
         type="file"
@@ -116,28 +141,6 @@ export function WallpaperPicker() {
         className="hidden"
         onChange={handleUpload}
       />
-
-      <div className="space-y-1.5 pt-1">
-        <div className="flex items-center justify-between text-micro text-text-secondary">
-          <span>壁纸暗化</span>
-          <span className="tabular-nums text-text-tertiary">{Math.round(dimming * 100)}%</span>
-        </div>
-        <input
-          type="range"
-          min={0}
-          max={60}
-          step={5}
-          value={Math.round(dimming * 100)}
-          onChange={(e) => setDimming(Number(e.target.value) / 100)}
-          aria-label="壁纸暗化强度"
-          className="range-slider"
-        />
-        <p className="text-micro text-text-tertiary">
-          壁纸偏亮或偏花时拉高，提升时钟与组件的可读性
-        </p>
-      </div>
-
-      <p className="text-micro text-text-tertiary">图片本地缓存，重复打开秒开</p>
-    </section>
+    </SettingsSection>
   )
 }

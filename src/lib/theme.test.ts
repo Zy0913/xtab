@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { applyWallpaperLuminance } from './theme'
+import { applyGlassTint, applyWallpaperLuminance } from './theme'
 
 describe('applyWallpaperLuminance', () => {
   beforeEach(() => {
@@ -39,5 +39,20 @@ describe('applyWallpaperLuminance', () => {
     applyWallpaperLuminance(0.3)
     applyWallpaperLuminance(null)
     expect(document.documentElement.style.getPropertyValue('--wallpaper-luminance')).toBe('')
+  })
+
+  it('classifies by the luminance seen through the dimming scrim', () => {
+    applyWallpaperLuminance(0.6, 0.2)
+    expect(document.documentElement.classList.contains('wallpaper-mid')).toBe(true)
+    expect(document.documentElement.style.getPropertyValue('--wallpaper-luminance')).toBe('0.600')
+  })
+})
+
+describe('applyGlassTint', () => {
+  it('writes the clamped transparency value', () => {
+    applyGlassTint(0.25)
+    expect(document.documentElement.style.getPropertyValue('--glass-tint')).toBe('0.25')
+    applyGlassTint(3)
+    expect(document.documentElement.style.getPropertyValue('--glass-tint')).toBe('1.00')
   })
 })

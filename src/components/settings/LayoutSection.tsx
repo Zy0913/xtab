@@ -1,97 +1,64 @@
-import { RotateCcw, Download, Upload, Sparkles } from 'lucide-react'
+import {
+  Bookmark,
+  Clock,
+  CloudSun,
+  LayoutGrid,
+  ListChecks,
+  Search,
+  type LucideIcon,
+} from 'lucide-react'
 import { useLayoutStore } from '@/store/useLayoutStore'
 import { useSettingsStore } from '@/store/useSettingsStore'
-import { cn } from '@/lib/cn'
+import { Switch } from '@/components/ui/Switch'
 import { WIDGET_LABELS, type WidgetId } from '@/types/widget'
-import { useBackupRestore } from './useBackupRestore'
+import { SettingsSection } from './SettingsSection'
 
 const ALL_IDS = Object.keys(WIDGET_LABELS) as WidgetId[]
 
-interface Props {
-  onRequestClose?: () => void
+/* Coloured squircle icons, as in the System Settings sidebar. */
+const WIDGET_ICONS: Record<WidgetId, { Icon: LucideIcon; color: string }> = {
+  search: { Icon: Search, color: 'rgb(0 122 255)' },
+  clock: { Icon: Clock, color: 'rgb(255 149 0)' },
+  shortcuts: { Icon: LayoutGrid, color: 'rgb(88 86 214)' },
+  weather: { Icon: CloudSun, color: 'rgb(50 173 230)' },
+  todo: { Icon: ListChecks, color: 'rgb(52 199 89)' },
+  bookmarks: { Icon: Bookmark, color: 'rgb(255 45 85)' },
 }
 
-export function LayoutSection({ onRequestClose }: Props = {}) {
+export function LayoutSection() {
   const enabled = useLayoutStore((s) => s.enabled)
   const toggleWidget = useLayoutStore((s) => s.toggleWidget)
-  const resetLayout = useLayoutStore((s) => s.reset)
-  const resetOnboarding = useSettingsStore((s) => s.resetOnboarding)
-
-  const { handleExport, handleImport } = useBackupRestore()
-
-  const handleReset = () => {
-    if (window.confirm('将恢复默认布局与组件开关，确定继续？')) {
-      resetLayout()
-    }
-  }
-
-  const handleReplayOnboarding = () => {
-    onRequestClose?.()
-    // Let the drawer start closing before the overlay mounts.
-    window.setTimeout(() => resetOnboarding(), 120)
-  }
+  const showSeconds = useSettingsStore((s) => s.showSeconds)
+  const setShowSeconds = useSettingsStore((s) => s.setShowSeconds)
 
   return (
-    <section className="space-y-3">
-      <h3 className="widget-title">组件</h3>
-
-      <div className="border-border/60 space-y-0.5 rounded-card border bg-surface p-1.5">
+    <SettingsSection title="组件">
+      {/* Separators start at the label: 12px padding + 22px icon + 10px gap. */}
+      <div className="form-group [--row-inset:44px]">
         {ALL_IDS.map((id) => {
-          const on = enabled.includes(id)
+          const { Icon, color } = WIDGET_ICONS[id]
           return (
-            <label
-              key={id}
-              className="flex items-center justify-between rounded-btn px-2.5 py-2 text-sm transition hover:bg-surface-strong"
-            >
-              <span className="text-text-primary">{WIDGET_LABELS[id]}</span>
-              <button
-                type="button"
-                onClick={() => toggleWidget(id)}
-                className={cn(
-                  'relative h-5 w-9 rounded-full transition',
-                  on ? 'bg-accent' : 'bg-text-tertiary/40',
-                )}
-                aria-pressed={on}
+            <label key={id} className="form-row">
+              <span
+                aria-hidden
+                className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[6px] text-white shadow-[inset_0_0_0_0.5px_rgb(0_0_0/0.1)]"
+                style={{ backgroundColor: color }}
               >
-                <span
-                  className={cn(
-                    'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition',
-                    on ? 'left-[18px]' : 'left-0.5',
-                  )}
-                />
-              </button>
+                <Icon size={13} strokeWidth={2.25} />
+              </span>
+              <span className="flex-1">{WIDGET_LABELS[id]}</span>
+              <Switch checked={enabled.includes(id)} onChange={() => toggleWidget(id)} />
             </label>
           )
         })}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 pt-1">
-        <button
-          onClick={handleExport}
-          className="flex items-center justify-center gap-1.5 rounded-btn bg-surface py-2 text-xs text-text-primary transition hover:bg-surface-strong"
-        >
-          <Download size={12} /> 导出
-        </button>
-        <label className="flex cursor-pointer items-center justify-center gap-1.5 rounded-btn bg-surface py-2 text-xs text-text-primary transition hover:bg-surface-strong">
-          <Upload size={12} /> 导入
-          <input type="file" accept="application/json" className="hidden" onChange={handleImport} />
+      <div className="form-group">
+        <label className="form-row">
+          <span className="flex-1">时钟显示秒数</span>
+          <Switch checked={showSeconds} onChange={setShowSeconds} />
         </label>
       </div>
-
-      <button
-        onClick={handleReset}
-        className="border-border/70 flex w-full items-center justify-center gap-1.5 rounded-btn border py-2 text-xs text-text-tertiary transition hover:border-danger-border hover:bg-danger-soft hover:text-danger"
-      >
-        <RotateCcw size={12} /> 重置布局
-      </button>
-
-      <button
-        type="button"
-        onClick={handleReplayOnboarding}
-        className="flex w-full items-center justify-center gap-1.5 py-1.5 text-micro text-text-tertiary transition hover:text-text-secondary"
-      >
-        <Sparkles size={11} /> 重新体验引导
-      </button>
-    </section>
+    </SettingsSection>
   )
 }

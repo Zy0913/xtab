@@ -8,9 +8,16 @@ interface Props {
   onClose: () => void
   title: string
   children: ReactNode
+  /** The key that opens the panel. It keeps working while the panel is open,
+   *  so it closes it again; other page shortcuts wait (useShortcut). */
+  shortcut?: string
 }
 
-export function Drawer({ open, onClose, title, children }: Props) {
+/**
+ * Floating side panel, inset from the window edges like a macOS 27 inspector.
+ * The scrim stays light and unblurred so the dashboard remains visible.
+ */
+export function Drawer({ open, onClose, title, children, shortcut }: Props) {
   const trapRef = useFocusTrap(open)
 
   useEffect(() => {
@@ -29,9 +36,10 @@ export function Drawer({ open, onClose, title, children }: Props) {
     <>
       <div
         className={cn(
-          'fixed inset-0 z-[55] bg-black/40 backdrop-blur-sm transition-opacity',
+          'fixed inset-0 z-drawer transition-opacity duration-slow',
           open ? 'opacity-100' : 'pointer-events-none opacity-0',
         )}
+        style={{ backgroundColor: 'var(--scrim)' }}
         onClick={onClose}
       />
       <aside
@@ -39,23 +47,27 @@ export function Drawer({ open, onClose, title, children }: Props) {
         role="dialog"
         aria-modal={open ? 'true' : undefined}
         aria-hidden={open ? undefined : true}
+        aria-keyshortcuts={shortcut}
         aria-label={title}
         className={cn(
-          'backdrop-blur-glass glass-noise fixed right-0 top-0 z-[60] flex h-screen w-[400px] max-w-[92vw] flex-col border-l border-border bg-surface-strong shadow-pop transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]',
-          open ? 'visible translate-x-0' : 'pointer-events-none invisible translate-x-full',
+          'material-pop fixed bottom-3 right-3 top-3 z-drawer flex w-[380px] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden overscroll-contain rounded-panel outline-none transition-[transform,opacity,visibility] duration-slow',
+          open
+            ? 'visible translate-x-0 opacity-100'
+            : 'pointer-events-none invisible translate-x-full opacity-0',
         )}
       >
-        <header className="border-border/80 relative z-[2] flex h-14 items-center justify-between border-b px-5">
-          <h2 className="text-[15px] font-semibold tracking-tight text-text-primary">{title}</h2>
+        <header className="flex h-[3.25rem] shrink-0 items-center justify-between pl-5 pr-3.5">
+          <h2 className="text-callout font-semibold text-text-primary">{title}</h2>
           <button
+            type="button"
             onClick={onClose}
-            className="rounded-full p-1.5 text-text-secondary transition hover:bg-surface hover:text-text-primary"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-fill hover:text-text-primary"
             aria-label="关闭设置"
           >
-            <X size={16} />
+            <X size={15} strokeWidth={2.25} />
           </button>
         </header>
-        <div className="relative z-[2] flex-1 overflow-y-auto px-5 py-5">{children}</div>
+        <div className="flex-1 overflow-y-auto px-4 pb-5">{children}</div>
       </aside>
     </>
   )

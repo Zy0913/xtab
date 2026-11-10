@@ -1,134 +1,90 @@
-/* Overrides for react-grid-layout — refined glass aesthetic */
+/*
+ * react-grid-layout overrides. Its stylesheet arrives with the lazy grid
+ * chunk, after this file, so every rule is scoped under .react-grid-layout to
+ * win on specificity rather than with !important.
+ */
 
-.react-grid-item.react-grid-placeholder {
-  background: rgba(0, 0, 0, 0.05) !important;
-  border: 2px dashed rgba(0, 0, 0, 0.12);
-  border-radius: var(--radius-card);
-  opacity: 1 !important;
-}
-
-.dark .react-grid-item.react-grid-placeholder {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 2px dashed rgba(255, 255, 255, 0.12);
-}
-
-/* Resize handle — hidden by default, visible in edit mode */
-.react-grid-item .react-resizable-handle-se {
-  width: 20px !important;
-  height: 20px !important;
-  bottom: 4px !important;
-  right: 4px !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  z-index: 50 !important;
-  background-image: none !important;
-  padding: 0 !important;
-  border: none !important;
-  transition: opacity var(--transition-duration) ease;
-}
-
-.is-editing .react-grid-item .react-resizable-handle-se {
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  animation: resize-handle-fade-in 200ms ease-out;
-}
-
-@keyframes resize-handle-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Disable fade-in animation for users who prefer reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .is-editing .react-grid-item .react-resizable-handle-se {
-    animation: none !important;
-  }
-}
-
-.reduce-motion .is-editing .react-grid-item .react-resizable-handle-se {
-  animation: none !important;
-}
-
-/* Corner grip — diagonal ticks, quieter than a solid accent block */
-.is-editing .react-grid-item .react-resizable-handle-se::after {
-  content: '' !important;
-  position: absolute !important;
-  right: 3px !important;
-  bottom: 3px !important;
-  width: 10px !important;
-  height: 10px !important;
-  border-radius: 0 !important;
-  background-color: transparent !important;
-  background-image:
-    linear-gradient(
-      135deg,
-      transparent 45%,
-      var(--text-tertiary) 46%,
-      var(--text-tertiary) 54%,
-      transparent 55%
-    ),
-    linear-gradient(
-      135deg,
-      transparent 62%,
-      var(--text-tertiary) 63%,
-      var(--text-tertiary) 71%,
-      transparent 72%
-    ) !important;
-  opacity: 0.55 !important;
+/* Widgets glide to their new slot. Size changes snap, so content never
+   reflows frame by frame. */
+.react-grid-layout > .react-grid-item.cssTransforms {
   transition:
-    opacity var(--transition-duration) ease,
-    transform var(--transition-duration) ease;
-  cursor: se-resize !important;
+    transform var(--dur-slow) var(--ease-out),
+    scale var(--dur-fast) var(--ease-out);
 }
 
-.is-editing .react-grid-item .react-resizable-handle-se:hover::after {
-  opacity: 1 !important;
-  transform: scale(1.1) !important;
-  background-image:
-    linear-gradient(135deg, transparent 45%, var(--accent) 46%, var(--accent) 54%, transparent 55%),
-    linear-gradient(135deg, transparent 62%, var(--accent) 63%, var(--accent) 71%, transparent 72%) !important;
-}
-
-.react-grid-item.react-draggable-dragging {
+.react-grid-layout > .react-grid-item.resizing {
+  z-index: 4;
   transition: none;
-  z-index: 20;
-  opacity: 0.9;
 }
 
-.react-grid-item {
-  transition:
-    transform var(--transition-duration) cubic-bezier(0.2, 0.8, 0.2, 1),
-    width var(--transition-duration) ease,
-    height var(--transition-duration) ease;
+/* Picked up: lift a little and track the pointer with no lag. */
+.react-grid-layout > .react-grid-item.react-draggable-dragging {
+  z-index: 4;
+  scale: 1.02;
+  transition: scale var(--dur-fast) var(--ease-out);
 }
 
-/* Fixed track width — avoid 1fr stretch that leaves huge gaps between tiles. */
-.shortcut-grid {
-  display: grid;
-  width: 100%;
-  gap: 0.7rem 0.65rem;
-  justify-content: center;
-  justify-items: center;
-  grid-template-columns: repeat(auto-fill, 4.5rem);
-  padding: 0.15rem 0.15rem 0.35rem;
+.react-grid-layout > .react-grid-item.react-draggable-dragging .widget-material {
+  box-shadow: var(--mat-edge), var(--mat-outline), var(--pop-shadow);
 }
 
-@supports (container-type: inline-size) {
-  @container (min-width: 480px) {
-    .shortcut-grid {
-      gap: 0.75rem 0.7rem;
-      grid-template-columns: repeat(auto-fill, 4.6rem);
-    }
-  }
+/* Raise a widget whose popover is open (search suggestions, engine menu,
+   city search) above the widgets that follow it. */
+.react-grid-layout > .react-grid-item:focus-within {
+  z-index: 3;
+}
 
-  @container (min-width: 720px) {
-    .shortcut-grid {
-      gap: 0.8rem 0.75rem;
-      grid-template-columns: repeat(auto-fill, 4.75rem);
-    }
-  }
+/* Drop target: a soft plate in the widget's shape. */
+.react-grid-layout > .react-grid-item.react-grid-placeholder {
+  border-radius: var(--radius-widget);
+  background-color: var(--wp-fg);
+  opacity: 0.16;
+  transition-duration: var(--dur-fast);
+}
+
+/* Resize grip: an arc concentric with the widget corner, like the window
+   corners of iPadOS and macOS 27. */
+.react-grid-layout > .react-grid-item > .react-resizable-handle.react-resizable-handle-se {
+  z-index: 5;
+  right: 0;
+  bottom: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background-image: none;
+  color: var(--text-secondary);
+  cursor: nwse-resize;
+  animation: fade-in var(--dur) var(--ease-out) both;
+}
+
+.react-grid-layout
+  > .react-grid-item[data-surface='wallpaper']
+  > .react-resizable-handle.react-resizable-handle-se {
+  color: var(--wp-fg-secondary);
+}
+
+.react-grid-layout > .react-grid-item > .react-resizable-handle.react-resizable-handle-se::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M16.67 5.12A15 15 0 0 1 5.12 16.67' fill='none' stroke='%23000' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M16.67 5.12A15 15 0 0 1 5.12 16.67' fill='none' stroke='%23000' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  opacity: 0.7;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.react-grid-layout
+  > .react-grid-item
+  > .react-resizable-handle.react-resizable-handle-se:hover::after,
+.react-grid-layout
+  > .react-grid-item.resizing
+  > .react-resizable-handle.react-resizable-handle-se::after {
+  opacity: 1;
 }

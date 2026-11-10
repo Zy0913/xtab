@@ -3,6 +3,8 @@ import { cn } from '@/lib/cn'
 
 type Props = InputHTMLAttributes<HTMLInputElement>
 
+/** NSTextField: a recessed field with a hairline edge; focus draws the global
+ *  accent focus ring. */
 export const Input = forwardRef<HTMLInputElement, Props>(function Input(
   { className, ...props },
   ref,
@@ -11,7 +13,7 @@ export const Input = forwardRef<HTMLInputElement, Props>(function Input(
     <input
       ref={ref}
       className={cn(
-        'focus:border-accent/40 focus:bg-surface-strong/60 focus:ring-accent/20 h-9 w-full rounded-btn border border-border bg-surface px-3 text-sm text-text-primary outline-none transition placeholder:text-text-tertiary focus:ring-2',
+        'h-8 w-full rounded-field bg-control px-3 text-body text-text-primary shadow-[inset_0_0_0_0.5px_var(--control-border)] transition-shadow disabled:opacity-50',
         className,
       )}
       {...props}

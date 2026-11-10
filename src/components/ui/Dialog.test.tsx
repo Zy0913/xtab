@@ -82,6 +82,25 @@ describe('Dialog', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
+  it('names its own shortcut and stops being modal as it closes', () => {
+    const { rerender } = render(
+      <Dialog open={true} onClose={() => {}} shortcut="?">
+        Content
+      </Dialog>,
+    )
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toHaveAttribute('aria-modal', 'true')
+    expect(dialog).toHaveAttribute('aria-keyshortcuts', '?')
+
+    rerender(
+      <Dialog open={false} onClose={() => {}} shortcut="?">
+        Content
+      </Dialog>,
+    )
+    // Still fading out, but no longer holding the keyboard.
+    expect(screen.getByRole('dialog')).not.toHaveAttribute('aria-modal')
+  })
+
   it('renders without title', () => {
     render(
       <Dialog open={true} onClose={() => {}}>

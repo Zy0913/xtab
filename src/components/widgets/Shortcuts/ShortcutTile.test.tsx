@@ -37,12 +37,12 @@ describe('ShortcutTile', () => {
 
   it('shows remove button when editable', () => {
     render(<ShortcutTile shortcut={baseShortcut} editable={true} />)
-    expect(screen.getByLabelText('删除')).toBeInTheDocument()
+    expect(screen.getByLabelText('删除GitHub')).toBeInTheDocument()
   })
 
   it('does not show remove button when not editable', () => {
     render(<ShortcutTile shortcut={baseShortcut} editable={false} />)
-    expect(screen.queryByLabelText('删除')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('删除GitHub')).not.toBeInTheDocument()
   })
 
   it('removes shortcut on remove button click', () => {
@@ -52,7 +52,7 @@ describe('ShortcutTile', () => {
     render(
       <ShortcutTile shortcut={{ id: 'a', title: 'A', url: 'https://a.com' }} editable={true} />,
     )
-    fireEvent.click(screen.getByLabelText('删除'))
+    fireEvent.click(screen.getByLabelText('删除A'))
     expect(useShortcutsStore.getState().items).toHaveLength(0)
   })
 

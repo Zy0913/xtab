@@ -78,6 +78,40 @@ export function PartlyCloudyIcon({ size = 24, className }: IconProps) {
   )
 }
 
+/** A crescent with two stars, like moon.stars.fill. */
+export function MoonIcon({ size = 24, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 36 36" className={className} aria-hidden="true">
+      <path
+        d="M17.43 7.02A11 11 0 1 0 28.92 19.33A9 9 0 0 1 17.43 7.02Z"
+        fill="currentColor"
+        fillOpacity={0.95}
+      />
+      <g fill="currentColor" fillOpacity={0.85}>
+        <path d="M27 4.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z" />
+        <path d="M31.5 11.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" />
+      </g>
+    </svg>
+  )
+}
+
+export function PartlyCloudyNightIcon({ size = 24, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 36 36" className={className} aria-hidden="true">
+      <path
+        d="M12.22 6.01A5.5 5.5 0 1 0 17.96 12.17A4.5 4.5 0 0 1 12.22 6.01Z"
+        fill="currentColor"
+        fillOpacity={0.9}
+      />
+      <path
+        d="M10 26a5.2 5.2 0 0 1-1-10.3A8.4 8.4 0 0 1 25 16.5h.35a4.15 4.15 0 0 1 0 8.3H10z"
+        fill="currentColor"
+        fillOpacity={0.92}
+      />
+    </svg>
+  )
+}
+
 export function RainIcon({ size = 24, className }: IconProps) {
   return (
     <svg
@@ -200,23 +234,29 @@ export function ThunderstormIcon({ size = 24, className }: IconProps) {
   )
 }
 
-const WEATHER_ICON_MAP = [
-  { maxCode: 0, Icon: SunIcon },
-  { maxCode: 3, Icon: PartlyCloudyIcon },
+type Glyph = (props: IconProps) => JSX.Element
+
+/** WMO code ranges; clear and partly cloudy skies have a night variant. */
+const WEATHER_ICON_MAP: Array<{ maxCode: number; Icon: Glyph; NightIcon?: Glyph }> = [
+  { maxCode: 1, Icon: SunIcon, NightIcon: MoonIcon },
+  { maxCode: 2, Icon: PartlyCloudyIcon, NightIcon: PartlyCloudyNightIcon },
+  { maxCode: 3, Icon: CloudIcon },
   { maxCode: 48, Icon: FogIcon },
   { maxCode: 67, Icon: RainIcon },
   { maxCode: 77, Icon: SnowIcon },
   { maxCode: 82, Icon: HeavyRainIcon },
+  { maxCode: 86, Icon: SnowIcon },
   { maxCode: 99, Icon: ThunderstormIcon },
-] as const
+]
 
 // eslint-disable-next-line react-refresh/only-export-components
-export function renderWeatherIcon(weatherCode: number, size = 24, className?: string) {
-  for (const entry of WEATHER_ICON_MAP) {
-    if (weatherCode <= entry.maxCode) {
-      const Icon = entry.Icon
-      return <Icon size={size} className={className} />
-    }
-  }
-  return <ThunderstormIcon size={size} className={className} />
+export function renderWeatherIcon(
+  weatherCode: number,
+  size = 24,
+  className?: string,
+  isDay = true,
+) {
+  const entry = WEATHER_ICON_MAP.find((e) => weatherCode <= e.maxCode)
+  const Icon = (!isDay && entry?.NightIcon) || entry?.Icon || ThunderstormIcon
+  return <Icon size={size} className={className} />
 }

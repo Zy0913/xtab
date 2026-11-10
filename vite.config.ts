@@ -4,6 +4,15 @@ import { crx } from '@crxjs/vite-plugin'
 import path from 'node:path'
 import manifest from './manifest.config'
 
+const wallhavenProxy = {
+  '/__wallhaven': {
+    target: 'https://wallhaven.cc',
+    changeOrigin: true,
+    rewrite: (p: string) => p.replace(/^\/__wallhaven/, ''),
+    timeout: 15_000,
+  },
+} as const
+
 export default defineConfig({
   plugins: [react(), crx({ manifest })],
   resolve: {
@@ -41,5 +50,10 @@ export default defineConfig({
     hmr: {
       port: 5173,
     },
+    proxy: wallhavenProxy,
+  },
+  preview: {
+    host: '127.0.0.1',
+    proxy: wallhavenProxy,
   },
 })

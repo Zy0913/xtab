@@ -1,134 +1,18 @@
 // Wallhaven random-wallpaper fetcher.
 //
-// Lives in the MV3 service worker because the API requires same-origin-ish
-// access (cookies, CORS) that's painful from the newtab page. We expose a
-// single `fetch-wallhaven` message; the response shape mirrors what the
-// frontend `fetchRandomWallhaven` helper expects in `src/lib/wallhaven.ts`.
+// Lives in the MV3 service worker so host_permissions apply even when the
+// newtab page is a web origin (Vite preview). The response shape mirrors
+// `fetchRandomWallhaven` in `src/lib/wallhaven.ts`.
 
 import { logger } from '@/lib/logger'
+import {
+  VALID_TOP_RANGES,
+  fetchRandomFromNetwork,
+  toFriendlyWallhavenNetworkError,
+  type TopRange,
+} from '@/lib/wallhavenApi'
 
-// Allowed topRange values per wallhaven API: 1d, 3d, 1w, 1M, 3M, 6M, 1y.
-// Frontend exposes 1d / 1w / 1M / 1y; if narrower windows yield zero results
-// (common at off-hours), we widen to the next bucket transparently.
-const VALID_TOP_RANGES = ['1d', '3d', '1w', '1M', '3M', '6M', '1y'] as const
-type TopRange = (typeof VALID_TOP_RANGES)[number]
-
-const FALLBACK_CHAIN: Record<TopRange, TopRange | null> = {
-  '1d': '1w',
-  '3d': '1w',
-  '1w': '1M',
-  '1M': '1y',
-  '3M': '1y',
-  '6M': '1y',
-  '1y': null,
-}
-
-const MAX_PAGE_SAMPLE = 20
-const REQUEST_TIMEOUT_MS = 20_000
-
-interface WallhavenThumbs {
-  large?: string
-  original?: string
-  small?: string
-}
-
-interface WallhavenItem {
-  id: string
-  path: string
-  thumbs?: WallhavenThumbs
-  resolution?: string
-  dimension_x?: number
-  dimension_y?: number
-}
-
-interface WallhavenSearchResponse {
-  data?: WallhavenItem[]
-  meta?: { total?: number; last_page?: number }
-}
-
-interface RateLimitedError extends Error {
-  code?: 'RATE_LIMITED'
-}
-
-function buildBaseUrl(topRange: TopRange): string {
-  return (
-    'https://wallhaven.cc/api/v1/search' +
-    '?categories=111' +
-    '&purity=100' +
-    '&sorting=toplist' +
-    '&order=desc' +
-    '&topRange=' +
-    topRange +
-    '&atleast=1920x1080' +
-    '&ratios=16x9,16x10,21x9'
-  )
-}
-
-async function fetchJson(url: string, signal: AbortSignal): Promise<WallhavenSearchResponse> {
-  const res = await fetch(url, { signal })
-  if (res.status === 429) {
-    const err: RateLimitedError = new Error('rate-limited')
-    err.code = 'RATE_LIMITED'
-    throw err
-  }
-  if (!res.ok) throw new Error('Wallhaven API: ' + res.status)
-  return (await res.json()) as WallhavenSearchResponse
-}
-
-// Wallhaven image/thumbnail URLs always live on wallhaven.cc subdomains and
-// are served over https. If the API is ever tampered with to return a
-// non-wallhaven or non-https URL (tracking pixel, redirect to a third party),
-// drop the item rather than feeding it to the newtab page's fetch/img sinks.
-function isSafeWallhavenUrl(u: unknown): u is string {
-  return typeof u === 'string' && /^https:\/\/[^/]*\.wallhaven\.cc\//i.test(u)
-}
-
-function pickRandomFromList(list: WallhavenItem[]): WallhavenItem | null {
-  const pool = list.filter((x) => x && isSafeWallhavenUrl(x.path))
-  if (!pool.length) return null
-  return pool[Math.floor(Math.random() * pool.length)]
-}
-
-async function fetchByStrategy(
-  strategy: TopRange,
-  signal: AbortSignal,
-): Promise<{ strategy: TopRange; json: WallhavenSearchResponse | null }> {
-  const base = buildBaseUrl(strategy)
-  const firstPage = await fetchJson(base + '&page=1', signal)
-  const meta = firstPage.meta ?? {}
-  const total = typeof meta.total === 'number' ? meta.total : (firstPage.data ?? []).length
-  if (!total) return { strategy, json: null }
-
-  const lastPage = meta.last_page ?? 1
-  const upper = Math.max(1, Math.min(lastPage, MAX_PAGE_SAMPLE))
-  const page = Math.floor(Math.random() * upper) + 1
-  if (page === 1) return { strategy, json: firstPage }
-  const json = await fetchJson(base + '&page=' + page, signal)
-  return { strategy, json }
-}
-
-// Try requested strategy first; if it yields nothing, widen along the chain.
-async function fetchWithFallback(
-  strategy: TopRange,
-  signal: AbortSignal,
-): Promise<{ strategy: TopRange; json: WallhavenSearchResponse | null }> {
-  const result = await fetchByStrategy(strategy, signal)
-  if (result.json) return result
-  const next = FALLBACK_CHAIN[result.strategy]
-  if (!next) return result
-  logger.warn('Wallhaven: empty result for ' + result.strategy + ', fallback to ' + next)
-  return fetchWithFallback(next, signal)
-}
-
-function toFriendlyError(err: unknown): string {
-  if (!err) return 'unknown'
-  if (err instanceof Error) {
-    if (err.name === 'AbortError') return '请求超时，请稍后再试'
-    if ((err as RateLimitedError).code === 'RATE_LIMITED') return '请求过于频繁，请稍后再试'
-    return err.message || 'unknown'
-  }
-  return 'unknown'
-}
+const REQUEST_TIMEOUT_MS = 8_000
 
 interface FetchWallhavenMessage {
   type: 'fetch-wallhaven'
@@ -139,6 +23,10 @@ function isFetchWallhavenMessage(m: unknown): m is FetchWallhavenMessage {
   return typeof m === 'object' && m !== null && (m as { type?: unknown }).type === 'fetch-wallhaven'
 }
 
+// Abort any previous in-flight wallhaven fetch when a new one starts so a
+// slow first click cannot finish after a fast second click and "jump twice".
+let activeWallhaven: AbortController | null = null
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!isFetchWallhavenMessage(message)) return false
 
@@ -148,39 +36,32 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       ? (message.strategy as TopRange)
       : '1M'
 
+  if (activeWallhaven) {
+    activeWallhaven.abort()
+    activeWallhaven = null
+  }
+
   const ctrl = new AbortController()
+  activeWallhaven = ctrl
   const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS)
 
   ;(async () => {
     try {
-      const result = await fetchWithFallback(requested, ctrl.signal)
-      const pick = result.json ? pickRandomFromList(result.json.data ?? []) : null
-      if (!pick) {
-        sendResponse({ error: '当前条件下暂无符合的壁纸' })
-        return
-      }
-      const thumbRaw =
-        (pick.thumbs && (pick.thumbs.large || pick.thumbs.original || pick.thumbs.small)) ||
-        pick.path
-      // Only forward a thumbnail we trust; otherwise fall back to the already
-      // validated full-size path.
-      const thumb = isSafeWallhavenUrl(thumbRaw) ? thumbRaw : pick.path
-      sendResponse({
-        id: pick.id,
-        url: pick.path,
-        thumb,
-        resolution: pick.resolution || pick.dimension_x + 'x' + pick.dimension_y,
-        requestedStrategy: requested,
-        actualStrategy: result.strategy,
-      })
+      const pick = await fetchRandomFromNetwork(requested, { signal: ctrl.signal })
+      if (ctrl.signal.aborted || activeWallhaven !== ctrl) return
+      sendResponse(pick)
     } catch (err) {
+      if (activeWallhaven !== ctrl) return
+      const message = ctrl.signal.aborted
+        ? '请求超时，请稍后再试'
+        : toFriendlyWallhavenNetworkError(err)
       logger.error('Wallhaven fetch error:', err)
-      sendResponse({ error: toFriendlyError(err) })
+      sendResponse({ error: message })
     } finally {
       clearTimeout(timer)
+      if (activeWallhaven === ctrl) activeWallhaven = null
     }
   })()
 
-  // Keep the message channel open for the async response.
   return true
 })

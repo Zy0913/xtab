@@ -11,7 +11,7 @@ describe('Button', () => {
   it('applies secondary variant by default', () => {
     render(<Button>Default</Button>)
     const btn = screen.getByRole('button')
-    expect(btn.className).toContain('bg-surface-strong')
+    expect(btn.className).toContain('bg-btn')
   })
 
   it('applies primary variant classes', () => {
@@ -35,7 +35,7 @@ describe('Button', () => {
   it('applies md size by default', () => {
     render(<Button>Size</Button>)
     const btn = screen.getByRole('button')
-    expect(btn.className).toContain('h-9')
+    expect(btn.className).toContain('h-8')
   })
 
   it('applies sm size', () => {
@@ -48,6 +48,11 @@ describe('Button', () => {
     render(<Button className="my-custom">Custom</Button>)
     const btn = screen.getByRole('button')
     expect(btn.className).toContain('my-custom')
+  })
+
+  it('defaults to type="button" so it never submits a form by accident', () => {
+    render(<Button>Plain</Button>)
+    expect(screen.getByRole('button')).toHaveAttribute('type', 'button')
   })
 
   it('handles disabled state', () => {

@@ -1,8 +1,11 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
-import type { Layout } from 'react-grid-layout'
+import { lazy, Suspense, useMemo, useState, type CSSProperties } from 'react'
+import type { ItemCallback } from 'react-grid-layout'
+import { Minus } from 'lucide-react'
 import { useLayoutStore } from '@/store/useLayoutStore'
 import { useSettingsStore } from '@/store/useSettingsStore'
+import { useShortcutsStore } from '@/store/useShortcutsStore'
 import { cn } from '@/lib/cn'
+import { Button } from '@/components/ui/Button'
 import { WidgetFrame } from './WidgetFrame'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { SearchBar } from '@/components/widgets/SearchBar/SearchBar'
@@ -11,7 +14,9 @@ import { ShortcutsGrid } from '@/components/widgets/Shortcuts/ShortcutsGrid'
 import { WeatherWidget } from '@/components/widgets/Weather/Weather'
 import { TodoList } from '@/components/widgets/Todo/TodoList'
 import { BookmarksTree } from '@/components/widgets/Bookmarks/BookmarksTree'
-import { WIDGET_LABELS, type WidgetId, type WidgetLayout } from '@/types/widget'
+import { WIDGET_LABELS, type WidgetId } from '@/types/widget'
+import { centerLastRow, generateStackedLayout } from './stackLayout'
+import type { Breakpoint } from './GridLayer'
 import './DashboardGrid.css'
 
 // Defer react-grid-layout (+ its CSS) until the first render so it doesn't
@@ -31,96 +36,128 @@ const WIDGETS: Record<
   bookmarks: { title: WIDGET_LABELS.bookmarks, render: () => <BookmarksTree /> },
 }
 
-function generateXsLayout(visible: WidgetLayout[]): WidgetLayout[] {
-  let y = 0
-  return visible.map((item) => {
-    const layout = { ...item, x: 0, y, w: Math.min(item.w, 4) }
-    y += item.h
-    return layout
-  })
-}
+/** Columns of the stacked layouts, as in GridLayer's COLS. */
+const STACK_COLS = { sm: 8, xs: 4 } as const
 
 export function DashboardGrid() {
   const layouts = useLayoutStore((s) => s.layouts)
   const enabled = useLayoutStore((s) => s.enabled)
+  const customized = useLayoutStore((s) => s.customized)
   const setLayouts = useLayoutStore((s) => s.setLayouts)
+  const toggleWidget = useLayoutStore((s) => s.toggleWidget)
   const editMode = useSettingsStore((s) => s.editMode)
-  const [breakpoint, setBreakpoint] = useState('lg')
+  const toggleEditMode = useSettingsStore((s) => s.toggleEditMode)
+  const [breakpoint, setBreakpoint] = useState<Breakpoint>('lg')
+  const stackCols = breakpoint === 'sm' || breakpoint === 'xs' ? STACK_COLS[breakpoint] : null
+  const narrow = stackCols !== null
+  // The add tile counts too.
+  const shortcutTiles = useShortcutsStore((s) => s.items.length) + 1
 
-  const visible = useMemo(
+  const visible = useMemo(() => {
+    const items = layouts
+      .filter((l) => enabled.includes(l.i))
+      .map((l) => {
+        if (l.i === 'search') return { ...l, minH: 1 }
+        if (l.i === 'shortcuts') return { ...l, minH: 2 }
+        return l
+      })
+    return customized ? items : centerLastRow(items)
+  }, [layouts, enabled, customized])
+
+  // Stacked, the shortcuts put one tile in each grid column (see
+  // --shortcut-columns below) and get a grid row for each row of tiles: a row
+  // of tiles is 80px tall, a grid row 86px with its margin.
+  const smLayout = useMemo(
     () =>
-      layouts
-        .filter((l) => enabled.includes(l.i))
-        .map((l) => {
-          if (l.i === 'search') return { ...l, minH: 1 }
-          if (l.i === 'shortcuts') return { ...l, minH: 2 }
-          return l
-        }),
-    [layouts, enabled],
+      generateStackedLayout(visible, STACK_COLS.sm, {
+        shortcuts: Math.ceil(shortcutTiles / STACK_COLS.sm),
+      }),
+    [visible, shortcutTiles],
   )
+  const xsLayout = useMemo(
+    () =>
+      generateStackedLayout(visible, STACK_COLS.xs, {
+        shortcuts: Math.ceil(shortcutTiles / STACK_COLS.xs),
+      }),
+    [visible, shortcutTiles],
+  )
+  // Never more columns than tiles, so a short row stays centred.
+  const stackStyle = narrow
+    ? ({ '--shortcut-columns': Math.min(stackCols, shortcutTiles) } as CSSProperties)
+    : undefined
 
-  const xsLayout = useMemo(() => generateXsLayout(visible), [visible])
-
-  const handleLayoutChange = (currentLayout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
-    if (breakpoint !== 'lg' && breakpoint !== 'md') return
-    const next = allLayouts[breakpoint] || currentLayout
-    const merged: WidgetLayout[] = layouts.map((cur) => {
-      const updated = next.find((n) => n.i === cur.i)
-      if (!updated) return cur
-      return {
-        ...cur,
-        x: updated.x,
-        y: updated.y,
-        w: updated.w,
-        h: updated.h,
-      }
-    })
-    setLayouts(merged)
+  // Save only what the user arranged. Saving every layout change would also
+  // store vertical compaction and the centred row as if they were choices.
+  const commitLayout: ItemCallback = (current, before, after) => {
+    const moved =
+      before.x !== after.x || before.y !== after.y || before.w !== after.w || before.h !== after.h
+    if (!moved) return
+    setLayouts(
+      layouts.map((cur) => {
+        const next = current.find((n) => n.i === cur.i)
+        return next ? { ...cur, x: next.x, y: next.y, w: next.w, h: next.h } : cur
+      }),
+    )
   }
 
-  const isMobile = breakpoint === 'xs' || breakpoint === 'sm'
-
   const children = visible.map((item) => {
-    const w = WIDGETS[item.i]
+    const widget = WIDGETS[item.i]
     return (
-      <div key={item.i} className={item.i === 'search' ? 'z-50' : ''}>
-        <WidgetFrame editMode={editMode} transparent={w.transparent}>
-          {editMode && !isMobile && (
-            <div
-              className="widget-drag-handle absolute inset-x-0 top-0 z-10 flex h-7 cursor-grab items-start justify-center rounded-t-card pt-1.5 active:cursor-grabbing"
-              aria-label="拖拽移动"
-            >
-              <span
-                className="bg-text-tertiary/50 h-1 w-8 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-                aria-hidden
-              />
-            </div>
-          )}
+      <div key={item.i} data-surface={widget.transparent ? 'wallpaper' : 'material'}>
+        <WidgetFrame editMode={editMode} transparent={widget.transparent}>
           <div
-            className={cn(
-              'relative z-[2] flex h-full w-full flex-col',
-              !w.transparent && 'p-4 sm:p-5',
-            )}
+            className={cn('relative flex h-full w-full flex-col', !widget.transparent && 'p-4')}
+            style={stackStyle}
           >
-            <ErrorBoundary>{w.render()}</ErrorBoundary>
+            <ErrorBoundary>{widget.render()}</ErrorBoundary>
           </div>
+          {/* While editing, the whole widget is the drag surface and its
+              content stays inert, as on the macOS desktop. */}
+          {editMode && !narrow && (
+            <div
+              aria-hidden
+              className="widget-drag-handle absolute inset-0 cursor-grab rounded-[inherit] active:cursor-grabbing"
+            />
+          )}
+          {editMode && (
+            <button
+              type="button"
+              onClick={() => toggleWidget(item.i)}
+              aria-label={`移除${widget.title}`}
+              title={`移除${widget.title}`}
+              className="widget-remove material-pop animate-check-in absolute -left-2 -top-2 flex h-[22px] w-[22px] items-center justify-center rounded-full text-text-primary transition-transform duration-fast hover:scale-110 active:scale-95"
+            >
+              <Minus size={12} strokeWidth={3} aria-hidden />
+            </button>
+          )}
         </WidgetFrame>
       </div>
     )
   })
 
   return (
-    <Suspense fallback={null}>
-      <GridLayer
-        visible={visible}
-        xsLayout={xsLayout}
-        editMode={editMode}
-        isMobile={isMobile}
-        onLayoutChange={handleLayoutChange}
-        onBreakpointChange={setBreakpoint}
-      >
-        {children}
-      </GridLayer>
-    </Suspense>
+    <>
+      <Suspense fallback={null}>
+        <GridLayer
+          visible={visible}
+          smLayout={smLayout}
+          xsLayout={xsLayout}
+          editMode={editMode}
+          onLayoutCommit={commitLayout}
+          onBreakpointChange={setBreakpoint}
+        >
+          {children}
+        </GridLayer>
+      </Suspense>
+
+      {editMode && (
+        <div className="material animate-rise-in fixed bottom-6 left-1/2 z-chrome flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full py-1.5 pl-4 pr-1.5 text-body text-text-secondary">
+          <span>{narrow ? '窗口较窄，组件会自动排列' : '拖动组件调整位置，拖右下角调整大小'}</span>
+          <Button size="sm" variant="primary" onClick={toggleEditMode} className="rounded-full">
+            完成
+          </Button>
+        </div>
+      )}
+    </>
   )
 }

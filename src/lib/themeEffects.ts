@@ -1,9 +1,11 @@
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { extractWallpaperTint } from '@/lib/wallpaperTint'
 import { warn } from '@/lib/logger'
+import { setLensing } from '@/lib/liquidGlass'
 import {
   applyThemeAndTint,
   applyGlassMode,
+  applyGlassTint,
   applyReduceMotion,
   applyWallpaperTint,
   applyWallpaperLuminance,
@@ -37,8 +39,10 @@ export async function initTheme() {
   // shows a fully consistent colour state (no class-only frame).
   applyThemeAndTint(state.theme, state.wallpaperTint)
   applyGlassMode(state.glassMode)
+  setLensing(state.glassMode === 'tahoe')
+  applyGlassTint(state.glassTint)
   applyReduceMotion(state.reduceMotion)
-  applyWallpaperLuminance(state.wallpaperLuminance)
+  applyWallpaperLuminance(state.wallpaperLuminance, state.wallpaperDimming)
 
   // Re-extract when we don't have a cached signal yet.
   const needsExtract =
@@ -49,7 +53,7 @@ export async function initTheme() {
         useSettingsStore.getState().setWallpaperTint(tint.rgb)
         useSettingsStore.getState().setWallpaperLuminance(tint.luminance)
         applyWallpaperTint(tint.rgb)
-        applyWallpaperLuminance(tint.luminance)
+        applyWallpaperLuminance(tint.luminance, useSettingsStore.getState().wallpaperDimming)
       } else {
         useSettingsStore.getState().setWallpaperTint(null)
         useSettingsStore.getState().setWallpaperLuminance(null)
@@ -73,7 +77,7 @@ export async function initTheme() {
           useSettingsStore.getState().setWallpaperTint(tint.rgb)
           useSettingsStore.getState().setWallpaperLuminance(tint.luminance)
           applyWallpaperTint(tint.rgb)
-          applyWallpaperLuminance(tint.luminance)
+          applyWallpaperLuminance(tint.luminance, useSettingsStore.getState().wallpaperDimming)
         }
       }).catch((e) => warn('Tint extraction failed:', e))
     }, TINT_DEBOUNCE_MS)
@@ -88,10 +92,17 @@ export async function initTheme() {
     } else if (next.wallpaperTint !== prev.wallpaperTint) {
       applyWallpaperTint(next.wallpaperTint)
     }
-    if (next.glassMode !== prev.glassMode) applyGlassMode(next.glassMode)
+    if (next.glassMode !== prev.glassMode) {
+      applyGlassMode(next.glassMode)
+      setLensing(next.glassMode === 'tahoe')
+    }
+    if (next.glassTint !== prev.glassTint) applyGlassTint(next.glassTint)
     if (next.reduceMotion !== prev.reduceMotion) applyReduceMotion(next.reduceMotion)
-    if (next.wallpaperLuminance !== prev.wallpaperLuminance)
-      applyWallpaperLuminance(next.wallpaperLuminance)
+    if (
+      next.wallpaperLuminance !== prev.wallpaperLuminance ||
+      next.wallpaperDimming !== prev.wallpaperDimming
+    )
+      applyWallpaperLuminance(next.wallpaperLuminance, next.wallpaperDimming)
     if (next.wallpaper !== prev.wallpaper) {
       scheduleTint()
     }

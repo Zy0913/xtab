@@ -17,11 +17,14 @@ export function useWallpaper() {
   })
   // Track object URLs we created so we can revoke them and avoid memory leaks.
   const ownedObjectUrls = useRef<Set<string>>(new Set())
+  // Ignore decode completions that no longer match the store (stale races).
+  const expectedUrlRef = useRef<string | null>(null)
 
   useEffect(() => {
+    expectedUrlRef.current = wallpaper
+
     if (!wallpaper) {
       setState((prev) => {
-        // The outgoing prev layer is about to be replaced — revoke if owned.
         if (prev.prevUrl && ownedObjectUrls.current.has(prev.prevUrl)) {
           URL.revokeObjectURL(prev.prevUrl)
           ownedObjectUrls.current.delete(prev.prevUrl)
@@ -36,64 +39,92 @@ export function useWallpaper() {
     }
 
     let cancelled = false
+    let revealed = false
+    const expected = wallpaper
 
-    // Start the cross-fade: clear loadedUrl so bottom layer shows old wallpaper.
-    // Any URL that was previously prev (url0) leaves the DOM now — revoke it.
-    setState((prev) => {
-      if (prev.prevUrl && ownedObjectUrls.current.has(prev.prevUrl)) {
-        URL.revokeObjectURL(prev.prevUrl)
-        ownedObjectUrls.current.delete(prev.prevUrl)
-      }
-      return {
-        loadedUrl: null,
-        prevUrl: prev.loadedUrl,
-        visible: false,
-      }
-    })
+    // Keep showing the current wallpaper until the next one is fully decoded.
     ;(async () => {
-      const { objectUrl } = await resolveWallpaper(wallpaper)
-      if (cancelled) {
-        if (objectUrl.startsWith('blob:')) URL.revokeObjectURL(objectUrl)
+      const { objectUrl } = await resolveWallpaper(expected)
+      if (cancelled || expectedUrlRef.current !== expected) {
+        if (objectUrl.startsWith('blob:') && !ownedObjectUrls.current.has(objectUrl)) {
+          URL.revokeObjectURL(objectUrl)
+        }
         return
       }
       if (objectUrl.startsWith('blob:')) ownedObjectUrls.current.add(objectUrl)
 
       const img = new Image()
-      const onLoad = () => {
-        if (cancelled) return
-        requestAnimationFrame(() => {
-          setState((prev) => ({
+      if ('decoding' in img) {
+        try {
+          ;(img as HTMLImageElement).decoding = 'async'
+        } catch {
+          // ignore
+        }
+      }
+
+      const reveal = () => {
+        // Guard: cancel, already revealed (onload + complete), or store moved on.
+        if (cancelled || revealed) return
+        if (expectedUrlRef.current !== expected) return
+        revealed = true
+
+        setState((prev) => {
+          if (prev.prevUrl && ownedObjectUrls.current.has(prev.prevUrl)) {
+            URL.revokeObjectURL(prev.prevUrl)
+            ownedObjectUrls.current.delete(prev.prevUrl)
+          }
+          const sameAsCurrent = prev.loadedUrl === objectUrl
+          return {
             loadedUrl: objectUrl,
-            prevUrl: prev.prevUrl,
-            visible: true,
-          }))
+            prevUrl: sameAsCurrent ? prev.prevUrl : prev.loadedUrl,
+            visible: sameAsCurrent,
+          }
+        })
+
+        requestAnimationFrame(() => {
+          if (cancelled || expectedUrlRef.current !== expected) return
+          setState((prev) => (prev.loadedUrl === objectUrl ? { ...prev, visible: true } : prev))
         })
       }
+
       const onError = () => {
-        if (cancelled) return
+        if (cancelled || revealed) return
+        if (expectedUrlRef.current !== expected) return
+        revealed = true
         if (objectUrl.startsWith('blob:')) {
           URL.revokeObjectURL(objectUrl)
           ownedObjectUrls.current.delete(objectUrl)
         }
-        requestAnimationFrame(() => {
-          setState((prev) => ({
-            loadedUrl: prev.prevUrl,
-            prevUrl: null,
-            visible: true,
-          }))
-        })
+        setState((prev) => ({
+          ...prev,
+          visible: true,
+        }))
       }
-      img.onload = onLoad
+
+      img.onload = reveal
       img.onerror = onError
       img.src = objectUrl
+      if (img.complete && img.naturalWidth > 0) {
+        reveal()
+      }
     })()
-
-    // Keep only the active wallpaper in IndexedDB.
-    void evictOthers(wallpaper)
 
     return () => {
       cancelled = true
     }
+  }, [wallpaper])
+
+  // Evict other cached blobs after the active wallpaper settles (idle).
+  useEffect(() => {
+    if (!wallpaper) return
+    const settled = wallpaper
+    const t = window.setTimeout(() => {
+      // Only evict if this URL is still the expected one (no newer swap).
+      if (expectedUrlRef.current === settled) {
+        void evictOthers(settled)
+      }
+    }, 2_000)
+    return () => window.clearTimeout(t)
   }, [wallpaper])
 
   useEffect(() => {

@@ -11,7 +11,9 @@ function resetStore() {
     wallpaper: DEFAULT_WALLPAPER,
     wallpaperTint: null,
     wallpaperLuminance: null,
-    wallpaperDimming: 0.25,
+    wallpaperDimming: 0.15,
+    glassTint: 0.5,
+    showSeconds: false,
     editMode: false,
     reduceMotion: false,
     onboardingDone: true,
@@ -29,7 +31,9 @@ describe('useSettingsStore', () => {
     expect(s.wallpaper).toBe(DEFAULT_WALLPAPER)
     expect(s.wallpaperTint).toBeNull()
     expect(s.wallpaperLuminance).toBeNull()
-    expect(s.wallpaperDimming).toBe(0.25)
+    expect(s.wallpaperDimming).toBe(0.15)
+    expect(s.glassTint).toBe(0.5)
+    expect(s.showSeconds).toBe(false)
     expect(s.editMode).toBe(false)
     expect(s.reduceMotion).toBe(false)
     expect(s.onboardingDone).toBe(true)
@@ -95,5 +99,21 @@ describe('useSettingsStore', () => {
     expect(useSettingsStore.getState().wallpaperDimming).toBe(0)
     useSettingsStore.getState().setWallpaperDimming(0.35)
     expect(useSettingsStore.getState().wallpaperDimming).toBe(0.35)
+  })
+
+  it('setGlassTint clamps values 0-1', () => {
+    useSettingsStore.getState().setGlassTint(0.8)
+    expect(useSettingsStore.getState().glassTint).toBe(0.8)
+    useSettingsStore.getState().setGlassTint(2)
+    expect(useSettingsStore.getState().glassTint).toBe(1)
+    useSettingsStore.getState().setGlassTint(-1)
+    expect(useSettingsStore.getState().glassTint).toBe(0)
+  })
+
+  it('setShowSeconds toggles the seconds counter', () => {
+    useSettingsStore.getState().setShowSeconds(true)
+    expect(useSettingsStore.getState().showSeconds).toBe(true)
+    useSettingsStore.getState().setShowSeconds(false)
+    expect(useSettingsStore.getState().showSeconds).toBe(false)
   })
 })

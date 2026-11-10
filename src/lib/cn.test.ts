@@ -22,4 +22,9 @@ describe('cn', () => {
   it('handles undefined and null', () => {
     expect(cn('foo', undefined, null, 'bar')).toBe('foo bar')
   })
+
+  it('keeps custom font sizes next to text colours', () => {
+    expect(cn('text-caption', 'text-text-primary')).toBe('text-caption text-text-primary')
+    expect(cn('text-caption', 'text-body')).toBe('text-body')
+  })
 })

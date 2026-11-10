@@ -31,13 +31,14 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback
       return (
-        <div className="flex h-full flex-col items-center justify-center gap-2 text-text-tertiary">
-          <p className="text-xs">组件加载失败</p>
+        <div className="flex h-full flex-col items-center justify-center gap-2.5 text-center">
+          <p className="text-body text-text-secondary">组件加载失败</p>
           <button
+            type="button"
             onClick={this.handleRetry}
-            className="flex items-center gap-1 rounded-btn bg-surface px-2 py-1 text-xs transition hover:bg-surface-strong"
+            className="inline-flex h-7 items-center gap-1.5 rounded-control bg-btn px-3 text-caption font-medium text-text-primary shadow-btn transition-colors hover:bg-btn-hover"
           >
-            <RefreshCw size={10} /> 重试
+            <RefreshCw size={12} aria-hidden /> 重试
           </button>
         </div>
       )

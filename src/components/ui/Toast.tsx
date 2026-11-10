@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { X } from 'lucide-react'
-import { cn } from '@/lib/cn'
+import { AlertCircle, Info, X } from 'lucide-react'
 import { setToastHandler } from '@/lib/toast'
 
 interface Toast {
@@ -31,25 +30,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <>
       {children}
       {createPortal(
-        <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2">
+        <div className="fixed bottom-4 right-4 z-toast flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-2">
           {toasts.map((t) => (
             <div
               key={t.id}
-              className={cn(
-                'animate-toast-in backdrop-blur-pop flex items-center gap-2 rounded-card border px-4 py-2.5 text-sm shadow-pop',
-                t.type === 'error'
-                  ? 'border-danger-border bg-danger-soft text-danger'
-                  : 'border-border bg-surface-strong text-text-primary',
-              )}
+              className="material-pop animate-rise-in flex items-start gap-2.5 rounded-[16px] py-2.5 pl-3 pr-2.5 text-body text-text-primary"
               role="alert"
             >
-              <span className="flex-1">{t.message}</span>
+              {t.type === 'error' ? (
+                <AlertCircle size={16} className="mt-px shrink-0 text-danger" aria-hidden />
+              ) : (
+                <Info size={16} className="mt-px shrink-0 text-accent" aria-hidden />
+              )}
+              <span className="min-w-0 flex-1 leading-snug">{t.message}</span>
               <button
+                type="button"
                 onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
-                className="shrink-0 rounded p-0.5 hover:bg-surface"
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-fill hover:text-text-primary"
                 aria-label="关闭"
               >
-                <X size={12} />
+                <X size={12} strokeWidth={2.25} />
               </button>
             </div>
           ))}

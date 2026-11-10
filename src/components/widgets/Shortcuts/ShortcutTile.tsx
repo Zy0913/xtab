@@ -1,5 +1,5 @@
 import { useState, useMemo, memo } from 'react'
-import { X } from 'lucide-react'
+import { Minus } from 'lucide-react'
 import { useShortcutsStore } from '@/store/useShortcutsStore'
 import { getFaviconSources, getInitial, getColorFor } from './faviconFetcher'
 import { cn } from '@/lib/cn'
@@ -10,6 +10,7 @@ interface Props {
   editable: boolean
 }
 
+/** A Safari Favorites tile: the site icon on an app-icon plate, its name below. */
 export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: Props) {
   const remove = useShortcutsStore((s) => s.remove)
   const [sourceIndex, setSourceIndex] = useState(0)
@@ -21,57 +22,62 @@ export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: P
     return list
   }, [shortcut.iconUrl, shortcut.url])
 
+  const hasIcon = sourceIndex < sources.length
+  // While editing, tiles are inert so a stray click never opens a site.
   const TileTag = editable ? 'div' : 'a'
   const linkProps = editable
     ? {}
-    : { href: shortcut.url, target: '_blank', rel: 'noopener noreferrer' }
+    : { href: shortcut.url, target: '_blank', rel: 'noopener noreferrer', title: shortcut.title }
 
   return (
-    <div className="group relative flex w-full flex-col items-center gap-1">
-      <TileTag
-        {...linkProps}
-        className={cn(
-          'bg-surface-strong/90 relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-[14px] shadow-card transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-pop sm:h-[3.15rem] sm:w-[3.15rem]',
-          editable && 'cursor-default',
-        )}
-        aria-label={shortcut.title}
-      >
-        {sourceIndex < sources.length ? (
-          <img
-            src={sources[sourceIndex]}
-            alt=""
-            width={26}
-            height={26}
-            className="h-6 w-6 object-contain sm:h-[1.625rem] sm:w-[1.625rem]"
-            onError={() => setSourceIndex((i) => i + 1)}
-          />
-        ) : (
-          <div
-            className="flex h-8 w-8 items-center justify-center rounded-[10px] text-xs font-semibold text-white sm:h-9 sm:w-9 sm:text-sm"
-            style={{ backgroundColor: getColorFor(shortcut.title) }}
-          >
-            {getInitial(shortcut.title)}
-          </div>
-        )}
-      </TileTag>
-      {editable && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            remove(shortcut.id)
-          }}
-          onMouseDown={(e) => e.stopPropagation()}
-          onTouchStart={(e) => e.stopPropagation()}
-          className="absolute -right-1 -top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-white shadow transition hover:scale-110"
-          aria-label="删除"
+    <div className="group flex w-full flex-col items-center gap-1.5">
+      <div className="relative">
+        <TileTag
+          {...linkProps}
+          aria-label={shortcut.title}
+          className={cn(
+            'tile flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-tile transition-transform duration-fast',
+            !editable && 'active:translate-y-0 active:scale-95 group-hover:-translate-y-0.5',
+          )}
+          // No icon: a monogram on a colour picked from the name, as Safari does.
+          style={hasIcon ? undefined : { backgroundColor: getColorFor(shortcut.title) }}
         >
-          <X size={12} />
-        </button>
-      )}
-      <span
-        className="text-shadow-wallpaper w-full max-w-[4.4rem] truncate text-center text-micro sm:text-[11px]"
-        style={{ color: 'var(--text-primary)' }}
-      >
+          {hasIcon ? (
+            <img
+              src={sources[sourceIndex]}
+              alt=""
+              width={28}
+              height={28}
+              referrerPolicy="no-referrer"
+              className="h-7 w-7 rounded-[6px] object-contain"
+              onError={() => setSourceIndex((i) => i + 1)}
+            />
+          ) : (
+            <span aria-hidden className="text-[1.375rem] font-semibold leading-none text-white">
+              {getInitial(shortcut.title)}
+            </span>
+          )}
+        </TileTag>
+        {editable && (
+          // Sits above the widget's drag surface (z-widget), so it stays
+          // clickable while the layout is being edited.
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              remove(shortcut.id)
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            aria-label={`删除${shortcut.title}`}
+            title={`删除${shortcut.title}`}
+            className="material-pop animate-check-in absolute -left-1.5 -top-1.5 z-widget flex h-5 w-5 items-center justify-center rounded-full text-text-primary transition-transform duration-fast hover:scale-110 active:scale-95"
+          >
+            <Minus size={11} strokeWidth={3} aria-hidden />
+          </button>
+        )}
+      </div>
+      <span className="text-shadow-wallpaper w-full truncate text-center text-caption font-medium text-wp">
         {shortcut.title}
       </span>
     </div>

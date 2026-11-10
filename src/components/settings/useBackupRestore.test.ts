@@ -595,7 +595,7 @@ describe('handleImport', () => {
       await result.current.handleImport(mockFileEvent(payload))
     })
 
-    expect(layoutSetState).toHaveBeenCalledWith({ layouts: payload.layouts })
+    expect(layoutSetState).toHaveBeenCalledWith({ layouts: payload.layouts, customized: true })
     expect(layoutSetState).toHaveBeenCalledWith({ enabled: payload.enabled })
     expect(settingsSetState).toHaveBeenCalledWith(expect.objectContaining({ theme: 'dark' }))
     expect(shortcutsSetState).toHaveBeenCalledWith({ items: payload.shortcuts })

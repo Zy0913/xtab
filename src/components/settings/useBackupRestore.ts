@@ -219,7 +219,8 @@ export function useBackupRestore(): UseBackupRestoreReturn {
       const shortcuts = raw.shortcuts !== undefined ? parseShortcuts(raw.shortcuts) : undefined
       const todos = raw.todos !== undefined ? parseTodos(raw.todos) : undefined
 
-      if (layouts !== undefined) useLayoutStore.setState({ layouts })
+      // An imported layout is shown exactly as saved, never re-centred.
+      if (layouts !== undefined) useLayoutStore.setState({ layouts, customized: true })
       if (enabledVal !== undefined) useLayoutStore.setState({ enabled: enabledVal })
       if (settings !== undefined) useSettingsStore.setState(settings)
       if (shortcuts !== undefined) useShortcutsStore.setState({ items: shortcuts })

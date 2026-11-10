@@ -67,29 +67,58 @@ export async function evictOthers(keepUrl: string): Promise<void> {
   }
 }
 
+/** In-flight warm caches so concurrent resolveWallpaper calls share one fetch. */
+const warmInflight = new Map<string, Promise<void>>()
+
 /**
- * Load a wallpaper URL via cache when possible. Returns an object URL (or the
- * original URL as a fallback). Always kicks off a background fetch to refresh
- * the cache if the entry was missing.
+ * Download into IndexedDB without blocking display. Used so the next open is
+ * instant and tint extraction can read a same-origin blob.
+ */
+export function warmWallpaperCache(url: string): Promise<void> {
+  if (!url || url.startsWith('data:') || url.startsWith('blob:')) {
+    return Promise.resolve()
+  }
+  const existing = warmInflight.get(url)
+  if (existing) return existing
+
+  const job = (async () => {
+    try {
+      const cached = await readCachedBlob(url)
+      if (cached) return
+      const res = await fetch(url, { mode: 'cors' })
+      if (!res.ok) return
+      await writeCachedBlob(url, await res.blob())
+    } catch {
+      // best-effort
+    } finally {
+      warmInflight.delete(url)
+    }
+  })()
+
+  warmInflight.set(url, job)
+  return job
+}
+
+/**
+ * Resolve a displayable wallpaper URL as fast as possible.
+ *
+ * - Cache hit → blob: object URL (instant local paint)
+ * - Cache miss → return the remote URL immediately and warm the cache in the
+ *   background. Waiting for a full multi‑MB re-download here made random /
+ *   API wallpaper switches feel stuck between the old and new image.
  */
 export async function resolveWallpaper(
   url: string,
 ): Promise<{ objectUrl: string; fromCache: boolean }> {
-  // Data URLs and blob URLs can't be cached via fetch — return as-is.
   if (url.startsWith('data:') || url.startsWith('blob:')) {
     return { objectUrl: url, fromCache: false }
   }
+
   const cached = await readCachedBlob(url)
   if (cached) {
     return { objectUrl: URL.createObjectURL(cached), fromCache: true }
   }
-  try {
-    const res = await fetch(url, { mode: 'cors' })
-    if (!res.ok) return { objectUrl: url, fromCache: false }
-    const blob = await res.blob()
-    void writeCachedBlob(url, blob)
-    return { objectUrl: URL.createObjectURL(blob), fromCache: false }
-  } catch {
-    return { objectUrl: url, fromCache: false }
-  }
+
+  void warmWallpaperCache(url)
+  return { objectUrl: url, fromCache: false }
 }

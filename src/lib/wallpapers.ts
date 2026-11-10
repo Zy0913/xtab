@@ -66,3 +66,25 @@ export const PRESETS: WallpaperPreset[] = [
     thumb: u('photo-1469474968028-56623f02e42e', 400),
   },
 ]
+
+/** Next wallpaper when Wallhaven is unreachable. Prefers extras (favorites), then presets. */
+export function pickFallbackWallpaper(
+  current: string | null | undefined,
+  extras: Array<{ url: string }> = [],
+): string | null {
+  const seen = new Set<string>()
+  const pool: string[] = []
+
+  const push = (url: string) => {
+    if (!url || url === current || seen.has(url)) return
+    seen.add(url)
+    pool.push(url)
+  }
+
+  for (const item of extras) push(item.url)
+  for (const preset of PRESETS) push(preset.url)
+  push(DEFAULT_WALLPAPER)
+
+  if (!pool.length) return null
+  return pool[Math.floor(Math.random() * pool.length)]
+}
