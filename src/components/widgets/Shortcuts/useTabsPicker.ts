@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useShortcutsStore } from '@/store/useShortcutsStore'
 import { showToast } from '@/lib/toast'
 import {
@@ -8,6 +8,7 @@ import {
   type OpenTab,
   type OpenTabsGroup,
 } from './useOpenTabs'
+import { suggestShortcutName } from './shortcutText'
 
 interface UseTabsPickerOptions {
   active: boolean
@@ -28,6 +29,11 @@ interface UseTabsPickerReturn {
   allSelected: boolean
   selectableKeys: string[]
   totalSelected: number
+  /** Names typed in the picker, by tab key. */
+  names: Map<string, string>
+  /** The name each tab gets when none is typed, by tab key. */
+  suggestedNames: Map<string, string>
+  setName: (key: string, name: string) => void
   handleSubmit: () => void
 }
 
@@ -45,6 +51,20 @@ export function useTabsPicker({ active, onClose }: UseTabsPickerOptions): UseTab
   // intentionally don't prune on tab close: if a tab reappears (e.g. browser
   // restored it), the user's prior selection is preserved.
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  // Typed names are keyed the same way, so a name survives the tab being
+  // unticked and ticked again.
+  const [names, setNames] = useState<Map<string, string>>(new Map())
+
+  const suggestedNames = useMemo(
+    () =>
+      new Map(
+        tabs.map((t): [string, string] => [
+          normalizeUrlKey(t.url),
+          suggestShortcutName(t.title, t.url),
+        ]),
+      ),
+    [tabs],
+  )
 
   // Live keys = tabs currently visible in the picker. We display and submit
   // based on the intersection so closed tabs don't inflate the count.
@@ -69,14 +89,19 @@ export function useTabsPicker({ active, onClose }: UseTabsPickerOptions): UseTab
   )
   const allSelected = selectableKeys.length > 0 && selectableKeys.every((k) => selected.has(k))
 
-  const toggle = (key: string) => {
+  // Stable, so typing in one row's name field re-renders only that row.
+  const toggle = useCallback((key: string) => {
     setSelected((prev) => {
       const next = new Set(prev)
       if (next.has(key)) next.delete(key)
       else next.add(key)
       return next
     })
-  }
+  }, [])
+
+  const setName = useCallback((key: string, name: string) => {
+    setNames((prev) => new Map(prev).set(key, name))
+  }, [])
 
   const toggleAll = () => {
     setSelected((prev) => {
@@ -96,9 +121,11 @@ export function useTabsPicker({ active, onClose }: UseTabsPickerOptions): UseTab
       if (existingKeys.has(key)) continue
       const t = tabByKey.get(key)
       if (!t) continue
+      // A name cleared in the picker falls back to the suggested one.
+      const suggested = suggestedNames.get(key) ?? t.title
       // Mirror the manual flow — store title + url only and let ShortcutTile
       // resolve the favicon at render time so we don't bake stale icon URLs in.
-      add({ title: t.title, url: t.url })
+      add({ title: names.get(key)?.trim() || suggested, url: t.url })
       added++
     }
     if (added === 0) {
@@ -107,6 +134,7 @@ export function useTabsPicker({ active, onClose }: UseTabsPickerOptions): UseTab
     }
     showToast(`已添加 ${added} 个快捷方式`)
     setSelected(new Set())
+    setNames(new Map())
     onClose()
   }
 
@@ -126,6 +154,9 @@ export function useTabsPicker({ active, onClose }: UseTabsPickerOptions): UseTab
     allSelected,
     selectableKeys,
     totalSelected,
+    names,
+    suggestedNames,
+    setName,
     handleSubmit,
   }
 }

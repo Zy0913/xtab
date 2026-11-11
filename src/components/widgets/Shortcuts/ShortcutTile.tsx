@@ -8,10 +8,12 @@ import type { Shortcut } from '@/types/widget'
 interface Props {
   shortcut: Shortcut
   editable: boolean
+  /** Opens this shortcut's editor, which is what a click on the tile does while editing. */
+  onEdit?: (id: string) => void
 }
 
 /** A Safari Favorites tile: the site icon on an app-icon plate, its name below. */
-export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: Props) {
+export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable, onEdit }: Props) {
   const remove = useShortcutsStore((s) => s.remove)
   const [sourceIndex, setSourceIndex] = useState(0)
 
@@ -23,21 +25,38 @@ export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: P
   }, [shortcut.iconUrl, shortcut.url])
 
   const hasIcon = sourceIndex < sources.length
-  // While editing, tiles are inert so a stray click never opens a site.
-  const TileTag = editable ? 'div' : 'a'
-  const linkProps = editable
-    ? {}
-    : { href: shortcut.url, target: '_blank', rel: 'noopener noreferrer', title: shortcut.title }
 
   return (
     <div className="group flex w-full flex-col items-center gap-1.5">
       <div className="relative">
-        <TileTag
-          {...linkProps}
-          aria-label={shortcut.title}
+        {editable && (
+          // While editing, a click opens the tile's editor, never the site.
+          // Like the remove button, it sits above the widget's drag surface
+          // (z-widget) so the click reaches it. It is laid over the plate
+          // rather than taking its place, so the icon is not loaded again
+          // each time editing starts or ends.
+          <button
+            type="button"
+            onClick={() => onEdit?.(shortcut.id)}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            aria-label={`编辑${shortcut.title}`}
+            title={`编辑${shortcut.title}`}
+            className="peer absolute inset-0 z-widget rounded-tile"
+          />
+        )}
+        {/* While editing, the link has no address: it is only the plate. */}
+        <a
+          href={editable ? undefined : shortcut.url}
+          target={editable ? undefined : '_blank'}
+          rel={editable ? undefined : 'noopener noreferrer'}
+          title={editable ? undefined : shortcut.title}
+          aria-label={editable ? undefined : shortcut.title}
           className={cn(
             'tile flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-tile transition-transform duration-fast',
-            !editable && 'active:translate-y-0 active:scale-95 group-hover:-translate-y-0.5',
+            editable
+              ? 'peer-hover:-translate-y-0.5 peer-active:translate-y-0 peer-active:scale-95'
+              : 'active:translate-y-0 active:scale-95 group-hover:-translate-y-0.5',
           )}
           // No icon: a monogram on a colour picked from the name, as Safari does.
           style={hasIcon ? undefined : { backgroundColor: getColorFor(shortcut.title) }}
@@ -57,7 +76,7 @@ export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable }: P
               {getInitial(shortcut.title)}
             </span>
           )}
-        </TileTag>
+        </a>
         {editable && (
           // Sits above the widget's drag surface (z-widget), so it stays
           // clickable while the layout is being edited.

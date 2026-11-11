@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { ShortcutTile } from '@/components/widgets/Shortcuts/ShortcutTile'
 import { useShortcutsStore } from '@/store/useShortcutsStore'
@@ -29,10 +29,28 @@ describe('ShortcutTile', () => {
     expect(link).toHaveAttribute('target', '_blank')
   })
 
-  it('renders as div when editable', () => {
+  it('renders as an edit button, not a link, when editable', () => {
     render(<ShortcutTile shortcut={baseShortcut} editable={true} />)
-    // In editable mode, it's a div with aria-label, not a link
-    expect(screen.getByLabelText('GitHub').tagName).toBe('DIV')
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '编辑GitHub' })).toBeInTheDocument()
+  })
+
+  it('opens its editor when clicked while editable', () => {
+    const onEdit = vi.fn()
+    render(<ShortcutTile shortcut={baseShortcut} editable={true} onEdit={onEdit} />)
+    fireEvent.click(screen.getByRole('button', { name: '编辑GitHub' }))
+    expect(onEdit).toHaveBeenCalledWith('test-1')
+  })
+
+  it('keeps its icon as editing starts and ends, so the icon is not loaded again', () => {
+    const { rerender } = render(<ShortcutTile shortcut={baseShortcut} editable={false} />)
+    const icon = document.querySelector('img')
+    expect(icon).not.toBeNull()
+
+    rerender(<ShortcutTile shortcut={baseShortcut} editable={true} />)
+    expect(document.querySelector('img')).toBe(icon)
+    rerender(<ShortcutTile shortcut={baseShortcut} editable={false} />)
+    expect(document.querySelector('img')).toBe(icon)
   })
 
   it('shows remove button when editable', () => {

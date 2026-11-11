@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react'
+import { memo, useMemo, useState, type KeyboardEvent } from 'react'
 import { Search, RefreshCw, Check } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -27,8 +27,19 @@ export function TabsPickerPanel({ active, onClose }: Props) {
     allSelected,
     selectableKeys,
     totalSelected,
+    names,
+    suggestedNames,
+    setName,
     handleSubmit,
   } = useTabsPicker({ active, onClose })
+
+  // Return in a name field adds the ticked tabs, as the default button would.
+  const submitFromNameField = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Enter' || e.nativeEvent.isComposing) return
+    if (!(e.target instanceof HTMLInputElement)) return
+    e.preventDefault()
+    handleSubmit()
+  }
 
   if (error) {
     return (
@@ -56,7 +67,7 @@ export function TabsPickerPanel({ active, onClose }: Props) {
           placeholder="搜索标题或网址"
           aria-label="搜索标签页"
           className="pl-8 glass:rounded-full"
-          autoFocus
+          data-autofocus
         />
       </div>
 
@@ -79,7 +90,10 @@ export function TabsPickerPanel({ active, onClose }: Props) {
         </button>
       </div>
 
-      <div className="form-group max-h-[320px] overflow-y-auto overscroll-contain">
+      <div
+        className="form-group max-h-[320px] overflow-y-auto overscroll-contain"
+        onKeyDown={submitFromNameField}
+      >
         {tabs.length === 0 ? (
           <p className="py-10 text-center text-body text-text-secondary">没有可添加的标签页</p>
         ) : groups.length === 0 ? (
@@ -99,13 +113,18 @@ export function TabsPickerPanel({ active, onClose }: Props) {
               <ul className="px-1 pb-1">
                 {g.tabs.map((t) => {
                   const key = normalizeUrlKey(t.url)
+                  const suggested = suggestedNames.get(key) ?? t.title
                   return (
                     <TabRow
                       key={`${t.windowId}-${t.id}`}
                       tab={t}
+                      tabKey={key}
                       existing={existingKeys.has(key)}
                       checked={selected.has(key)}
-                      onToggle={() => toggle(key)}
+                      name={names.get(key) ?? suggested}
+                      suggested={suggested}
+                      onToggle={toggle}
+                      onNameChange={setName}
                     />
                   )
                 })}
@@ -127,12 +146,26 @@ export function TabsPickerPanel({ active, onClose }: Props) {
 
 interface TabRowProps {
   tab: OpenTab
+  tabKey: string
   existing: boolean
   checked: boolean
-  onToggle: () => void
+  /** What the shortcut will be called: the typed name, else the suggested one. */
+  name: string
+  suggested: string
+  onToggle: (key: string) => void
+  onNameChange: (key: string, name: string) => void
 }
 
-const TabRow = memo(function TabRow({ tab, existing, checked, onToggle }: TabRowProps) {
+const TabRow = memo(function TabRow({
+  tab,
+  tabKey,
+  existing,
+  checked,
+  name,
+  suggested,
+  onToggle,
+  onNameChange,
+}: TabRowProps) {
   const host = (() => {
     try {
       return new URL(tab.url).hostname
@@ -143,38 +176,64 @@ const TabRow = memo(function TabRow({ tab, existing, checked, onToggle }: TabRow
   const on = checked || existing
 
   return (
-    <li>
+    <li
+      className={cn(
+        'relative flex items-center gap-2.5 rounded-[6px] px-2 py-1.5 transition-colors duration-fast',
+        !existing && 'hover:bg-fill has-[>button:active]:bg-fill-strong',
+      )}
+    >
+      {/* The whole row ticks the tab. It is a button laid over the row, not
+          around it, so the name field can sit on top of it. */}
       <button
         type="button"
         role="checkbox"
         aria-checked={on}
+        aria-label={existing ? `${tab.title}（已添加）` : tab.title}
+        title={tab.title}
         disabled={existing}
-        onClick={onToggle}
+        onClick={() => onToggle(tabKey)}
+        className={cn('absolute inset-0 rounded-[inherit]', existing && 'cursor-default')}
+      />
+      {/* NSButton checkbox */}
+      <span
+        aria-hidden
         className={cn(
-          'flex w-full items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-left transition-colors duration-fast',
-          existing ? 'cursor-default' : 'hover:bg-fill active:bg-fill-strong',
+          'flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-[4px] transition-colors duration-fast',
+          on
+            ? 'bg-accent text-on-accent'
+            : 'bg-control shadow-[inset_0_0_0_0.5px_var(--control-border),0_0.5px_1px_rgb(0_0_0/0.1)]',
+          existing && 'opacity-50',
         )}
       >
-        {/* NSButton checkbox */}
-        <span
-          aria-hidden
-          className={cn(
-            'flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-[4px] transition-colors duration-fast',
-            on
-              ? 'bg-accent text-on-accent'
-              : 'bg-control shadow-[inset_0_0_0_0.5px_var(--control-border),0_0.5px_1px_rgb(0_0_0/0.1)]',
-            existing && 'opacity-50',
-          )}
-        >
-          {on && <Check size={10} strokeWidth={3.5} />}
-        </span>
-        <TabFavicon key={`${tab.id}-${tab.url}-${tab.favIconUrl || ''}`} tab={tab} />
-        <span className={cn('flex min-w-0 flex-1 flex-col', existing && 'opacity-50')}>
+        {on && <Check size={10} strokeWidth={3.5} />}
+      </span>
+      <TabFavicon key={`${tab.id}-${tab.url}-${tab.favIconUrl || ''}`} tab={tab} />
+      <span className={cn('flex min-w-0 flex-1 flex-col', existing && 'opacity-50')}>
+        {checked ? (
+          // Once ticked, the title gives way to the name the shortcut will
+          // get, ready to edit. The field's text lines up with the address
+          // below, and its negative margins keep the row from growing. The
+          // row has no room for the focus halo, which would cover the
+          // address, so the ring is drawn just inside the field instead.
+          <Input
+            value={name}
+            placeholder={suggested}
+            onChange={(e) => onNameChange(tabKey, e.target.value)}
+            aria-label={`快捷方式名称：${tab.title}`}
+            autoComplete="off"
+            spellCheck={false}
+            className="relative -my-0.5 -ml-1.5 h-[22px] w-[calc(100%+0.375rem)] rounded-[5px] px-1.5 focus-visible:outline-2 focus-visible:-outline-offset-2"
+          />
+        ) : (
           <span className="truncate text-body text-text-primary">{tab.title}</span>
-          <span className="truncate text-caption text-text-secondary">{host}</span>
+        )}
+        <span className="truncate text-caption text-text-secondary">{host}</span>
+      </span>
+      {existing && (
+        <span aria-hidden className="shrink-0 text-caption text-text-secondary">
+          已添加
         </span>
-        {existing && <span className="shrink-0 text-caption text-text-secondary">已添加</span>}
-      </button>
+      )}
     </li>
   )
 })

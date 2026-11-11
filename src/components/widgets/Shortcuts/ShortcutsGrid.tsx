@@ -5,11 +5,14 @@ import { useSettingsStore } from '@/store/useSettingsStore'
 import { useShortcut } from '@/lib/useShortcut'
 import { ShortcutTile } from './ShortcutTile'
 import { AddShortcutDialog } from './AddShortcutDialog'
+import { EditShortcutDialog } from './EditShortcutDialog'
 
 export function ShortcutsGrid() {
   const items = useShortcutsStore((s) => s.items)
   const editMode = useSettingsStore((s) => s.editMode)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const editing = editingId === null ? undefined : items.find((s) => s.id === editingId)
 
   useShortcut('T', () => setDialogOpen(true))
 
@@ -21,6 +24,7 @@ export function ShortcutsGrid() {
             key={`${shortcut.id}-${shortcut.url}-${shortcut.iconUrl || ''}`}
             shortcut={shortcut}
             editable={editMode}
+            onEdit={setEditingId}
           />
         ))}
         <div className="flex w-full flex-col items-center gap-1.5">
@@ -42,6 +46,7 @@ export function ShortcutsGrid() {
         </div>
       </div>
       <AddShortcutDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+      <EditShortcutDialog shortcut={editing} onClose={() => setEditingId(null)} />
     </>
   )
 }

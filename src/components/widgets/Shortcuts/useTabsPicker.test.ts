@@ -238,7 +238,61 @@ describe('useTabsPicker', () => {
     expect(mockOnClose).not.toHaveBeenCalled()
   })
 
-  // 8. Error state pass-through ----------------------------------------------
+  // 8. Names -------------------------------------------------------------------
+  it('suggests a short name for each tab', () => {
+    setTabs([{ ...mockTabs[0], title: 'LINUX DO - 新的理想型社区', url: 'https://linux.do/' }])
+    const { result } = renderHook(() => useTabsPicker(defaultProps))
+
+    expect(result.current.suggestedNames.get('https://linux.do')).toBe('LINUX DO')
+  })
+
+  it('adds a tab under the name typed for it, trimmed', () => {
+    const { result } = renderHook(() => useTabsPicker(defaultProps))
+
+    act(() => {
+      result.current.toggle('https://github.com')
+      result.current.setName('https://github.com', '  代码  ')
+    })
+    expect(result.current.names.get('https://github.com')).toBe('  代码  ')
+
+    act(() => {
+      result.current.handleSubmit()
+    })
+    expect(mockAdd).toHaveBeenCalledWith({ title: '代码', url: 'https://github.com/' })
+  })
+
+  it('falls back to the suggested name when the typed one is cleared', () => {
+    setTabs([{ ...mockTabs[0], title: 'GitHub: Let’s build from here · GitHub' }])
+    const { result } = renderHook(() => useTabsPicker(defaultProps))
+
+    act(() => {
+      result.current.toggle('https://github.com')
+      result.current.setName('https://github.com', '   ')
+    })
+    act(() => {
+      result.current.handleSubmit()
+    })
+    expect(mockAdd).toHaveBeenCalledWith({ title: 'GitHub', url: 'https://github.com/' })
+  })
+
+  it('keeps a typed name when the tab is unticked and ticked again', () => {
+    const { result } = renderHook(() => useTabsPicker(defaultProps))
+
+    act(() => {
+      result.current.toggle('https://github.com')
+      result.current.setName('https://github.com', 'Code')
+      result.current.toggle('https://github.com')
+    })
+    act(() => {
+      result.current.toggle('https://github.com')
+    })
+    act(() => {
+      result.current.handleSubmit()
+    })
+    expect(mockAdd).toHaveBeenCalledWith({ title: 'Code', url: 'https://github.com/' })
+  })
+
+  // 9. Error state pass-through ----------------------------------------------
   it('passes through error and refresh from useOpenTabs', () => {
     const mockRefresh = vi.fn()
     mockedUseOpenTabs.mockReturnValue({

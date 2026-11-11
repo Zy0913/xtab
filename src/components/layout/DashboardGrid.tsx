@@ -152,7 +152,12 @@ export function DashboardGrid() {
 
       {editMode && (
         <div className="material animate-rise-in fixed bottom-6 left-1/2 z-chrome flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full py-1.5 pl-4 pr-1.5 text-body text-text-secondary">
-          <span>{narrow ? '窗口较窄，组件会自动排列' : '拖动组件调整位置，拖右下角调整大小'}</span>
+          <span>
+            {narrow
+              ? '窗口较窄，组件会自动排列'
+              : // Shortcut tiles open their editor when clicked (ShortcutTile).
+                `拖动组件调整位置，拖右下角调整大小${enabled.includes('shortcuts') ? '，点快捷方式可编辑' : ''}`}
+          </span>
           <Button size="sm" variant="primary" onClick={toggleEditMode} className="rounded-full">
             完成
           </Button>

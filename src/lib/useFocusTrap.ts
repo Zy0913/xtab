@@ -23,8 +23,17 @@ export function useFocusTrap(active: boolean) {
       container.setAttribute('tabindex', '-1')
     }
 
-    // Focus the first focusable element, or the container itself
+    // A field marked data-autofocus takes the focus with its text selected, as
+    // the first field of a macOS sheet does. (React's autoFocus would fire
+    // before the opener is remembered above, and this would then override it.)
+    // Otherwise the first focusable element, or the container itself.
     requestAnimationFrame(() => {
+      const preferred = container.querySelector<HTMLElement>('[data-autofocus]')
+      if (preferred) {
+        preferred.focus()
+        if (preferred instanceof HTMLInputElement) preferred.select()
+        return
+      }
       const focusable = getFocusable()
       if (focusable.length > 0) {
         focusable[0].focus()

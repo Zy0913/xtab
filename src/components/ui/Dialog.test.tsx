@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { Dialog } from '@/components/ui/Dialog'
 
 function setupOverlay() {
@@ -108,5 +108,30 @@ describe('Dialog', () => {
       </Dialog>,
     )
     expect(screen.getByText('No title dialog')).toBeInTheDocument()
+  })
+
+  it('opens on the field marked data-autofocus, its text selected, and gives focus back on close', async () => {
+    const opener = document.createElement('button')
+    document.body.appendChild(opener)
+    opener.focus()
+
+    const { rerender } = render(
+      <Dialog open={true} onClose={() => {}} title="Edit">
+        <input aria-label="Address" />
+        <input aria-label="Name" defaultValue="GitHub" data-autofocus />
+      </Dialog>,
+    )
+    const name = screen.getByLabelText('Name') as HTMLInputElement
+    await waitFor(() => expect(name).toHaveFocus())
+    expect([name.selectionStart, name.selectionEnd]).toEqual([0, 'GitHub'.length])
+
+    rerender(
+      <Dialog open={false} onClose={() => {}} title="Edit">
+        <input aria-label="Address" />
+        <input aria-label="Name" defaultValue="GitHub" data-autofocus />
+      </Dialog>,
+    )
+    expect(opener).toHaveFocus()
+    opener.remove()
   })
 })
