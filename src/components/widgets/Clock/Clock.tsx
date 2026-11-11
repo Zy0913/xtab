@@ -64,13 +64,19 @@ function useAlignedTick(periodMs: number, onTick: () => void) {
 }
 
 // Seconds re-render on their own, so the rest of the clock only updates once
-// a minute.
+// a minute. They take up no width: the hours and minutes stay centred just
+// where they are without them, and the smaller seconds hang off to the right
+// on the same baseline instead of pulling the time off centre.
 function Seconds() {
   const [ss, setSs] = useState(() => pad(new Date().getSeconds()))
   const tick = useCallback(() => setSs(pad(new Date().getSeconds())), [])
   useAlignedTick(1000, tick)
   return (
-    <span className="ml-1.5 text-[0.36em] font-medium tracking-normal text-wp-secondary">{ss}</span>
+    <span className="w-0 whitespace-nowrap text-left">
+      <span className="ml-1.5 text-[0.36em] font-medium tracking-normal text-wp-secondary">
+        {ss}
+      </span>
+    </span>
   )
 }
 
