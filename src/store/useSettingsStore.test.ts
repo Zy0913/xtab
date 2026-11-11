@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useSettingsStore } from '@/store/useSettingsStore'
-import { DEFAULT_WALLPAPER } from '@/lib/wallpapers'
+import { DEFAULT_WALLPAPER, OLD_DEFAULT_WALLPAPER } from '@/lib/wallpapers'
 import { getDefaultSearchEngine } from '@/lib/region'
 import { recentWallpapers } from '@/lib/recentWallpapers'
 
@@ -137,5 +137,30 @@ describe('useSettingsStore migrations', () => {
       onboardingDone: true,
     }
     expect(await migrate({ ...saved }, 6)).toEqual({ ...saved, wallpaperTint: null })
+  })
+
+  it('moves whoever had the old drawing to the photo, its colours read again', async () => {
+    const saved = {
+      wallpaper: OLD_DEFAULT_WALLPAPER,
+      wallpaperTint: 'rgb(42, 76, 86)',
+      wallpaperLuminance: 0.06,
+      wallpaperDimming: 0.15,
+      onboardingDone: true,
+    }
+    expect(await migrate({ ...saved }, 7)).toEqual({
+      ...saved,
+      wallpaper: DEFAULT_WALLPAPER,
+      wallpaperTint: null,
+      wallpaperLuminance: null,
+    })
+  })
+
+  it('leaves any other wallpaper and its colours as they were', async () => {
+    const saved = {
+      wallpaper: 'https://example.com/forest.jpg',
+      wallpaperTint: 'rgb(0, 0, 179)',
+      wallpaperLuminance: 0.1,
+    }
+    expect(await migrate({ ...saved }, 7)).toEqual(saved)
   })
 })

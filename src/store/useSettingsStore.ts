@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { chromeStorage, registerHydration, registerRemoteSync } from './storage'
-import { DEFAULT_WALLPAPER } from '@/lib/wallpapers'
+import { DEFAULT_WALLPAPER, OLD_DEFAULT_WALLPAPER } from '@/lib/wallpapers'
 import { rememberWallpaper } from '@/lib/recentWallpapers'
 import { getDefaultSearchEngine } from '@/lib/region'
 
@@ -82,7 +82,7 @@ export const useSettingsStore = create<SettingsState>()(
       name: 'tab:settings',
       storage: createJSONStorage(() => chromeStorage),
       skipHydration: true,
-      version: 7,
+      version: 8,
       migrate: (persisted, fromVersion) => {
         const data = (persisted ?? {}) as Record<string, unknown>
         // v1 → v2: introduce wallpaperDimming with a sensible default.
@@ -115,6 +115,14 @@ export const useSettingsStore = create<SettingsState>()(
         // Drop the stored one so it is read again on the next load.
         if (fromVersion < 7) {
           data.wallpaperTint = null
+        }
+        // v7 → v8: the default wallpaper is a photo, and the drawing before it
+        // is gone. Whoever still had the drawing gets the photo, its colours
+        // read again from it.
+        if (fromVersion < 8 && data.wallpaper === OLD_DEFAULT_WALLPAPER) {
+          data.wallpaper = DEFAULT_WALLPAPER
+          data.wallpaperTint = null
+          data.wallpaperLuminance = null
         }
         return data as unknown as SettingsState
       },

@@ -10,7 +10,12 @@ export interface WallpaperPreset {
 const u = (id: string, w = 2560) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=80`
 
-export const DEFAULT_WALLPAPER = '/wallpapers/default.svg'
+/** A fresh install's wallpaper: mountains in morning mist over a still lake. */
+export const DEFAULT_WALLPAPER = '/wallpapers/default.jpg'
+
+/** The drawing that was the default before it. It no longer ships, but
+    settings and backups from earlier versions may still name it. */
+export const OLD_DEFAULT_WALLPAPER = '/wallpapers/default.svg'
 
 export const PRESETS: WallpaperPreset[] = [
   {

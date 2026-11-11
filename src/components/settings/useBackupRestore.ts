@@ -10,7 +10,7 @@ import {
   readLocalWallpaper,
   saveLocalWallpaper,
 } from '@/lib/localWallpaper'
-import { DEFAULT_WALLPAPER } from '@/lib/wallpapers'
+import { DEFAULT_WALLPAPER, OLD_DEFAULT_WALLPAPER } from '@/lib/wallpapers'
 import { WIDGET_LABELS, type WidgetId, type WidgetLayout, type Shortcut } from '@/types/widget'
 import type { TodoItem } from '@/store/useTodoStore'
 
@@ -48,7 +48,7 @@ export function isObj(v: unknown): v is Record<string, unknown> {
 // Schemes that execute script when placed in href="..." (or, for wallpaper,
 // reach a fetch/img sink). Backup files are untrusted, so we reject these
 // before the value reaches the DOM. http/https/data/blob and scheme-less
-// relative paths (e.g. "/wallpapers/default.svg") are all still allowed.
+// relative paths (e.g. "/wallpapers/default.jpg") are all still allowed.
 const SCRIPT_URL_SCHEME = /^\s*(javascript|vbscript):/i
 export function isScriptUrl(url: string): boolean {
   return SCRIPT_URL_SCHEME.test(url)
@@ -256,6 +256,14 @@ export function useBackupRestore(): UseBackupRestoreReturn {
       const settings = raw.settings !== undefined ? parseSettings(raw.settings) : undefined
       const shortcuts = raw.shortcuts !== undefined ? parseShortcuts(raw.shortcuts) : undefined
       const todos = raw.todos !== undefined ? parseTodos(raw.todos) : undefined
+      if (settings?.wallpaper === OLD_DEFAULT_WALLPAPER) {
+        // A backup from before the photo became the default names the
+        // drawing, with colours read from it. Without those, the photo keeps
+        // its own colours, or has them read again as the wallpaper changes.
+        settings.wallpaper = DEFAULT_WALLPAPER
+        delete settings.wallpaperTint
+        delete settings.wallpaperLuminance
+      }
       if (settings?.wallpaper) settings.wallpaper = await importedWallpaper(settings.wallpaper)
 
       // An imported layout is shown exactly as saved, never re-centred.

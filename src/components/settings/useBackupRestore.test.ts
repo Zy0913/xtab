@@ -82,7 +82,7 @@ vi.mock('@/lib/localWallpaper', async (importOriginal) => ({
 import { useBackupRestore } from './useBackupRestore'
 import { showToast } from '@/lib/toast'
 import { readLocalWallpaper, saveLocalWallpaper } from '@/lib/localWallpaper'
-import { DEFAULT_WALLPAPER } from '@/lib/wallpapers'
+import { DEFAULT_WALLPAPER, OLD_DEFAULT_WALLPAPER } from '@/lib/wallpapers'
 import { renderHook, act } from '@testing-library/react'
 
 // ---------------------------------------------------------------------------
@@ -301,8 +301,8 @@ describe('parseSettings', () => {
   })
 
   it('accepts local path wallpaper (scheme-less)', () => {
-    const result = parseSettings({ wallpaper: '/wallpapers/default.svg' })
-    expect(result.wallpaper).toBe('/wallpapers/default.svg')
+    const result = parseSettings({ wallpaper: '/wallpapers/default.jpg' })
+    expect(result.wallpaper).toBe('/wallpapers/default.jpg')
   })
 
   it('accepts data: / blob: wallpaper', () => {
@@ -831,5 +831,33 @@ describe('uploaded wallpapers', () => {
       expect((await exportedSettings()).wallpaper).toBe('https://example.com/bg.jpg')
       expect(readLocalWallpaper).not.toHaveBeenCalled()
     })
+  })
+})
+
+describe('the old default wallpaper', () => {
+  beforeEach(() => {
+    settingsSetState.mockClear()
+  })
+
+  it('becomes the photo on import, leaving out the colours read from the drawing', async () => {
+    const payload = {
+      version: 4,
+      settings: {
+        wallpaper: OLD_DEFAULT_WALLPAPER,
+        wallpaperTint: 'rgb(42, 76, 86)',
+        wallpaperLuminance: 0.06,
+        wallpaperDimming: 0.3,
+      },
+    }
+    const { result } = renderHook(() => useBackupRestore())
+
+    await act(async () => {
+      await result.current.handleImport(mockFileEvent(payload))
+    })
+
+    const applied = settingsSetState.mock.calls[0][0]
+    expect(applied).toMatchObject({ wallpaper: DEFAULT_WALLPAPER, wallpaperDimming: 0.3 })
+    expect(applied).not.toHaveProperty('wallpaperTint')
+    expect(applied).not.toHaveProperty('wallpaperLuminance')
   })
 })

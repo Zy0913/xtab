@@ -1,5 +1,13 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { DEFAULT_WALLPAPER, PRESETS, pickFallbackWallpaper } from './wallpapers'
+
+describe('DEFAULT_WALLPAPER', () => {
+  it('ships with the extension', () => {
+    expect(existsSync(resolve(__dirname, '../../public', DEFAULT_WALLPAPER.slice(1)))).toBe(true)
+  })
+})
 
 describe('pickFallbackWallpaper', () => {
   afterEach(() => {
