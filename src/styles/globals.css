@@ -63,6 +63,13 @@
     outline-offset: 1px;
   }
 
+  /* The page scrolls with no bar of its own, as the desktop has none: a bar
+     down the right edge would cut a strip out of the wallpaper. Panels and
+     lists keep the slim bars below. */
+  html {
+    scrollbar-width: none;
+  }
+
   /* Slim rounded scrollbars, close to the macOS overlay bars. */
   ::-webkit-scrollbar {
     width: 11px;

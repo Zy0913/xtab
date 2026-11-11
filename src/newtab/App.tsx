@@ -74,9 +74,16 @@ export default function App() {
         </header>
       )}
 
-      {/* Bottom padding keeps the last row clear of the edit bar. In Liquid
-          Glass, ink on the dashboard follows the wallpaper (tokens.css). */}
-      <main className="on-wallpaper relative mx-auto w-full max-w-[1360px] px-6 pb-24 pt-[clamp(3.5rem,10vh,7rem)] sm:px-10 lg:px-12">
+      {/* While editing, bottom padding keeps the last row clear of the edit
+          bar; otherwise it stays small, so a dashboard that fits the window
+          does not scroll. In Liquid Glass, ink on the dashboard follows the
+          wallpaper (tokens.css). */}
+      <main
+        className={cn(
+          'on-wallpaper relative mx-auto w-full max-w-[1360px] px-6 pt-[clamp(3.5rem,10vh,7rem)] sm:px-10 lg:px-12',
+          editMode ? 'pb-24' : 'pb-10',
+        )}
+      >
         <DashboardGrid />
       </main>
 
