@@ -15,9 +15,12 @@ const STORAGE_KEY = 'tab:recent-wallpapers'
     toplist holds, fewer than the long toplists. */
 export const RECENT_WALLPAPER_LIMIT = 100
 
-/** Anything longer is an upload (a data URL): never picked at random and
-    too big to keep. */
+/** Nothing longer is kept: an address that long is a data URL. */
 const MAX_URL_LENGTH = 2048
+
+/** Uploads ("local:" keys, or data URLs from older versions) and object URLs
+    are never picked at random, so they aren't remembered. */
+const NOT_REMEMBERED = /^(data|blob|local):/i
 
 /** The same Bing picture comes from www.bing.com or cn.bing.com, whichever
     answered; both count as one. */
@@ -37,7 +40,7 @@ export function recentWallpapers(): string[] {
 
 /** Notes that a wallpaper went on screen. */
 export function rememberWallpaper(url: string): void {
-  if (!url || url.length > MAX_URL_LENGTH || /^(data|blob):/i.test(url)) return
+  if (!url || url.length > MAX_URL_LENGTH || NOT_REMEMBERED.test(url)) return
   const key = wallpaperKey(url)
   const list = recentWallpapers().filter((x) => x !== key)
   list.push(key)

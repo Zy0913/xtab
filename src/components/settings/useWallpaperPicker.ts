@@ -4,10 +4,15 @@ import { useFavoriteWallpapersStore } from '@/store/useFavoriteWallpapersStore'
 import { fetchRandomWallhaven, type WallhavenResult, type WallhavenStrategy } from '@/lib/wallhaven'
 import { pickFallbackWallpaper } from '@/lib/wallpapers'
 import { warmWallpaperCache } from '@/lib/wallpaperCache'
+import {
+  MAX_UPLOAD_BYTES,
+  MAX_UPLOAD_MB,
+  prepareWallpaper,
+  saveLocalWallpaper,
+  UnreadableImageError,
+} from '@/lib/localWallpaper'
 import { showToast } from '@/lib/toast'
 import { warn, error as logError } from '@/lib/logger'
-
-const MAX_FILE_SIZE_MB = 5
 
 const STRATEGY_LABEL: Record<string, string> = {
   '1d': '日榜',
@@ -23,15 +28,6 @@ function strategyLabel(key: string): string {
   return STRATEGY_LABEL[key] ?? key
 }
 
-function fileToDataURL(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onerror = () => reject(reader.error)
-    reader.onload = () => resolve(reader.result as string)
-    reader.readAsDataURL(file)
-  })
-}
-
 function preloadImage(url: string) {
   try {
     const pre = new Image()
@@ -44,21 +40,31 @@ function preloadImage(url: string) {
 
 export function useWallpaperPicker() {
   const current = useSettingsStore((s) => s.wallpaper)
-  const setWallpaper = useSettingsStore((s) => s.setWallpaper)
+  const storeWallpaper = useSettingsStore((s) => s.setWallpaper)
   const dimming = useSettingsStore((s) => s.wallpaperDimming)
   const setDimming = useSettingsStore((s) => s.setWallpaperDimming)
   const favoriteItems = useFavoriteWallpapersStore((s) => s.items)
   const addFavorite = useFavoriteWallpapersStore((s) => s.add)
   const fileRef = useRef<HTMLInputElement>(null)
   const [randomLoading, setRandomLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [strategy, setStrategy] = useState<WallhavenStrategy>('1M')
   // Last successful wallhaven result; used to drive the "favorite current" button
   // because we don't otherwise know if `current` came from wallhaven.
   const [lastResult, setLastResult] = useState<WallhavenResult | null>(null)
 
-  // Monotonic request id — only the latest click may call setWallpaper.
-  // Also prevents double-submit from a stale `randomLoading` closure.
-  const randomSeqRef = useRef(0)
+  // Monotonic request id — only the latest choice (a random pick, an upload
+  // or a preset) may call setWallpaper. Also prevents double-submit from a
+  // stale `randomLoading` closure.
+  const requestSeqRef = useRef(0)
+
+  /** Picks a wallpaper outright, dropping any random pick or upload under way. */
+  const setWallpaper = (url: string) => {
+    requestSeqRef.current += 1
+    setRandomLoading(false)
+    setUploading(false)
+    storeWallpaper(url)
+  }
 
   const canFavoriteCurrent = lastResult !== null && lastResult.url === current
   const alreadyFavorited = useMemo(
@@ -67,38 +73,56 @@ export function useWallpaperPicker() {
   )
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const input = e.target
+    const file = input.files?.[0]
+    // Cleared so that picking the same file again still counts as a change.
+    input.value = ''
     if (!file) return
 
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      showToast(`图片过大，请选择小于 ${MAX_FILE_SIZE_MB}MB 的文件`, 'error')
-      if (fileRef.current) fileRef.current.value = ''
+    if (file.size > MAX_UPLOAD_BYTES) {
+      showToast(`图片过大，请选择不超过 ${MAX_UPLOAD_MB}MB 的文件`, 'error')
       return
     }
 
+    // Uploads supersede any in-flight random result, and a later choice
+    // supersedes the upload.
+    const seq = ++requestSeqRef.current
+    setRandomLoading(false)
+    setUploading(true)
     try {
-      const dataUrl = await fileToDataURL(file)
-      // Uploads supersede any in-flight random result.
-      randomSeqRef.current += 1
-      setRandomLoading(false)
-      setWallpaper(dataUrl)
-    } catch {
-      warn('Failed to read file as data URL')
+      const { blob, resizedTo } = await prepareWallpaper(file)
+      const key = await saveLocalWallpaper(blob)
+      if (seq !== requestSeqRef.current) return
+      storeWallpaper(key)
+      if (resizedTo) {
+        showToast(`图片超过 8K，已缩小到 ${resizedTo.width}×${resizedTo.height}`, 'info')
+      }
+    } catch (err) {
+      if (seq !== requestSeqRef.current) return
+      if (err instanceof UnreadableImageError) {
+        showToast('无法读取这张图片，换成 JPG、PNG 或 WebP 试试', 'error')
+      } else {
+        logError('Wallpaper upload failed:', err)
+        showToast('图片没能保存，请重试', 'error')
+      }
+    } finally {
+      if (seq === requestSeqRef.current) setUploading(false)
     }
   }
 
   const handleRandom = async () => {
-    const seq = ++randomSeqRef.current
+    const seq = ++requestSeqRef.current
     setRandomLoading(true)
+    setUploading(false)
     try {
       const result = await fetchRandomWallhaven(strategy, current)
 
       // A newer click (or upload) already owns the UI — drop this result.
-      if (seq !== randomSeqRef.current) return
+      if (seq !== requestSeqRef.current) return
 
       preloadImage(result.url)
       void warmWallpaperCache(result.url)
-      setWallpaper(result.url)
+      storeWallpaper(result.url)
       if (result.via === 'bing') {
         setLastResult(null)
         showToast('排行榜暂时连不上，已换一张必应壁纸', 'info')
@@ -112,13 +136,13 @@ export function useWallpaperPicker() {
         )
       }
     } catch (err) {
-      if (seq !== randomSeqRef.current) return
+      if (seq !== requestSeqRef.current) return
       const fallback = pickFallbackWallpaper(current, favoriteItems)
       if (fallback) {
         warn('Random wallpaper unavailable, using fallback:', err)
         preloadImage(fallback)
         void warmWallpaperCache(fallback)
-        setWallpaper(fallback)
+        storeWallpaper(fallback)
         setLastResult(null)
         showToast('排行榜暂时连不上，已换一张备用壁纸', 'info')
         return
@@ -128,7 +152,7 @@ export function useWallpaperPicker() {
       showToast(message, 'error')
     } finally {
       // Only the latest request clears the spinner.
-      if (seq === randomSeqRef.current) setRandomLoading(false)
+      if (seq === requestSeqRef.current) setRandomLoading(false)
     }
   }
 
@@ -152,6 +176,7 @@ export function useWallpaperPicker() {
     setWallpaper,
     fileRef,
     randomLoading,
+    uploading,
     strategy,
     setStrategy,
     canFavoriteCurrent,

@@ -101,6 +101,7 @@ describe('rememberWallpaper', () => {
   })
 
   it('skips uploads', () => {
+    rememberWallpaper('local:m3x1k2-abc123')
     rememberWallpaper('data:image/png;base64,AAAA')
     rememberWallpaper('blob:chrome-extension://id/123')
     rememberWallpaper('')

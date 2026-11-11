@@ -1,11 +1,28 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { evictOthers, resolveWallpaper } from './wallpaperCache'
+import { dataUrlToBlob, pruneLocalWallpapers, saveLocalWallpaper } from './localWallpaper'
 
 interface WallpaperState {
   loadedUrl: string | null
   prevUrl: string | null
   visible: boolean
+}
+
+/**
+ * Older versions kept an upload in the settings, as a data URL. It moves to
+ * the uploads store, which takes megabytes out of every settings write.
+ */
+async function moveLegacyUpload(dataUrl: string): Promise<void> {
+  try {
+    const key = await saveLocalWallpaper(dataUrlToBlob(dataUrl))
+    // Unless the wallpaper changed meanwhile, here or in another tab.
+    if (useSettingsStore.getState().wallpaper === dataUrl) {
+      useSettingsStore.setState({ wallpaper: key })
+    }
+  } catch {
+    // It still shows as it is, and the next new tab tries again.
+  }
 }
 
 export function useWallpaper() {
@@ -114,15 +131,17 @@ export function useWallpaper() {
     }
   }, [wallpaper])
 
-  // Evict other cached blobs after the active wallpaper settles (idle).
+  // Once the active wallpaper settles (idle), let the other pictures go:
+  // cached downloads, and uploads no longer in use.
   useEffect(() => {
     if (!wallpaper) return
     const settled = wallpaper
     const t = window.setTimeout(() => {
-      // Only evict if this URL is still the expected one (no newer swap).
-      if (expectedUrlRef.current === settled) {
-        void evictOthers(settled)
-      }
+      // Only if this URL is still the expected one (no newer swap).
+      if (expectedUrlRef.current !== settled) return
+      void evictOthers(settled)
+      void pruneLocalWallpapers(settled)
+      if (settled.startsWith('data:')) void moveLegacyUpload(settled)
     }, 2_000)
     return () => window.clearTimeout(t)
   }, [wallpaper])

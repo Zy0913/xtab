@@ -10,7 +10,7 @@
 import { warn } from '@/lib/logger'
 import { inGamut, linearToOklch, oklchToLinear, toLinear, toSrgb } from './color'
 import type { Vec3 } from './color'
-import { readCachedBlob } from './wallpaperCache'
+import { wallpaperSource } from './wallpaperCache'
 
 interface ColorResult {
   rgb: string // "rgb(r, g, b)"
@@ -175,9 +175,9 @@ export function extractWallpaperTint(url: string): Promise<ColorResult | null> {
   if (existing) return existing
 
   const promise = (async () => {
-    // Check IndexedDB cache first
-    const cachedBlob = await readCachedBlob(url)
-    const objectUrl = cachedBlob ? URL.createObjectURL(cachedBlob) : url
+    // The bytes held locally (an upload, or a cached download), else the address.
+    const source = await wallpaperSource(url)
+    const objectUrl = typeof source === 'string' ? source : URL.createObjectURL(source)
 
     return new Promise<ColorResult | null>((resolve) => {
       const done = (value: ColorResult | null) => {

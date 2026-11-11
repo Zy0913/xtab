@@ -46,6 +46,12 @@ vi.mock('@/lib/wallpaperCache', () => ({
   warmWallpaperCache: vi.fn(() => Promise.resolve()),
 }))
 
+vi.mock('@/lib/localWallpaper', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/localWallpaper')>()),
+  prepareWallpaper: vi.fn(),
+  saveLocalWallpaper: vi.fn(),
+}))
+
 vi.mock('@/lib/toast', () => ({ showToast: vi.fn() }))
 vi.mock('@/lib/logger', () => ({ warn: vi.fn(), error: vi.fn() }))
 
@@ -55,6 +61,13 @@ vi.mock('@/lib/logger', () => ({ warn: vi.fn(), error: vi.fn() }))
 
 import { useWallpaperPicker } from './useWallpaperPicker'
 import { fetchRandomWallhaven } from '@/lib/wallhaven'
+import {
+  MAX_UPLOAD_BYTES,
+  UnreadableImageError,
+  prepareWallpaper,
+  saveLocalWallpaper,
+  type PreparedWallpaper,
+} from '@/lib/localWallpaper'
 import { showToast } from '@/lib/toast'
 import { error as logError } from '@/lib/logger'
 
@@ -72,6 +85,34 @@ function makeWallhavenResult(overrides: Partial<WallhavenResult> = {}): Wallhave
     actualStrategy: '1M',
     ...overrides,
   }
+}
+
+/** A file picked in the upload input, of `size` bytes. */
+function pickFile(size = 4 * 1024 * 1024) {
+  const file = new File(['picture'], 'wallpaper.png', { type: 'image/png' })
+  Object.defineProperty(file, 'size', { value: size })
+  const input = document.createElement('input')
+  Object.defineProperty(input, 'files', { value: [file] })
+  let value = 'C:\\fakepath\\wallpaper.png'
+  Object.defineProperty(input, 'value', {
+    get: () => value,
+    set: (v: string) => {
+      value = v
+    },
+  })
+  const event = {
+    target: input,
+    currentTarget: input,
+  } as unknown as React.ChangeEvent<HTMLInputElement>
+  return { file, input, event }
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((r) => {
+    resolve = r
+  })
+  return { promise, resolve }
 }
 
 // ---------------------------------------------------------------------------
@@ -92,6 +133,10 @@ describe('useWallpaperPicker', () => {
     vi.mocked(fetchRandomWallhaven).mockReset()
     vi.mocked(showToast).mockReset()
     vi.mocked(logError).mockReset()
+    vi.mocked(prepareWallpaper)
+      .mockReset()
+      .mockImplementation(async (file) => ({ blob: file, resizedTo: null }))
+    vi.mocked(saveLocalWallpaper).mockReset().mockResolvedValue('local:m3x1k2-abc123')
   })
 
   // 1. Initial state
@@ -344,5 +389,147 @@ describe('useWallpaperPicker', () => {
 
     expect(storeState.setWallpaper).toHaveBeenCalled()
     expect(showToast).toHaveBeenCalledWith('排行榜暂时连不上，已换一张备用壁纸', 'info')
+  })
+  // Uploads
+  it('handleUpload keeps a 4K picture of 30MB and points the wallpaper at it', async () => {
+    const { file, input, event } = pickFile(30 * 1024 * 1024)
+    const { result } = renderHook(() => useWallpaperPicker())
+
+    await act(async () => {
+      await result.current.handleUpload(event)
+    })
+
+    expect(prepareWallpaper).toHaveBeenCalledWith(file)
+    expect(saveLocalWallpaper).toHaveBeenCalledWith(file)
+    expect(storeState.setWallpaper).toHaveBeenCalledWith('local:m3x1k2-abc123')
+    expect(showToast).not.toHaveBeenCalled()
+    expect(result.current.uploading).toBe(false)
+    // Cleared, so picking the same file again counts as a change.
+    expect(input.value).toBe('')
+  })
+
+  it('handleUpload refuses a file over the limit', async () => {
+    const { input, event } = pickFile(MAX_UPLOAD_BYTES + 1)
+    const { result } = renderHook(() => useWallpaperPicker())
+
+    await act(async () => {
+      await result.current.handleUpload(event)
+    })
+
+    expect(showToast).toHaveBeenCalledWith('图片过大，请选择不超过 50MB 的文件', 'error')
+    expect(prepareWallpaper).not.toHaveBeenCalled()
+    expect(storeState.setWallpaper).not.toHaveBeenCalled()
+    expect(input.value).toBe('')
+  })
+
+  it('handleUpload says when a picture larger than 8K was scaled down', async () => {
+    const webp = new Blob(['webp'], { type: 'image/webp' })
+    vi.mocked(prepareWallpaper).mockResolvedValue({
+      blob: webp,
+      resizedTo: { width: 7680, height: 4320 },
+    })
+    const { result } = renderHook(() => useWallpaperPicker())
+
+    await act(async () => {
+      await result.current.handleUpload(pickFile().event)
+    })
+
+    expect(saveLocalWallpaper).toHaveBeenCalledWith(webp)
+    expect(storeState.setWallpaper).toHaveBeenCalledWith('local:m3x1k2-abc123')
+    expect(showToast).toHaveBeenCalledWith('图片超过 8K，已缩小到 7680×4320', 'info')
+  })
+
+  it('handleUpload explains a picture the browser cannot read', async () => {
+    vi.mocked(prepareWallpaper).mockRejectedValue(new UnreadableImageError())
+    const { result } = renderHook(() => useWallpaperPicker())
+
+    await act(async () => {
+      await result.current.handleUpload(pickFile().event)
+    })
+
+    expect(showToast).toHaveBeenCalledWith('无法读取这张图片，换成 JPG、PNG 或 WebP 试试', 'error')
+    expect(saveLocalWallpaper).not.toHaveBeenCalled()
+    expect(storeState.setWallpaper).not.toHaveBeenCalled()
+    expect(result.current.uploading).toBe(false)
+  })
+
+  it('handleUpload reports a picture that could not be kept, and keeps the wallpaper', async () => {
+    vi.mocked(saveLocalWallpaper).mockRejectedValue(new Error('QuotaExceededError'))
+    const { result } = renderHook(() => useWallpaperPicker())
+
+    await act(async () => {
+      await result.current.handleUpload(pickFile().event)
+    })
+
+    expect(showToast).toHaveBeenCalledWith('图片没能保存，请重试', 'error')
+    expect(logError).toHaveBeenCalled()
+    expect(storeState.setWallpaper).not.toHaveBeenCalled()
+  })
+
+  it('shows the upload as busy while the picture is readied', async () => {
+    const prepared = deferred<PreparedWallpaper>()
+    vi.mocked(prepareWallpaper).mockReturnValue(prepared.promise)
+    const { file, event } = pickFile()
+    const { result } = renderHook(() => useWallpaperPicker())
+
+    let done!: Promise<void>
+    act(() => {
+      done = result.current.handleUpload(event)
+    })
+    expect(result.current.uploading).toBe(true)
+
+    await act(async () => {
+      prepared.resolve({ blob: file, resizedTo: null })
+      await done
+    })
+    expect(result.current.uploading).toBe(false)
+  })
+
+  it('a random pick made while an upload is readied wins', async () => {
+    const prepared = deferred<PreparedWallpaper>()
+    vi.mocked(prepareWallpaper).mockReturnValue(prepared.promise)
+    const random = makeWallhavenResult()
+    vi.mocked(fetchRandomWallhaven).mockResolvedValue(random)
+    const { file, event } = pickFile()
+    const { result } = renderHook(() => useWallpaperPicker())
+
+    let uploadDone!: Promise<void>
+    act(() => {
+      uploadDone = result.current.handleUpload(event)
+    })
+    await act(async () => {
+      await result.current.handleRandom()
+    })
+    expect(result.current.uploading).toBe(false)
+
+    await act(async () => {
+      prepared.resolve({ blob: file, resizedTo: null })
+      await uploadDone
+    })
+    expect(storeState.setWallpaper).toHaveBeenCalledTimes(1)
+    expect(storeState.setWallpaper).toHaveBeenLastCalledWith(random.url)
+  })
+
+  it('a preset picked while an upload is readied wins', async () => {
+    const prepared = deferred<PreparedWallpaper>()
+    vi.mocked(prepareWallpaper).mockReturnValue(prepared.promise)
+    const { file, event } = pickFile()
+    const { result } = renderHook(() => useWallpaperPicker())
+
+    let uploadDone!: Promise<void>
+    act(() => {
+      uploadDone = result.current.handleUpload(event)
+    })
+    act(() => {
+      result.current.setWallpaper('https://example.com/preset.jpg')
+    })
+    expect(result.current.uploading).toBe(false)
+
+    await act(async () => {
+      prepared.resolve({ blob: file, resizedTo: null })
+      await uploadDone
+    })
+    expect(storeState.setWallpaper).toHaveBeenCalledTimes(1)
+    expect(storeState.setWallpaper).toHaveBeenLastCalledWith('https://example.com/preset.jpg')
   })
 })

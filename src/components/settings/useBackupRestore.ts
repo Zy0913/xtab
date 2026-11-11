@@ -3,6 +3,14 @@ import { useSettingsStore } from '@/store/useSettingsStore'
 import { useShortcutsStore } from '@/store/useShortcutsStore'
 import { useTodoStore } from '@/store/useTodoStore'
 import { showToast } from '@/lib/toast'
+import {
+  blobToDataUrl,
+  dataUrlToBlob,
+  isLocalWallpaper,
+  readLocalWallpaper,
+  saveLocalWallpaper,
+} from '@/lib/localWallpaper'
+import { DEFAULT_WALLPAPER } from '@/lib/wallpapers'
 import { WIDGET_LABELS, type WidgetId, type WidgetLayout, type Shortcut } from '@/types/widget'
 import type { TodoItem } from '@/store/useTodoStore'
 
@@ -11,7 +19,9 @@ import type { TodoItem } from '@/store/useTodoStore'
 // ---------------------------------------------------------------------------
 
 const ALL_IDS = Object.keys(WIDGET_LABELS) as WidgetId[]
-export const MAX_IMPORT_SIZE = 5 * 1024 * 1024
+/** A backup carries an uploaded wallpaper as a data URL, a third larger than
+    the file itself: room enough for the largest upload. */
+export const MAX_IMPORT_SIZE = 100 * 1024 * 1024
 export const SUPPORTED_VERSIONS = [1, 2, 3, 4]
 
 export const VALID_THEMES = ['light', 'dark', 'system'] as const
@@ -157,16 +167,39 @@ export function parseTodos(raw: unknown): TodoItem[] {
 }
 
 // ---------------------------------------------------------------------------
+// Uploaded wallpapers
+// ---------------------------------------------------------------------------
+
+/** The wallpaper as a backup holds it. An upload goes in whole, as a data
+    URL: its key means nothing to another browser. */
+async function portableWallpaper(wallpaper: string): Promise<string> {
+  if (!isLocalWallpaper(wallpaper)) return wallpaper
+  const blob = await readLocalWallpaper(wallpaper)
+  return blob ? blobToDataUrl(blob) : DEFAULT_WALLPAPER
+}
+
+/** An uploaded wallpaper comes back as a data URL and moves to the uploads
+    store, keeping the settings small. It stays as it is if it can't. */
+async function importedWallpaper(wallpaper: string): Promise<string> {
+  if (!wallpaper.startsWith('data:')) return wallpaper
+  try {
+    return await saveLocalWallpaper(dataUrlToBlob(wallpaper))
+  } catch {
+    return wallpaper
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
 
 export interface UseBackupRestoreReturn {
-  handleExport: () => void
+  handleExport: () => Promise<void>
   handleImport: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>
 }
 
 export function useBackupRestore(): UseBackupRestoreReturn {
-  const handleExport = () => {
+  const handleExport = async () => {
     const {
       theme,
       glassMode,
@@ -177,37 +210,42 @@ export function useBackupRestore(): UseBackupRestoreReturn {
       wallpaperDimming,
       reduceMotion,
     } = useSettingsStore.getState()
-    const data = {
-      version: 4,
-      layouts: useLayoutStore.getState().layouts,
-      enabled: useLayoutStore.getState().enabled,
-      settings: {
-        theme,
-        glassMode,
-        searchEngine,
-        wallpaper,
-        wallpaperTint,
-        wallpaperLuminance,
-        wallpaperDimming,
-        reduceMotion,
-      },
-      shortcuts: useShortcutsStore.getState().items,
-      todos: useTodoStore.getState().items,
+    try {
+      const data = {
+        version: 4,
+        layouts: useLayoutStore.getState().layouts,
+        enabled: useLayoutStore.getState().enabled,
+        settings: {
+          theme,
+          glassMode,
+          searchEngine,
+          wallpaper: await portableWallpaper(wallpaper),
+          wallpaperTint,
+          wallpaperLuminance,
+          wallpaperDimming,
+          reduceMotion,
+        },
+        shortcuts: useShortcutsStore.getState().items,
+        todos: useTodoStore.getState().items,
+      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `tab-backup-${new Date().toISOString().slice(0, 10)}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      showToast('导出失败，请重试', 'error')
     }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `tab-backup-${new Date().toISOString().slice(0, 10)}.json`
-    a.click()
-    URL.revokeObjectURL(url)
   }
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     try {
-      if (file.size > MAX_IMPORT_SIZE) throw new Error('文件过大，最大支持 5MB')
+      if (file.size > MAX_IMPORT_SIZE)
+        throw new Error(`文件过大，最大支持 ${MAX_IMPORT_SIZE / 1024 / 1024}MB`)
       const raw = JSON.parse(await file.text())
       if (!isObj(raw)) throw new Error('文件不是合法 JSON 对象')
       if (raw.version !== undefined && !SUPPORTED_VERSIONS.includes(raw.version as number))
@@ -218,6 +256,7 @@ export function useBackupRestore(): UseBackupRestoreReturn {
       const settings = raw.settings !== undefined ? parseSettings(raw.settings) : undefined
       const shortcuts = raw.shortcuts !== undefined ? parseShortcuts(raw.shortcuts) : undefined
       const todos = raw.todos !== undefined ? parseTodos(raw.todos) : undefined
+      if (settings?.wallpaper) settings.wallpaper = await importedWallpaper(settings.wallpaper)
 
       // An imported layout is shown exactly as saved, never re-centred.
       if (layouts !== undefined) useLayoutStore.setState({ layouts, customized: true })

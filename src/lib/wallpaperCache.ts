@@ -1,3 +1,6 @@
+import { isLocalWallpaper, readLocalWallpaper } from './localWallpaper'
+import { DEFAULT_WALLPAPER } from './wallpapers'
+
 const DB_NAME = 'tab-wallpaper-cache'
 const STORE = 'blobs'
 const VERSION = 1
@@ -75,7 +78,7 @@ const warmInflight = new Map<string, Promise<void>>()
  * instant and tint extraction can read a same-origin blob.
  */
 export function warmWallpaperCache(url: string): Promise<void> {
-  if (!url || url.startsWith('data:') || url.startsWith('blob:')) {
+  if (!url || url.startsWith('data:') || url.startsWith('blob:') || isLocalWallpaper(url)) {
     return Promise.resolve()
   }
   const existing = warmInflight.get(url)
@@ -100,9 +103,21 @@ export function warmWallpaperCache(url: string): Promise<void> {
 }
 
 /**
+ * The picture behind a wallpaper setting: its bytes when this browser holds
+ * them (an upload, or a download already cached), else the address to load
+ * it from. An upload this browser doesn't hold, from a backup made elsewhere
+ * say, gives the default wallpaper.
+ */
+export async function wallpaperSource(url: string): Promise<Blob | string> {
+  if (isLocalWallpaper(url)) return (await readLocalWallpaper(url)) ?? DEFAULT_WALLPAPER
+  if (url.startsWith('data:') || url.startsWith('blob:')) return url
+  return (await readCachedBlob(url)) ?? url
+}
+
+/**
  * Resolve a displayable wallpaper URL as fast as possible.
  *
- * - Cache hit → blob: object URL (instant local paint)
+ * - Held locally → blob: object URL (instant local paint)
  * - Cache miss → return the remote URL immediately and warm the cache in the
  *   background. Waiting for a full multi‑MB re-download here made random /
  *   API wallpaper switches feel stuck between the old and new image.
@@ -110,15 +125,10 @@ export function warmWallpaperCache(url: string): Promise<void> {
 export async function resolveWallpaper(
   url: string,
 ): Promise<{ objectUrl: string; fromCache: boolean }> {
-  if (url.startsWith('data:') || url.startsWith('blob:')) {
-    return { objectUrl: url, fromCache: false }
+  const source = await wallpaperSource(url)
+  if (typeof source !== 'string') {
+    return { objectUrl: URL.createObjectURL(source), fromCache: true }
   }
-
-  const cached = await readCachedBlob(url)
-  if (cached) {
-    return { objectUrl: URL.createObjectURL(cached), fromCache: true }
-  }
-
-  void warmWallpaperCache(url)
-  return { objectUrl: url, fromCache: false }
+  if (source === url) void warmWallpaperCache(url)
+  return { objectUrl: source, fromCache: false }
 }

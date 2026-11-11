@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   isStr,
   isNum,
@@ -21,12 +21,23 @@ import {
 // vi.hoisted ensures these are available when vi.mock factories run.
 // ---------------------------------------------------------------------------
 
-const { layoutSetState, settingsSetState, shortcutsSetState, todoSetState } = vi.hoisted(() => ({
-  layoutSetState: vi.fn(),
-  settingsSetState: vi.fn(),
-  shortcutsSetState: vi.fn(),
-  todoSetState: vi.fn(),
-}))
+const { layoutSetState, settingsSetState, shortcutsSetState, todoSetState, settingsState } =
+  vi.hoisted(() => ({
+    layoutSetState: vi.fn(),
+    settingsSetState: vi.fn(),
+    shortcutsSetState: vi.fn(),
+    todoSetState: vi.fn(),
+    settingsState: {
+      theme: 'system',
+      glassMode: 'sequoia',
+      searchEngine: 'google',
+      wallpaper: '',
+      wallpaperTint: null,
+      wallpaperLuminance: null,
+      wallpaperDimming: 0.25,
+      reduceMotion: false,
+    },
+  }))
 
 vi.mock('@/store/useLayoutStore', () => ({
   useLayoutStore: {
@@ -40,16 +51,7 @@ vi.mock('@/store/useLayoutStore', () => ({
 
 vi.mock('@/store/useSettingsStore', () => ({
   useSettingsStore: {
-    getState: () => ({
-      theme: 'system',
-      glassMode: 'sequoia',
-      searchEngine: 'google',
-      wallpaper: '',
-      wallpaperTint: null,
-      wallpaperLuminance: null,
-      wallpaperDimming: 0.25,
-      reduceMotion: false,
-    }),
+    getState: () => settingsState,
     setState: settingsSetState,
   },
 }))
@@ -70,9 +72,17 @@ vi.mock('@/store/useTodoStore', () => ({
 
 vi.mock('@/lib/toast', () => ({ showToast: vi.fn() }))
 
+vi.mock('@/lib/localWallpaper', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/localWallpaper')>()),
+  readLocalWallpaper: vi.fn(),
+  saveLocalWallpaper: vi.fn(),
+}))
+
 // Import after mocks
 import { useBackupRestore } from './useBackupRestore'
 import { showToast } from '@/lib/toast'
+import { readLocalWallpaper, saveLocalWallpaper } from '@/lib/localWallpaper'
+import { DEFAULT_WALLPAPER } from '@/lib/wallpapers'
 import { renderHook, act } from '@testing-library/react'
 
 // ---------------------------------------------------------------------------
@@ -505,8 +515,10 @@ describe('parseTodos', () => {
 // ---------------------------------------------------------------------------
 
 describe('constants', () => {
-  it('MAX_IMPORT_SIZE is 5MB', () => {
-    expect(MAX_IMPORT_SIZE).toBe(5 * 1024 * 1024)
+  it('MAX_IMPORT_SIZE holds a backup carrying the largest upload', () => {
+    // A data URL is a third larger than the file it holds.
+    expect(MAX_IMPORT_SIZE).toBe(100 * 1024 * 1024)
+    expect(MAX_IMPORT_SIZE).toBeGreaterThan((50 * 1024 * 1024 * 4) / 3)
   })
 
   it('SUPPORTED_VERSIONS contains 1-4', () => {
@@ -705,5 +717,119 @@ describe('handleImport', () => {
 
       expect(showToast).not.toHaveBeenCalled()
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Uploaded wallpapers in backups
+// ---------------------------------------------------------------------------
+
+describe('uploaded wallpapers', () => {
+  beforeEach(() => {
+    settingsSetState.mockClear()
+    vi.mocked(showToast).mockClear()
+    vi.mocked(readLocalWallpaper).mockReset()
+    vi.mocked(saveLocalWallpaper).mockReset()
+    settingsState.wallpaper = ''
+  })
+
+  it('come back from a backup into the uploads store, not the settings', async () => {
+    vi.mocked(saveLocalWallpaper).mockResolvedValue('local:m3x1k2-abc123')
+    const payload = { version: 4, settings: { wallpaper: 'data:image/png;base64,AQID' } }
+    const { result } = renderHook(() => useBackupRestore())
+
+    await act(async () => {
+      await result.current.handleImport(mockFileEvent(payload))
+    })
+
+    const saved = vi.mocked(saveLocalWallpaper).mock.calls[0][0]
+    expect(saved.type).toBe('image/png')
+    expect([...new Uint8Array(await saved.arrayBuffer())]).toEqual([1, 2, 3])
+    expect(settingsSetState).toHaveBeenCalledWith(
+      expect.objectContaining({ wallpaper: 'local:m3x1k2-abc123' }),
+    )
+    expect(showToast).not.toHaveBeenCalled()
+  })
+
+  it('stay in the settings when the uploads store cannot take them', async () => {
+    vi.mocked(saveLocalWallpaper).mockRejectedValue(new Error('QuotaExceededError'))
+    const payload = { version: 4, settings: { wallpaper: 'data:image/png;base64,AQID' } }
+    const { result } = renderHook(() => useBackupRestore())
+
+    await act(async () => {
+      await result.current.handleImport(mockFileEvent(payload))
+    })
+
+    expect(settingsSetState).toHaveBeenCalledWith(
+      expect.objectContaining({ wallpaper: 'data:image/png;base64,AQID' }),
+    )
+    expect(showToast).not.toHaveBeenCalled()
+  })
+
+  it('leave other wallpapers as they are on import', async () => {
+    const payload = { version: 4, settings: { wallpaper: 'https://example.com/bg.jpg' } }
+    const { result } = renderHook(() => useBackupRestore())
+
+    await act(async () => {
+      await result.current.handleImport(mockFileEvent(payload))
+    })
+
+    expect(saveLocalWallpaper).not.toHaveBeenCalled()
+    expect(settingsSetState).toHaveBeenCalledWith(
+      expect.objectContaining({ wallpaper: 'https://example.com/bg.jpg' }),
+    )
+  })
+
+  describe('on export', () => {
+    let exported: Blob | null = null
+
+    beforeEach(() => {
+      exported = null
+      Object.assign(URL, {
+        createObjectURL: (blob: Blob) => {
+          exported = blob
+          return 'blob:backup'
+        },
+        revokeObjectURL: () => {},
+      })
+      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    async function exportedSettings() {
+      const { result } = renderHook(() => useBackupRestore())
+      await act(async () => {
+        await result.current.handleExport()
+      })
+      expect(exported).not.toBeNull()
+      return JSON.parse(await exported!.text()).settings
+    }
+
+    it('go into the backup whole, as a data URL', async () => {
+      settingsState.wallpaper = 'local:m3x1k2-abc123'
+      vi.mocked(readLocalWallpaper).mockResolvedValue(
+        new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' }),
+      )
+
+      expect((await exportedSettings()).wallpaper).toBe('data:image/png;base64,AQID')
+      expect(readLocalWallpaper).toHaveBeenCalledWith('local:m3x1k2-abc123')
+    })
+
+    it('give the default wallpaper when this browser no longer holds them', async () => {
+      settingsState.wallpaper = 'local:m3x1k2-abc123'
+      vi.mocked(readLocalWallpaper).mockResolvedValue(null)
+
+      expect((await exportedSettings()).wallpaper).toBe(DEFAULT_WALLPAPER)
+    })
+
+    it('leave other wallpapers as they are', async () => {
+      settingsState.wallpaper = 'https://example.com/bg.jpg'
+
+      expect((await exportedSettings()).wallpaper).toBe('https://example.com/bg.jpg')
+      expect(readLocalWallpaper).not.toHaveBeenCalled()
+    })
   })
 })

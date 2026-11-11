@@ -1,6 +1,7 @@
 import { Upload, Shuffle, Loader, Heart } from 'lucide-react'
 import { PRESETS } from '@/lib/wallpapers'
 import { type WallhavenStrategy } from '@/lib/wallhaven'
+import { MAX_UPLOAD_MB } from '@/lib/localWallpaper'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/Button'
 import { SegmentedControl, type SegmentOption } from '@/components/ui/SegmentedControl'
@@ -25,6 +26,7 @@ export function WallpaperPicker() {
     setWallpaper,
     fileRef,
     randomLoading,
+    uploading,
     strategy,
     setStrategy,
     canFavoriteCurrent,
@@ -105,9 +107,19 @@ export function WallpaperPicker() {
           </Button>
         </div>
         <div className="form-row">
-          <RowLabel label="本地图片" description="不超过 5MB" />
-          <Button size="sm" onClick={() => fileRef.current?.click()}>
-            <Upload size={13} aria-hidden />
+          <RowLabel label="本地图片" description={`不超过 ${MAX_UPLOAD_MB}MB`} />
+          <Button
+            size="sm"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            aria-busy={uploading || undefined}
+            className="disabled:opacity-100"
+          >
+            {uploading ? (
+              <Loader size={13} className="animate-spin" aria-hidden />
+            ) : (
+              <Upload size={13} aria-hidden />
+            )}
             选取…
           </Button>
         </div>

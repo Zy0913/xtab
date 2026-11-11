@@ -5,8 +5,14 @@ import { renderHook, act } from '@testing-library/react'
 const storeState = { wallpaper: null as string | null }
 
 vi.mock('@/store/useSettingsStore', () => ({
-  useSettingsStore: (selector?: (s: typeof storeState) => unknown) =>
-    selector ? selector(storeState) : storeState,
+  useSettingsStore: Object.assign(
+    (selector?: (s: typeof storeState) => unknown) =>
+      selector ? selector(storeState) : storeState,
+    {
+      getState: () => storeState,
+      setState: (patch: Partial<typeof storeState>) => Object.assign(storeState, patch),
+    },
+  ),
 }))
 
 // Mock wallpaperCache
@@ -19,6 +25,16 @@ const evictOthersMock = vi.fn()
 vi.mock('./wallpaperCache', () => ({
   resolveWallpaper: (...args: unknown[]) => resolveWallpaperMock(...(args as [string])),
   evictOthers: (...args: unknown[]) => evictOthersMock(...(args as [string])),
+}))
+
+// Mock the uploads store
+const pruneMock = vi.fn()
+const saveLocalWallpaperMock = vi.fn()
+
+vi.mock('./localWallpaper', () => ({
+  pruneLocalWallpapers: (...args: unknown[]) => pruneMock(...args),
+  saveLocalWallpaper: (...args: unknown[]) => saveLocalWallpaperMock(...args),
+  dataUrlToBlob: (url: string) => new Blob([url]),
 }))
 
 // Mock Image constructor
@@ -76,6 +92,8 @@ describe('useWallpaper', () => {
     imageBehavior = 'load'
     resolveWallpaperMock.mockClear()
     evictOthersMock.mockClear()
+    pruneMock.mockClear()
+    saveLocalWallpaperMock.mockReset()
   })
 
   it('enters visible state when no wallpaper is set', () => {
@@ -107,6 +125,43 @@ describe('useWallpaper', () => {
       await new Promise((r) => setTimeout(r, 2_100))
     })
     expect(evictOthersMock).toHaveBeenCalledWith('https://example.com/wall.jpg')
+    // Uploads no longer in use go too.
+    expect(pruneMock).toHaveBeenCalledWith('https://example.com/wall.jpg')
+    expect(saveLocalWallpaperMock).not.toHaveBeenCalled()
+  })
+
+  it('moves an upload kept in the settings by an older version to the uploads store', async () => {
+    saveLocalWallpaperMock.mockResolvedValue('local:m3x1k2-abc123')
+    const { rerender } = renderHook(() => useWallpaper())
+
+    await act(async () => {
+      storeState.wallpaper = 'data:image/png;base64,AAAA'
+      rerender()
+    })
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 2_100))
+    })
+
+    expect(saveLocalWallpaperMock).toHaveBeenCalledWith(expect.any(Blob))
+    expect(storeState.wallpaper).toBe('local:m3x1k2-abc123')
+  })
+
+  it('leaves a wallpaper chosen while the old upload was moving', async () => {
+    saveLocalWallpaperMock.mockImplementation(async () => {
+      storeState.wallpaper = 'https://example.com/chosen.jpg'
+      return 'local:m3x1k2-abc123'
+    })
+    const { rerender } = renderHook(() => useWallpaper())
+
+    await act(async () => {
+      storeState.wallpaper = 'data:image/png;base64,AAAA'
+      rerender()
+    })
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 2_100))
+    })
+
+    expect(storeState.wallpaper).toBe('https://example.com/chosen.jpg')
   })
 
   it('falls back gracefully on image error', async () => {
