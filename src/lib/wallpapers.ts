@@ -1,3 +1,5 @@
+import { pickFresh, recentWallpapers } from '@/lib/recentWallpapers'
+
 export interface WallpaperPreset {
   id: string
   name: string
@@ -67,10 +69,12 @@ export const PRESETS: WallpaperPreset[] = [
   },
 ]
 
-/** Next wallpaper when Wallhaven is unreachable. Prefers extras (favorites), then presets. */
+/** Next wallpaper when Wallhaven is unreachable. Prefers extras (favorites), then presets,
+    passing over ones shown lately while others remain. */
 export function pickFallbackWallpaper(
   current: string | null | undefined,
   extras: Array<{ url: string }> = [],
+  recent: readonly string[] = recentWallpapers(),
 ): string | null {
   const seen = new Set<string>()
   const pool: string[] = []
@@ -85,6 +89,5 @@ export function pickFallbackWallpaper(
   for (const preset of PRESETS) push(preset.url)
   push(DEFAULT_WALLPAPER)
 
-  if (!pool.length) return null
-  return pool[Math.floor(Math.random() * pool.length)]
+  return pickFresh(pool, (url) => url, recent)
 }

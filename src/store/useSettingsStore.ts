@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { chromeStorage, registerHydration, registerRemoteSync } from './storage'
 import { DEFAULT_WALLPAPER } from '@/lib/wallpapers'
+import { rememberWallpaper } from '@/lib/recentWallpapers'
 import { getDefaultSearchEngine } from '@/lib/region'
 
 export type ThemeMode = 'light' | 'dark' | 'system'
@@ -62,7 +63,11 @@ export const useSettingsStore = create<SettingsState>()(
       setTheme: (theme) => set({ theme }),
       setGlassMode: (glassMode) => set({ glassMode }),
       setSearchEngine: (searchEngine) => set({ searchEngine }),
-      setWallpaper: (wallpaper) => set({ wallpaper }),
+      setWallpaper: (wallpaper) => {
+        set({ wallpaper })
+        // Random picks pass over what was shown lately.
+        rememberWallpaper(wallpaper)
+      },
       setWallpaperTint: (wallpaperTint) => set({ wallpaperTint }),
       setWallpaperLuminance: (wallpaperLuminance) => set({ wallpaperLuminance }),
       setWallpaperDimming: (v) => set({ wallpaperDimming: clampDimming(v) }),

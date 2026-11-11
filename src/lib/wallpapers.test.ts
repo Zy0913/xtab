@@ -25,4 +25,10 @@ describe('pickFallbackWallpaper', () => {
     const onlyCurrent = pickFallbackWallpaper(null, [])
     expect([DEFAULT_WALLPAPER, ...PRESETS.map((p) => p.url)]).toContain(onlyCurrent)
   })
+
+  it('passes over presets shown lately', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const shown = PRESETS.slice(1, 4).map((p) => p.url)
+    expect(pickFallbackWallpaper(PRESETS[0].url, [], shown)).toBe(PRESETS[4].url)
+  })
 })

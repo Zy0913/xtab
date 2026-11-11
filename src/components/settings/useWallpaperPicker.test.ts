@@ -110,6 +110,7 @@ describe('useWallpaperPicker', () => {
   it('handleRandom sets loading, fetches wallpaper, and updates state on success', async () => {
     const mockResult = makeWallhavenResult()
     vi.mocked(fetchRandomWallhaven).mockResolvedValue(mockResult)
+    storeState.wallpaper = 'https://example.com/on-screen.jpg'
 
     const { result } = renderHook(() => useWallpaperPicker())
 
@@ -117,7 +118,8 @@ describe('useWallpaperPicker', () => {
       await result.current.handleRandom()
     })
 
-    expect(fetchRandomWallhaven).toHaveBeenCalledWith('1M')
+    // The wallpaper on screen goes along so it isn't picked again.
+    expect(fetchRandomWallhaven).toHaveBeenCalledWith('1M', 'https://example.com/on-screen.jpg')
     expect(storeState.setWallpaper).toHaveBeenCalledWith(mockResult.url)
     expect(result.current.randomLoading).toBe(false)
   })

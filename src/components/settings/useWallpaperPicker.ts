@@ -91,7 +91,7 @@ export function useWallpaperPicker() {
     const seq = ++randomSeqRef.current
     setRandomLoading(true)
     try {
-      const result = await fetchRandomWallhaven(strategy)
+      const result = await fetchRandomWallhaven(strategy, current)
 
       // A newer click (or upload) already owns the UI — drop this result.
       if (seq !== randomSeqRef.current) return

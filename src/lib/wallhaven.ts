@@ -6,6 +6,7 @@ import {
   type WallhavenPick,
 } from '@/lib/wallhavenApi'
 import { BING_CLIENT_TIMEOUT_MS, fetchRandomBingWallpaper } from '@/lib/bingWallpaper'
+import { recentWallpapers } from '@/lib/recentWallpapers'
 
 export type WallhavenStrategy = '1d' | '1w' | '1M' | '1y'
 
@@ -49,12 +50,16 @@ async function fetchWithTimeout<T>(
   }
 }
 
-async function fetchViaPage(strategy: WallhavenStrategy): Promise<WallhavenResult> {
+async function fetchViaPage(
+  strategy: WallhavenStrategy,
+  recent: readonly string[],
+): Promise<WallhavenResult> {
   try {
     return await fetchWithTimeout(WALLHAVEN_CLIENT_TIMEOUT_MS, (signal) =>
       fetchRandomFromNetwork(strategy, {
         origin: wallhavenApiOrigin(),
         signal,
+        recent,
       }),
     )
   } catch (err) {
@@ -62,9 +67,12 @@ async function fetchViaPage(strategy: WallhavenStrategy): Promise<WallhavenResul
   }
 }
 
-async function fetchViaBing(strategy: WallhavenStrategy): Promise<WallhavenResult> {
+async function fetchViaBing(
+  strategy: WallhavenStrategy,
+  recent: readonly string[],
+): Promise<WallhavenResult> {
   return fetchWithTimeout(BING_CLIENT_TIMEOUT_MS, (signal) =>
-    fetchRandomBingWallpaper(strategy, signal),
+    fetchRandomBingWallpaper(strategy, signal, recent),
   )
 }
 
@@ -76,19 +84,28 @@ async function fetchViaBing(strategy: WallhavenStrategy): Promise<WallhavenResul
  *
  * Wallhaven is often blocked in CN and hangs until the hard abort. After a
  * short wait we take Bing (or a late Wallhaven success) instead of stalling.
+ *
+ * Pictures shown lately, and `current` on screen now, are passed over while
+ * others remain, so clicking through doesn't bring back what was just seen.
  */
-export async function fetchRandomWallhaven(strategy: WallhavenStrategy): Promise<WallhavenResult> {
+export async function fetchRandomWallhaven(
+  strategy: WallhavenStrategy,
+  current?: string | null,
+): Promise<WallhavenResult> {
   if (!(VALID_TOP_RANGES as readonly string[]).includes(strategy)) {
     strategy = '1M'
   }
 
-  const wallhaven = settle(fetchViaPage(strategy))
+  const recent = recentWallpapers()
+  if (current) recent.push(current)
+
+  const wallhaven = settle(fetchViaPage(strategy, recent))
   const first = await Promise.race([wallhaven, delay(WALLHAVEN_SOFT_TIMEOUT_MS).then(() => null)])
 
   if (first?.status === 'fulfilled') return first.value
 
   try {
-    return await fetchViaBing(strategy)
+    return await fetchViaBing(strategy, recent)
   } catch {
     const late = first ?? (await wallhaven)
     if (late.status === 'fulfilled') return late.value

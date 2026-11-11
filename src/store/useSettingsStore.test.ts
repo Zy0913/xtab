@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { DEFAULT_WALLPAPER } from '@/lib/wallpapers'
 import { getDefaultSearchEngine } from '@/lib/region'
+import { recentWallpapers } from '@/lib/recentWallpapers'
 
 function resetStore() {
   useSettingsStore.setState({
@@ -61,6 +62,11 @@ describe('useSettingsStore', () => {
   it('setWallpaper updates wallpaper', () => {
     useSettingsStore.getState().setWallpaper('https://example.com/bg.jpg')
     expect(useSettingsStore.getState().wallpaper).toBe('https://example.com/bg.jpg')
+  })
+
+  it('setWallpaper notes the wallpaper so random picks pass over it', () => {
+    useSettingsStore.getState().setWallpaper('https://example.com/shown.jpg')
+    expect(recentWallpapers().at(-1)).toBe('https://example.com/shown.jpg')
   })
 
   it('setWallpaperTint updates and clears tint', () => {

@@ -1,4 +1,5 @@
 import { logger } from '@/lib/logger'
+import { pickFresh } from '@/lib/recentWallpapers'
 
 /** Allowed topRange values per Wallhaven API. */
 export const VALID_TOP_RANGES = ['1d', '3d', '1w', '1M', '3M', '6M', '1y'] as const
@@ -13,6 +14,24 @@ export const FALLBACK_CHAIN: Record<TopRange, TopRange | null> = {
   '6M': '1y',
   '1y': null,
 }
+
+/**
+ * How many pages (24 pictures each) a random pick reaches into each toplist.
+ * The lists run from most to least popular, and the long ranges stay popular
+ * much deeper: at page 30 the year list still has about a hundred favourites
+ * a picture, while the week list is down to single digits by page 6.
+ */
+export const TOPLIST_DEPTH: Record<TopRange, number> = {
+  '1d': 2,
+  '3d': 3,
+  '1w': 4,
+  '1M': 6,
+  '3M': 10,
+  '6M': 12,
+  '1y': 16,
+}
+
+const PAGE_SIZE = 24
 
 export interface WallhavenThumbs {
   large?: string
@@ -73,10 +92,13 @@ export function isSafeWallhavenUrl(u: unknown): u is string {
   return typeof u === 'string' && /^https:\/\/[^/]*\.wallhaven\.cc\//i.test(u)
 }
 
-export function pickRandomFromList(list: WallhavenItem[]): WallhavenItem | null {
+/** A picture with a safe URL, preferring ones not in `recent`. */
+export function pickRandomFromList(
+  list: WallhavenItem[],
+  recent: readonly string[] = [],
+): WallhavenItem | null {
   const pool = list.filter((x) => x && isSafeWallhavenUrl(x.path))
-  if (!pool.length) return null
-  return pool[Math.floor(Math.random() * pool.length)]
+  return pickFresh(pool, (x) => x.path, recent)
 }
 
 export function toFriendlyWallhavenNetworkError(err: unknown): string {
@@ -106,16 +128,28 @@ export async function fetchSearchJson(
   return (await res.json()) as WallhavenSearchResponse
 }
 
+function randomPage(pages: number): number {
+  return 1 + Math.floor(Math.random() * pages)
+}
+
+/** One page drawn at random from the top of the list. */
 async function fetchByStrategy(
   strategy: TopRange,
   origin: string,
   signal?: AbortSignal,
 ): Promise<{ strategy: TopRange; json: WallhavenSearchResponse | null }> {
-  const firstPage = await fetchSearchJson(buildSearchUrl(strategy, origin) + '&page=1', signal)
-  const total =
-    typeof firstPage.meta?.total === 'number' ? firstPage.meta.total : (firstPage.data ?? []).length
+  const search = buildSearchUrl(strategy, origin)
+  const depth = TOPLIST_DEPTH[strategy]
+  const page = randomPage(depth)
+  let json = await fetchSearchJson(`${search}&page=${page}`, signal)
+  const total = typeof json.meta?.total === 'number' ? json.meta.total : (json.data ?? []).length
   if (!total) return { strategy, json: null }
-  return { strategy, json: firstPage }
+  // A quiet day's list can end before the page drawn; draw again within it.
+  const lastPage = json.meta?.last_page ?? Math.ceil(total / PAGE_SIZE)
+  if (!json.data?.length && lastPage < page) {
+    json = await fetchSearchJson(`${search}&page=${randomPage(Math.min(depth, lastPage))}`, signal)
+  }
+  return { strategy, json }
 }
 
 export async function fetchWithFallback(
@@ -151,11 +185,11 @@ export function itemToPick(
 
 export async function fetchRandomFromNetwork(
   requested: TopRange,
-  options: { origin?: string; signal?: AbortSignal } = {},
+  options: { origin?: string; signal?: AbortSignal; recent?: readonly string[] } = {},
 ): Promise<WallhavenPick> {
   const origin = options.origin ?? 'https://wallhaven.cc'
   const result = await fetchWithFallback(requested, origin, options.signal)
-  const pick = result.json ? pickRandomFromList(result.json.data ?? []) : null
+  const pick = result.json ? pickRandomFromList(result.json.data ?? [], options.recent) : null
   if (!pick) throw new Error('当前条件下暂无符合的壁纸')
   return { ...itemToPick(pick, requested, result.strategy), via: 'wallhaven' }
 }

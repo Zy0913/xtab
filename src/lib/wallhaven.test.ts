@@ -1,5 +1,30 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fetchRandomWallhaven, WALLHAVEN_SOFT_TIMEOUT_MS } from './wallhaven'
+import { rememberWallpaper } from './recentWallpapers'
+
+const wallhavenPath = (id: string) => `https://w.wallhaven.cc/full/${id}/wallhaven-${id}.jpg`
+const bingUrl = (day: string) => `https://www.bing.com/th?id=OHR.${day}_1920x1080.jpg`
+
+function wallhavenWith(ids: string[]) {
+  return {
+    ok: true,
+    status: 200,
+    json: async () => ({
+      data: ids.map((id) => ({ id, path: wallhavenPath(id) })),
+      meta: { total: ids.length, last_page: 1 },
+    }),
+  }
+}
+
+function bingWith(days: string[]) {
+  return {
+    ok: true,
+    status: 200,
+    json: async () => ({
+      images: days.map((day) => ({ url: `/th?id=OHR.${day}_1920x1080.jpg`, startdate: day })),
+    }),
+  }
+}
 
 function wallhavenOk() {
   return {
@@ -40,6 +65,41 @@ describe('fetchRandomWallhaven', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.useRealTimers()
+    vi.restoreAllMocks()
+    localStorage.clear()
+  })
+
+  it('passes over the wallpaper on screen and the ones shown lately', async () => {
+    vi.stubGlobal('chrome', { runtime: { id: 'ext-id' } })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(wallhavenWith(['a', 'b', 'c'])))
+    rememberWallpaper(wallhavenPath('a'))
+
+    for (const r of [0, 0.5, 0.999]) {
+      vi.spyOn(Math, 'random').mockReturnValue(r)
+      await expect(fetchRandomWallhaven('1M', wallhavenPath('b'))).resolves.toMatchObject({
+        id: 'c',
+      })
+    }
+  })
+
+  it('passes over them on the Bing fallback too', async () => {
+    vi.stubGlobal('chrome', { runtime: { id: 'ext-id' } })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) =>
+        String(url).includes('wallhaven.cc')
+          ? Promise.reject(new TypeError('Failed to fetch'))
+          : Promise.resolve(bingWith(['d0', 'd1', 'd2'])),
+      ),
+    )
+    rememberWallpaper(bingUrl('d0'))
+
+    for (const r of [0, 0.5, 0.999]) {
+      vi.spyOn(Math, 'random').mockReturnValue(r)
+      await expect(fetchRandomWallhaven('1M', bingUrl('d1'))).resolves.toMatchObject({
+        id: 'bing-d2',
+      })
+    }
   })
 
   it('fetches via the page proxy when chrome.runtime is missing', async () => {
