@@ -17,7 +17,15 @@ export const DEFAULT_WALLPAPER = '/wallpapers/default.jpg'
     settings and backups from earlier versions may still name it. */
 export const OLD_DEFAULT_WALLPAPER = '/wallpapers/default.svg'
 
+/** The default leads, so it can be picked again once another has taken its
+    place, and a fresh install's welcome sheet shows it picked. */
 export const PRESETS: WallpaperPreset[] = [
+  {
+    id: 'misty-lake',
+    name: '湖山',
+    url: DEFAULT_WALLPAPER,
+    thumb: DEFAULT_WALLPAPER,
+  },
   {
     id: 'sonoma-light',
     name: '晨光',
@@ -35,12 +43,6 @@ export const PRESETS: WallpaperPreset[] = [
     name: '海岸',
     url: u('photo-1507525428034-b723cf961d3e'),
     thumb: u('photo-1507525428034-b723cf961d3e', 400),
-  },
-  {
-    id: 'dark-sky',
-    name: '深空',
-    url: u('photo-1534796636912-3b95b3ab5986'),
-    thumb: u('photo-1534796636912-3b95b3ab5986', 400),
   },
   {
     id: 'mountain-mist',
@@ -92,7 +94,6 @@ export function pickFallbackWallpaper(
 
   for (const item of extras) push(item.url)
   for (const preset of PRESETS) push(preset.url)
-  push(DEFAULT_WALLPAPER)
 
   return pickFresh(pool, (url) => url, recent)
 }

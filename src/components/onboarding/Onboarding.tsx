@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { DEFAULT_WALLPAPER, PRESETS } from '@/lib/wallpapers'
+import { PRESETS } from '@/lib/wallpapers'
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { useLayoutStore } from '@/store/useLayoutStore'
 import { WIDGET_LABELS, type WidgetId } from '@/types/widget'
@@ -84,12 +84,9 @@ export function Onboarding() {
     window.setTimeout(() => completeOnboarding(), EXIT_MS)
   }
 
-  // The icon shows the wallpaper behind the sheet: the default, which a
-  // fresh install starts on, or a preset picked here.
-  const iconThumb =
-    wallpaper === DEFAULT_WALLPAPER
-      ? DEFAULT_WALLPAPER
-      : (PRESETS.find((p) => p.url === wallpaper) ?? PRESETS[0]).thumb
+  // The icon shows the wallpaper behind the sheet when it is a preset, and
+  // the default, the first of them, when it is not.
+  const iconThumb = (PRESETS.find((p) => p.url === wallpaper) ?? PRESETS[0]).thumb
   const heading = 'text-[1.375rem] font-bold leading-tight text-text-primary outline-none'
   const portalRoot = document.getElementById('portal-root') || document.body
 

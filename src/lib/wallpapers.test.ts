@@ -7,6 +7,10 @@ describe('DEFAULT_WALLPAPER', () => {
   it('ships with the extension', () => {
     expect(existsSync(resolve(__dirname, '../../public', DEFAULT_WALLPAPER.slice(1)))).toBe(true)
   })
+
+  it('leads the presets, so it can be picked again', () => {
+    expect(PRESETS[0]).toMatchObject({ url: DEFAULT_WALLPAPER, thumb: DEFAULT_WALLPAPER })
+  })
 })
 
 describe('pickFallbackWallpaper', () => {
