@@ -29,7 +29,8 @@ export async function refreshWallpaperTint(
 
 /**
  * Bootstrap theme side-effects: apply initial values, subscribe to store
- * changes, and listen for system preference updates.
+ * changes, listen for system preference updates, and read the wallpaper's
+ * colours when none are cached.
  *
  * Called once from `main.tsx` after stores are hydrated.
  */
@@ -44,24 +45,10 @@ export async function initTheme() {
   applyReduceMotion(state.reduceMotion)
   applyWallpaperLuminance(state.wallpaperLuminance, state.wallpaperDimming)
 
-  // Re-extract when we don't have a cached signal yet.
-  const needsExtract =
-    state.wallpaper && (!state.wallpaperTint || state.wallpaperLuminance === null)
-  if (needsExtract) {
-    await refreshWallpaperTint(state.wallpaper, (tint) => {
-      if (tint) {
-        useSettingsStore.getState().setWallpaperTint(tint.rgb)
-        useSettingsStore.getState().setWallpaperLuminance(tint.luminance)
-        applyWallpaperTint(tint.rgb)
-        applyWallpaperLuminance(tint.luminance, useSettingsStore.getState().wallpaperDimming)
-      } else {
-        useSettingsStore.getState().setWallpaperTint(null)
-        useSettingsStore.getState().setWallpaperLuminance(null)
-        applyWallpaperTint(null)
-        applyWallpaperLuminance(null)
-      }
-    })
-  }
+  // A read can take seconds when the picture has to be downloaded, and by
+  // the time it is done another wallpaper may be up, with a read of its own.
+  // Colours read for a wallpaper no longer shown are dropped.
+  const shown = (wallpaper: string | null) => useSettingsStore.getState().wallpaper === wallpaper
 
   // Debounce tint extraction so rapid wallpaper swaps (e.g., clicking through
   // presets) don't fire a burst of canvas decodes.
@@ -73,7 +60,7 @@ export async function initTheme() {
       tintTimer = null
       const wallpaper = useSettingsStore.getState().wallpaper
       refreshWallpaperTint(wallpaper, (tint) => {
-        if (tint) {
+        if (tint && shown(wallpaper)) {
           useSettingsStore.getState().setWallpaperTint(tint.rgb)
           useSettingsStore.getState().setWallpaperLuminance(tint.luminance)
           applyWallpaperTint(tint.rgb)
@@ -127,4 +114,25 @@ export async function initTheme() {
       store.setReduceMotion(e.matches)
     }
   })
+
+  // Re-extract when we don't have a cached signal yet. Last, once changes
+  // are listened for, so a wallpaper picked while this runs gets its own read.
+  const needsExtract =
+    state.wallpaper && (!state.wallpaperTint || state.wallpaperLuminance === null)
+  if (needsExtract) {
+    await refreshWallpaperTint(state.wallpaper, (tint) => {
+      if (!shown(state.wallpaper)) return
+      if (tint) {
+        useSettingsStore.getState().setWallpaperTint(tint.rgb)
+        useSettingsStore.getState().setWallpaperLuminance(tint.luminance)
+        applyWallpaperTint(tint.rgb)
+        applyWallpaperLuminance(tint.luminance, useSettingsStore.getState().wallpaperDimming)
+      } else {
+        useSettingsStore.getState().setWallpaperTint(null)
+        useSettingsStore.getState().setWallpaperLuminance(null)
+        applyWallpaperTint(null)
+        applyWallpaperLuminance(null)
+      }
+    })
+  }
 }
