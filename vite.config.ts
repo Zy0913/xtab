@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { crx } from '@crxjs/vite-plugin'
 import path from 'node:path'
-import manifest from './manifest.config'
+import manifest from './manifest.config.ts'
 
 const wallhavenProxy = {
   '/__wallhaven': {
@@ -17,7 +17,7 @@ export default defineConfig({
   plugins: [react(), crx({ manifest })],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve(import.meta.dirname, 'src'),
     },
   },
   build: {
@@ -47,7 +47,9 @@ export default defineConfig({
     host: '127.0.0.1',
     port: 5173,
     strictPort: true,
-    hmr: {
+    // Extension pages load Vite's client from chrome-extension://, so its HMR
+    // socket can't read the port from its own URL.
+    ws: {
       port: 5173,
     },
     proxy: wallhavenProxy,
