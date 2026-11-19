@@ -583,19 +583,20 @@ input[type='range'].range-slider:disabled {
 .weather-hourly {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.25rem;
   margin-top: auto;
   padding-top: 0.75rem;
 }
 
-@container (min-width: 38rem) {
+@container (min-width: 34rem) {
   .weather {
     flex-direction: row;
     align-items: center;
-    gap: 2rem;
+    gap: 1.5rem;
   }
 
   .weather-head {
-    flex: 0 0 16rem;
+    flex: 0 1 15rem;
   }
 
   .weather-hourly {

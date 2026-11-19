@@ -102,8 +102,8 @@ export default function App() {
           wallpaper (tokens.css). */}
       <main
         className={cn(
-          'on-wallpaper relative mx-auto w-full max-w-[1360px] px-6 pt-[clamp(3.5rem,10vh,7rem)] sm:px-10 lg:px-12',
-          editMode ? 'pb-24' : 'pb-10',
+          'on-wallpaper relative mx-auto w-full max-w-[1360px] px-6 pt-[clamp(3.25rem,7vh,5.25rem)] sm:px-10 lg:px-12',
+          editMode ? 'pb-24' : 'pb-6',
         )}
       >
         <DashboardGrid />
