@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { WidgetLayout } from '@/types/widget'
-import { centerLastRow, generateStackedLayout } from './stackLayout'
+import {
+  centerLastRow,
+  expandWidgetRows,
+  generateStackedLayout,
+  shortcutColumnsForWidth,
+} from './stackLayout'
 
 const sample: WidgetLayout[] = [
   { i: 'clock', x: 0, y: 0, w: 12, h: 2 },
@@ -99,5 +104,43 @@ describe('centerLastRow', () => {
   it('leaves a full row alone', () => {
     const full: WidgetLayout[] = [...sample, { i: 'bookmarks', x: 8, y: 5, w: 4, h: 3 }]
     expect(centerLastRow(full)).toEqual(full)
+  })
+})
+
+describe('shortcutColumnsForWidth', () => {
+  it('computes how many 4.75rem tiles fit across a desktop widget width', () => {
+    // 1264px wide container -> 1264px 12-col widget: floor((1264 + 12) / 88) = 14
+    expect(shortcutColumnsForWidth(1264, 12)).toBe(14)
+    // Half-width widget on 1264px -> 621px: floor((621 + 12) / 88) = 7
+    expect(shortcutColumnsForWidth(1264, 6)).toBe(7)
+    expect(shortcutColumnsForWidth(0, 12)).toBe(0)
+  })
+})
+
+describe('expandWidgetRows', () => {
+  it('grows shortcuts height and shifts rows below down without colliding', () => {
+    const desktop: WidgetLayout[] = [
+      { i: 'clock', x: 0, y: 0, w: 12, h: 2 },
+      { i: 'search', x: 0, y: 2, w: 12, h: 1 },
+      { i: 'shortcuts', x: 0, y: 3, w: 12, h: 2 },
+      { i: 'weather', x: 4, y: 5, w: 4, h: 3 },
+    ]
+    expect(expandWidgetRows(desktop, 'shortcuts', 3)).toEqual([
+      { i: 'clock', x: 0, y: 0, w: 12, h: 2 },
+      { i: 'search', x: 0, y: 2, w: 12, h: 1 },
+      { i: 'shortcuts', x: 0, y: 3, w: 12, h: 3, minH: 3 },
+      { i: 'weather', x: 4, y: 6, w: 4, h: 3 },
+    ])
+  })
+
+  it('keeps rows untouched when existing height already fits', () => {
+    const desktop: WidgetLayout[] = [
+      { i: 'shortcuts', x: 0, y: 3, w: 12, h: 3 },
+      { i: 'weather', x: 4, y: 6, w: 4, h: 3 },
+    ]
+    expect(expandWidgetRows(desktop, 'shortcuts', 2)).toEqual([
+      { i: 'shortcuts', x: 0, y: 3, w: 12, h: 3, minH: 2 },
+      { i: 'weather', x: 4, y: 6, w: 4, h: 3 },
+    ])
   })
 })

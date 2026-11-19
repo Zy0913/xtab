@@ -28,7 +28,7 @@ interface Props {
   editMode: boolean
   /** Called when a drag or resize ends; narrow layouts are never editable. */
   onLayoutCommit: ItemCallback
-  onBreakpointChange: (breakpoint: Breakpoint) => void
+  onViewportChange: (breakpoint: Breakpoint, width: number) => void
   children: ReactNode
 }
 
@@ -38,7 +38,7 @@ export function GridLayer({
   xsLayout,
   editMode,
   onLayoutCommit,
-  onBreakpointChange,
+  onViewportChange,
   children,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null)
@@ -58,8 +58,8 @@ export function GridLayer({
   const measured = width > 0
   const breakpoint = breakpointFor(width)
   useLayoutEffect(() => {
-    if (measured) onBreakpointChange(breakpoint)
-  }, [measured, breakpoint, onBreakpointChange])
+    if (measured) onViewportChange(breakpoint, width)
+  }, [measured, breakpoint, width, onViewportChange])
 
   const layouts = useMemo(
     () => ({ lg: visible, md: visible, sm: smLayout, xs: xsLayout }),

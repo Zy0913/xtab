@@ -80,3 +80,47 @@ export function centerLastRow(items: WidgetLayout[], cols = 12): WidgetLayout[] 
     return nextX === undefined || nextX === item.x ? item : { ...item, x: nextX }
   })
 }
+
+const SHORTCUT_TILE_PX = 76 // 4.75rem tile column in globals.css (.shortcut-grid)
+const SHORTCUT_GAP_PX = 12 // 0.75rem column gap in globals.css (.shortcut-grid)
+
+/** How many shortcut tiles fit on one row of a `widgetCols`-wide desktop widget. */
+export function shortcutColumnsForWidth(
+  containerWidth: number,
+  widgetCols: number,
+  totalCols = 12,
+  marginX = 22,
+): number {
+  if (containerWidth <= 0 || widgetCols <= 0 || totalCols <= 0) return 0
+  const colW = (containerWidth - marginX * (totalCols - 1)) / totalCols
+  const widgetW = colW * widgetCols + marginX * Math.max(0, widgetCols - 1)
+  return Math.max(1, Math.floor((widgetW + SHORTCUT_GAP_PX) / (SHORTCUT_TILE_PX + SHORTCUT_GAP_PX)))
+}
+
+/**
+ * Give `targetId` at least `minRows` on the desktop grid, shifting any widgets
+ * placed below its old bottom edge down by the extra rows so it never spills
+ * over them.
+ */
+export function expandWidgetRows(
+  items: WidgetLayout[],
+  targetId: WidgetId,
+  minRows: number,
+): WidgetLayout[] {
+  const target = items.find((item) => item.i === targetId)
+  if (!target) return items
+  const nextMinH = Math.max(target.minH ?? 2, minRows)
+  const nextH = Math.max(target.h, nextMinH)
+  const delta = nextH - target.h
+  const oldBottom = target.y + target.h
+
+  return items.map((item) => {
+    if (item.i === targetId) {
+      return { ...item, h: nextH, minH: nextMinH }
+    }
+    if (delta > 0 && item.y >= oldBottom) {
+      return { ...item, y: item.y + delta }
+    }
+    return item
+  })
+}

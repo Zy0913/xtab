@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState, type CSSProperties } from 'react'
+import { lazy, Suspense, useCallback, useMemo, useState, type CSSProperties } from 'react'
 import type { ItemCallback } from 'react-grid-layout'
 import { Minus } from 'lucide-react'
 import { useLayoutStore } from '@/store/useLayoutStore'
@@ -15,7 +15,12 @@ import { WeatherWidget } from '@/components/widgets/Weather/Weather'
 import { TodoList } from '@/components/widgets/Todo/TodoList'
 import { BookmarksTree } from '@/components/widgets/Bookmarks/BookmarksTree'
 import { WIDGET_LABELS, type WidgetId } from '@/types/widget'
-import { centerLastRow, generateStackedLayout } from './stackLayout'
+import {
+  centerLastRow,
+  expandWidgetRows,
+  generateStackedLayout,
+  shortcutColumnsForWidth,
+} from './stackLayout'
 import type { Breakpoint } from './GridLayer'
 import './DashboardGrid.css'
 
@@ -47,7 +52,16 @@ export function DashboardGrid() {
   const toggleWidget = useLayoutStore((s) => s.toggleWidget)
   const editMode = useSettingsStore((s) => s.editMode)
   const toggleEditMode = useSettingsStore((s) => s.toggleEditMode)
-  const [breakpoint, setBreakpoint] = useState<Breakpoint>('lg')
+  const [viewport, setViewport] = useState<{ breakpoint: Breakpoint; width: number }>({
+    breakpoint: 'lg',
+    width: 0,
+  })
+  const onViewportChange = useCallback((breakpoint: Breakpoint, width: number) => {
+    setViewport((prev) =>
+      prev.breakpoint === breakpoint && prev.width === width ? prev : { breakpoint, width },
+    )
+  }, [])
+  const { breakpoint } = viewport
   const stackCols = breakpoint === 'sm' || breakpoint === 'xs' ? STACK_COLS[breakpoint] : null
   const narrow = stackCols !== null
   // The add tile counts too.
@@ -61,8 +75,14 @@ export function DashboardGrid() {
         if (l.i === 'shortcuts') return { ...l, minH: 2 }
         return l
       })
-    return customized ? items : centerLastRow(items)
-  }, [layouts, enabled, customized])
+    const packed = customized ? items : centerLastRow(items)
+    const shortcutsItem = packed.find((l) => l.i === 'shortcuts')
+    if (!shortcutsItem || viewport.width <= 0 || narrow) return packed
+    const fitCols = shortcutColumnsForWidth(viewport.width, shortcutsItem.w)
+    if (fitCols <= 0) return packed
+    const minShortcutRows = Math.max(2, Math.ceil(shortcutTiles / fitCols))
+    return expandWidgetRows(packed, 'shortcuts', minShortcutRows)
+  }, [layouts, enabled, customized, viewport.width, narrow, shortcutTiles])
 
   // Stacked, the shortcuts put one tile in each grid column (see
   // --shortcut-columns below) and get a grid row for each row of tiles: a row
@@ -144,7 +164,7 @@ export function DashboardGrid() {
           xsLayout={xsLayout}
           editMode={editMode}
           onLayoutCommit={commitLayout}
-          onBreakpointChange={setBreakpoint}
+          onViewportChange={onViewportChange}
         >
           {children}
         </GridLayer>
