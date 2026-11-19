@@ -16,7 +16,7 @@ describe('ShortcutsGrid', () => {
     fireEvent.click(screen.getByRole('button', { name: '编辑GitHub' }))
     const dialog = screen.getByRole('dialog', { name: '编辑快捷方式' })
     fireEvent.change(within(dialog).getByLabelText('名称'), { target: { value: '代码' } })
-    fireEvent.click(within(dialog).getByRole('button', { name: '存储' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: '保存' }))
 
     expect(useShortcutsStore.getState().items[0].title).toBe('代码')
     expect(screen.getByRole('button', { name: '编辑代码' })).toBeInTheDocument()

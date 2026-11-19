@@ -25,7 +25,7 @@ describe('EditShortcutDialog', () => {
 
     fireEvent.change(screen.getByLabelText('名称'), { target: { value: '  代码  ' } })
     fireEvent.change(screen.getByLabelText('网址'), { target: { value: 'gitlab.com' } })
-    fireEvent.click(screen.getByRole('button', { name: '存储' }))
+    fireEvent.click(screen.getByRole('button', { name: '保存' }))
 
     expect(useShortcutsStore.getState().items).toEqual([
       { id: 'gh', title: '代码', url: 'https://gitlab.com' },
@@ -39,19 +39,19 @@ describe('EditShortcutDialog', () => {
     const { rerender } = render(<EditShortcutDialog shortcut={withIcon} onClose={vi.fn()} />)
 
     fireEvent.change(screen.getByLabelText('名称'), { target: { value: 'Code' } })
-    fireEvent.click(screen.getByRole('button', { name: '存储' }))
+    fireEvent.click(screen.getByRole('button', { name: '保存' }))
     expect(useShortcutsStore.getState().items[0].iconUrl).toBe('https://github.com/icon.png')
 
     rerender(<EditShortcutDialog shortcut={undefined} onClose={vi.fn()} />)
     rerender(<EditShortcutDialog shortcut={withIcon} onClose={vi.fn()} />)
     fireEvent.change(screen.getByLabelText('网址'), { target: { value: 'https://gitlab.com' } })
-    fireEvent.click(screen.getByRole('button', { name: '存储' }))
+    fireEvent.click(screen.getByRole('button', { name: '保存' }))
     expect(useShortcutsStore.getState().items[0].iconUrl).toBeUndefined()
   })
 
   it('cannot be saved without a name or an address', () => {
     render(<EditShortcutDialog shortcut={github} onClose={vi.fn()} />)
-    const save = screen.getByRole('button', { name: '存储' })
+    const save = screen.getByRole('button', { name: '保存' })
 
     fireEvent.change(screen.getByLabelText('名称'), { target: { value: '   ' } })
     expect(save).toBeDisabled()

@@ -52,7 +52,7 @@ export function EditShortcutDialog({ shortcut, onClose }: Props) {
         <div className="mt-5 flex justify-end gap-2">
           <Button onClick={onClose}>取消</Button>
           <Button type="submit" variant="primary" disabled={!canSave}>
-            存储
+            保存
           </Button>
         </div>
       </form>
