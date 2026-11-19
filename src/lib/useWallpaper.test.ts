@@ -210,6 +210,10 @@ describe('useWallpaper', () => {
     expect(result.current.loadedUrl).not.toBeNull()
     expect(result.current.loadedUrl).not.toBe(firstUrl)
     expect(result.current.visible).toBe(true)
+
+    // Once the transition lands, clearing prevUrl drops the stale layer.
+    act(() => result.current.clearPrev())
+    expect(result.current.prevUrl).toBeNull()
   })
 
   it('clears wallpaper and moves loadedUrl to prevUrl', async () => {

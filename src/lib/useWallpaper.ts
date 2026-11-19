@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { evictOthers, resolveWallpaper } from './wallpaperCache'
 import { dataUrlToBlob, pruneLocalWallpapers, saveLocalWallpaper } from './localWallpaper'
@@ -146,6 +146,17 @@ export function useWallpaper() {
     return () => window.clearTimeout(t)
   }, [wallpaper])
 
+  const clearPrev = useCallback(() => {
+    setState((prev) => {
+      if (!prev.prevUrl) return prev
+      if (ownedObjectUrls.current.has(prev.prevUrl)) {
+        URL.revokeObjectURL(prev.prevUrl)
+        ownedObjectUrls.current.delete(prev.prevUrl)
+      }
+      return { ...prev, prevUrl: null }
+    })
+  }, [])
+
   useEffect(() => {
     const owned = ownedObjectUrls.current
     return () => {
@@ -154,5 +165,5 @@ export function useWallpaper() {
     }
   }, [])
 
-  return state
+  return { ...state, clearPrev }
 }

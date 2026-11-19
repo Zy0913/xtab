@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Keyboard, Pencil, Settings } from 'lucide-react'
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { DashboardGrid } from '@/components/layout/DashboardGrid'
@@ -17,9 +17,21 @@ export default function App() {
   const onboardingDone = useSettingsStore((s) => s.onboardingDone)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
-  const { loadedUrl, prevUrl, visible } = useWallpaper()
+  const { loadedUrl, prevUrl, visible, clearPrev } = useWallpaper()
   // A plain cross-fade, the way macOS swaps the desktop picture.
   const fadeMs = reduceMotion ? 0 : 400
+
+  // Once the fade lands (or right away with reduced motion), unmount the old
+  // wallpaper layer so it does not stay composited under transparent glass.
+  useEffect(() => {
+    if (!visible || !prevUrl) return
+    if (fadeMs === 0) {
+      clearPrev()
+      return
+    }
+    const timer = window.setTimeout(clearPrev, fadeMs + 80)
+    return () => window.clearTimeout(timer)
+  }, [visible, prevUrl, fadeMs, clearPrev])
 
   useShortcut('e', toggleEditMode)
   useShortcut(',', () => setSettingsOpen((v) => !v))
@@ -41,6 +53,16 @@ export default function App() {
             backgroundImage: loadedUrl ? `url(${loadedUrl})` : undefined,
             opacity: visible ? 1 : 0,
             transition: `opacity ${fadeMs}ms var(--ease-out)`,
+          }}
+          onTransitionEnd={(e) => {
+            if (
+              e.target === e.currentTarget &&
+              e.propertyName === 'opacity' &&
+              visible &&
+              prevUrl
+            ) {
+              clearPrev()
+            }
           }}
         />
         {/* User dimming keeps the clock and labels legible on busy pictures. */}
