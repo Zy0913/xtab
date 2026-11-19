@@ -1,4 +1,4 @@
-import { useState, useMemo, memo } from 'react'
+import { useState, useMemo, memo, type CSSProperties } from 'react'
 import { Minus } from 'lucide-react'
 import { useShortcutsStore } from '@/store/useShortcutsStore'
 import { getFaviconSources, getInitial, getColorFor } from './faviconFetcher'
@@ -58,8 +58,11 @@ export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable, onE
               ? 'peer-hover:-translate-y-0.5 peer-active:translate-y-0 peer-active:scale-95'
               : 'active:translate-y-0 active:scale-95 group-hover:-translate-y-0.5',
           )}
+          data-monogram={!hasIcon || undefined}
           // No icon: a monogram on a colour picked from the name, as Safari does.
-          style={hasIcon ? undefined : { backgroundColor: getColorFor(shortcut.title) }}
+          style={
+            hasIcon ? undefined : ({ '--tile-tint': getColorFor(shortcut.title) } as CSSProperties)
+          }
         >
           {hasIcon ? (
             <img
@@ -72,7 +75,10 @@ export const ShortcutTile = memo(function ShortcutTile({ shortcut, editable, onE
               onError={() => setSourceIndex((i) => i + 1)}
             />
           ) : (
-            <span aria-hidden className="text-[1.375rem] font-semibold leading-none text-white">
+            <span
+              aria-hidden
+              className="text-[1.375rem] font-semibold leading-none text-white drop-shadow-[0_1px_2px_rgb(0_0_0/0.22)]"
+            >
               {getInitial(shortcut.title)}
             </span>
           )}

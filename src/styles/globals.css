@@ -142,6 +142,14 @@
     box-shadow: var(--tile-shadow);
   }
 
+  .tile[data-monogram] {
+    background-color: var(--tile-tint);
+  }
+
+  .glass-mode .tile[data-monogram] {
+    background-color: color-mix(in srgb, var(--tile-tint) 76%, transparent);
+  }
+
   /*
    * Liquid Glass. The transparency slider only changes how frosted the glass
    * is (--mat-blur, --tile-blur). liquidGlass.ts adds the edge refraction as
@@ -357,7 +365,7 @@
 
   .menu-item:not([data-active]):hover .menu-item-meta,
   .menu-item[data-active='true'] .menu-item-meta {
-    color: rgb(255 255 255 / 0.82);
+    color: color-mix(in srgb, var(--on-accent) 82%, transparent);
   }
 
   .keycap {

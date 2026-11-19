@@ -122,7 +122,7 @@
   /* Labels, separators, fills */
   --text-primary: rgb(0 0 0 / 0.86);
   --text-secondary: rgb(0 0 0 / 0.6);
-  --text-tertiary: rgb(0 0 0 / 0.42);
+  --text-tertiary: rgb(0 0 0 / 0.52);
   /* Placeholders still need 4.5:1, so they sit between secondary and tertiary. */
   --text-placeholder: rgb(0 0 0 / 0.55);
   --border: rgb(0 0 0 / 0.1);
@@ -171,7 +171,7 @@
 
   --text-primary: rgb(255 255 255 / 0.92);
   --text-secondary: rgb(255 255 255 / 0.64);
-  --text-tertiary: rgb(255 255 255 / 0.42);
+  --text-tertiary: rgb(255 255 255 / 0.52);
   --text-placeholder: rgb(255 255 255 / 0.5);
   --border: rgb(255 255 255 / 0.1);
   --fill: rgb(255 255 255 / 0.08);
@@ -274,22 +274,23 @@
    frosts it. Popovers redeclare all of these. */
 .glass-mode.wallpaper-dark .on-wallpaper {
   --mat-rgb: 0 0 0;
-  --mat-alpha: calc(0.14 + 0.08 * var(--glass-tint));
+  --mat-alpha: calc(0.18 + 0.08 * var(--glass-tint));
   --mat-brightness: 0.94;
   --rim-opacity: 0.7;
 }
 
 .glass-mode.wallpaper-mid .on-wallpaper {
   --mat-rgb: 0 0 0;
-  --mat-alpha: calc(0.24 + 0.08 * var(--glass-tint));
+  --mat-alpha: calc(0.28 + 0.08 * var(--glass-tint));
   --mat-brightness: 0.88;
   --rim-opacity: 0.7;
 }
 
 .glass-mode.wallpaper-light .on-wallpaper {
   --mat-rgb: 255 255 255;
-  --mat-alpha: calc(0.16 + 0.1 * var(--glass-tint));
+  --mat-alpha: calc(0.2 + 0.1 * var(--glass-tint));
   --mat-brightness: 1.06;
+  --rim-opacity: 1;
 }
 
 /* ===== On-wallpaper content on light wallpapers ===== */

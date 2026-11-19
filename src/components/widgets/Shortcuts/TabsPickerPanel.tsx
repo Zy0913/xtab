@@ -105,8 +105,8 @@ export function TabsPickerPanel({ active, onClose }: Props) {
               role="group"
               aria-label={g.isCurrent ? '当前窗口' : `窗口 ${g.windowId}`}
             >
-              {/* Sticky header in the dialog's own material, blurring rows scrolling under it. */}
-              <div className="sticky top-0 z-10 flex items-center justify-between bg-[rgb(var(--mat-rgb)/0.82)] px-3 py-1.5 text-caption font-semibold text-text-secondary backdrop-blur-md">
+              {/* Sticky header matching the dialog's own material, blurring rows scrolling under it. */}
+              <div className="sticky top-0 z-10 flex items-center justify-between border-b-[0.5px] border-border bg-[rgb(var(--mat-rgb)/var(--mat-pop-alpha))] px-3 py-1.5 text-caption font-semibold text-text-secondary [backdrop-filter:blur(var(--mat-pop-blur,var(--mat-blur)))]">
                 <span>{g.isCurrent ? '当前窗口' : `窗口 ${g.windowId}`}</span>
                 <span className="font-normal tabular-nums">{g.tabs.length}</span>
               </div>
