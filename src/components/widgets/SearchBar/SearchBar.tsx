@@ -6,13 +6,16 @@ import { useShortcut } from '@/lib/useShortcut'
 import { cn } from '@/lib/cn'
 import { EngineSelector } from './EngineSelector'
 import { Suggestions } from './Suggestions'
+import { shouldOpenUpward } from './dropdownPlacement'
 
 export function SearchBar() {
   const engine = useSettingsStore((s) => s.searchEngine)
   const [query, setQuery] = useState('')
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [focused, setFocused] = useState(false)
+  const [dropUp, setDropUp] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
+  const capsuleRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -23,6 +26,7 @@ export function SearchBar() {
     const ctrl = new AbortController()
     const t = setTimeout(async () => {
       const items = await fetchSuggestions(engine, query, ctrl.signal)
+      setDropUp(shouldOpenUpward(capsuleRef.current, 280))
       setSuggestions(items)
       setActiveIndex(-1)
     }, 150)
@@ -78,7 +82,10 @@ export function SearchBar() {
       <div className="relative mx-auto w-full max-w-2xl">
         {/* A Spotlight capsule. The ring follows the field's own focus, not
             the engine button's. */}
-        <div className="relative h-[3.25rem] rounded-full has-[input:focus-visible]:outline has-[input:focus-visible]:outline-[3px] has-[input:focus-visible]:outline-[color:var(--focus-color)]">
+        <div
+          ref={capsuleRef}
+          className="relative h-[3.25rem] rounded-full has-[input:focus-visible]:outline has-[input:focus-visible]:outline-[3px] has-[input:focus-visible]:outline-offset-[1px] has-[input:focus-visible]:outline-[color:var(--focus-color)]"
+        >
           <div
             aria-hidden
             className="material pointer-events-none absolute inset-0 rounded-[inherit]"
@@ -109,7 +116,10 @@ export function SearchBar() {
                 }
               }}
               onKeyDown={handleKeyDown}
-              onFocus={() => setFocused(true)}
+              onFocus={() => {
+                setDropUp(shouldOpenUpward(capsuleRef.current, 280))
+                setFocused(true)
+              }}
               onBlur={handleBlur}
               placeholder={ENGINES[engine].placeholder}
               className="h-full min-w-0 flex-1 bg-transparent text-title text-text-primary outline-none"
@@ -131,6 +141,7 @@ export function SearchBar() {
           <Suggestions
             items={suggestions}
             activeIndex={activeIndex}
+            placement={dropUp ? 'top' : 'bottom'}
             onPick={(text, newTab) => submit(text, newTab)}
             onHover={setActiveIndex}
           />

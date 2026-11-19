@@ -3,6 +3,7 @@ import { Check, ChevronsUpDown } from 'lucide-react'
 import { useSettingsStore, type SearchEngine } from '@/store/useSettingsStore'
 import { ENGINES } from '@/lib/search'
 import { cn } from '@/lib/cn'
+import { shouldOpenUpward } from './dropdownPlacement'
 
 const ENGINE_IDS = Object.keys(ENGINES) as SearchEngine[]
 
@@ -11,7 +12,9 @@ export function EngineSelector() {
   const engine = useSettingsStore((s) => s.searchEngine)
   const setEngine = useSettingsStore((s) => s.setSearchEngine)
   const [open, setOpen] = useState(false)
+  const [dropUp, setDropUp] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
+  const wrapRef = useRef<HTMLDivElement>(null)
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -37,12 +40,17 @@ export function EngineSelector() {
     [setEngine],
   )
 
+  const openMenu = useCallback(() => {
+    setDropUp(shouldOpenUpward(wrapRef.current, 180))
+    setOpen(true)
+    setActiveIndex(ENGINE_IDS.indexOf(engine))
+  }, [engine])
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!open) {
       if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
         e.preventDefault()
-        setOpen(true)
-        setActiveIndex(ENGINE_IDS.indexOf(engine))
+        openMenu()
       }
       return
     }
@@ -72,12 +80,12 @@ export function EngineSelector() {
   const current = ENGINES[engine]
 
   return (
-    <div className="relative" onKeyDown={handleKeyDown}>
+    <div ref={wrapRef} className="relative" onKeyDown={handleKeyDown}>
       <button
         type="button"
         onClick={() => {
-          setOpen((v) => !v)
-          if (!open) setActiveIndex(ENGINE_IDS.indexOf(engine))
+          if (open) setOpen(false)
+          else openMenu()
         }}
         onBlur={handleBlur}
         aria-expanded={open}
@@ -90,12 +98,17 @@ export function EngineSelector() {
         <ChevronsUpDown size={12} strokeWidth={2.25} className="opacity-70" aria-hidden />
       </button>
       {open && (
-        // Drops 8px below the capsule: the button sits 10px inside its edge.
+        // Drops 8px outside the capsule: the button sits 10px inside its edge.
         <div
           role="listbox"
           aria-label="搜索引擎"
           onMouseLeave={() => setActiveIndex(-1)}
-          className="material-pop animate-pop-in absolute right-0 top-full z-dropdown mt-[1.125rem] min-w-40 origin-top-right rounded-menu p-1.5"
+          className={cn(
+            'material-pop animate-pop-in absolute right-0 z-dropdown min-w-40 rounded-menu p-1.5',
+            dropUp
+              ? 'bottom-full mb-[1.125rem] origin-bottom-right'
+              : 'top-full mt-[1.125rem] origin-top-right',
+          )}
         >
           {ENGINE_IDS.map((id, index) => (
             <div
