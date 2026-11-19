@@ -13,8 +13,16 @@ export function resolveIsDark(theme: ThemeMode): boolean {
   return window.matchMedia('(prefers-color-scheme: dark)').matches
 }
 
+function syncThemeColor(isDark: boolean) {
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute('content', isDark ? '#000000' : '#e8e8ed')
+}
+
 export function applyTheme(theme: ThemeMode) {
-  document.documentElement.classList.toggle('dark', resolveIsDark(theme))
+  const isDark = resolveIsDark(theme)
+  document.documentElement.classList.toggle('dark', isDark)
+  syncThemeColor(isDark)
 }
 
 export function applyGlassMode(mode: 'sequoia' | 'tahoe') {
@@ -78,6 +86,7 @@ export function applyThemeAndTint(theme: ThemeMode, tint: string | null) {
   const isDark = resolveIsDark(theme)
   applyWallpaperTint(tint, isDark)
   root.classList.toggle('dark', isDark)
+  syncThemeColor(isDark)
 }
 
 /**

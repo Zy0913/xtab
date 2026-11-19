@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { applyGlassTint, applyWallpaperLuminance } from './theme'
+import { applyGlassTint, applyTheme, applyThemeAndTint, applyWallpaperLuminance } from './theme'
 
 describe('applyWallpaperLuminance', () => {
   beforeEach(() => {
@@ -54,5 +54,22 @@ describe('applyGlassTint', () => {
     expect(document.documentElement.style.getPropertyValue('--glass-tint')).toBe('0.25')
     applyGlassTint(3)
     expect(document.documentElement.style.getPropertyValue('--glass-tint')).toBe('1.00')
+  })
+})
+
+describe('theme-color meta sync', () => {
+  it('updates meta[name="theme-color"] when theme switches between light and dark', () => {
+    let meta = document.querySelector('meta[name="theme-color"]')
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.setAttribute('name', 'theme-color')
+      document.head.appendChild(meta)
+    }
+
+    applyTheme('dark')
+    expect(meta).toHaveAttribute('content', '#000000')
+
+    applyThemeAndTint('light', null)
+    expect(meta).toHaveAttribute('content', '#e8e8ed')
   })
 })
