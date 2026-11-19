@@ -40,7 +40,7 @@ export const TodoItem = memo(function TodoItem({ item }: Props) {
         onClick={() => remove(item.id)}
         aria-label="删除"
         title="删除"
-        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-text-secondary opacity-0 transition-[opacity,background-color,color] duration-fast hover:bg-fill-strong hover:text-text-primary focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+        className="relative flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-text-secondary opacity-0 transition-[opacity,background-color,color] duration-fast after:absolute after:-inset-1.5 after:content-[''] hover:bg-fill-strong hover:text-text-primary focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
       >
         <X size={12} strokeWidth={2.5} aria-hidden />
       </button>

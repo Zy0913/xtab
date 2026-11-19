@@ -173,7 +173,7 @@ export function Onboarding() {
                   title={p.name}
                   // Selected: an accent ring held off the picture by a gap,
                   // as in System Settings › Wallpaper.
-                  className="group relative aspect-video overflow-hidden rounded-[10px] bg-fill transition-shadow duration-fast aria-pressed:shadow-[0_0_0_2px_rgb(var(--mat-rgb)),0_0_0_4.5px_var(--accent)]"
+                  className="group relative aspect-video overflow-hidden rounded-[10px] bg-fill transition-shadow duration-fast hover:shadow-[0_0_0_2px_rgb(var(--mat-rgb)),0_0_0_3.5px_var(--fill-strong)] focus-visible:outline-offset-[3px] aria-pressed:shadow-[0_0_0_2px_rgb(var(--mat-rgb)),0_0_0_4px_var(--accent)]"
                 >
                   <img
                     src={p.thumb}

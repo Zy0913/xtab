@@ -27,11 +27,11 @@ export function WallpaperFavorites() {
             selected={current === item.url}
             onSelect={() => setWallpaper(item.url)}
           >
-            {/* Launchpad-style delete badge: shown on hover or keyboard focus. */}
+            {/* Launchpad-style delete badge: shown on hover, keyboard focus, or touch screens. */}
             <button
               type="button"
               onClick={() => remove(item.id)}
-              className="absolute -left-1.5 -top-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[rgb(118_118_124)] text-white opacity-0 shadow-[0_0_0_0.5px_rgb(0_0_0/0.2),0_1px_3px_rgb(0_0_0/0.3)] transition-opacity duration-fast hover:bg-[rgb(96_96_102)] focus-visible:opacity-100 group-focus-within:opacity-100 group-hover:opacity-100"
+              className="material-pop absolute -left-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full text-text-primary opacity-0 transition-[opacity,transform] duration-fast after:absolute after:-inset-1 after:content-[''] hover:scale-110 focus-visible:opacity-100 active:scale-95 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
               aria-label="移除收藏"
               title="移除收藏"
             >

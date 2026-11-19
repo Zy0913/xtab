@@ -61,10 +61,10 @@ export function Drawer({ open, onClose, title, children, shortcut }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-fill hover:text-text-primary"
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-fill text-text-secondary transition-colors hover:bg-fill-strong hover:text-text-primary"
             aria-label="关闭设置"
           >
-            <X size={15} strokeWidth={2.25} />
+            <X size={14} strokeWidth={2.25} />
           </button>
         </header>
         <div className="flex-1 overflow-y-auto px-4 pb-5">{children}</div>

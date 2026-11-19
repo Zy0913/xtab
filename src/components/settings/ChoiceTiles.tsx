@@ -56,10 +56,10 @@ export function ChoiceTiles<T extends string>({
             <span
               aria-hidden
               className={cn(
-                'relative block w-full overflow-hidden rounded-[9px] outline outline-2 outline-offset-2 transition-[outline-color] duration-fast group-focus-visible:outline-[3px]',
+                'relative block w-full overflow-hidden rounded-[9px] transition-shadow duration-fast group-focus-visible:outline group-focus-visible:outline-[3px] group-focus-visible:outline-offset-[3px] group-focus-visible:outline-[color:var(--focus-color)]',
                 selected
-                  ? 'outline-accent'
-                  : 'outline-transparent group-hover:outline-[color:var(--fill-strong)] group-focus-visible:outline-[color:var(--focus-color)]',
+                  ? 'shadow-[0_0_0_2px_rgb(var(--mat-rgb)),0_0_0_4px_var(--accent)]'
+                  : 'group-hover:shadow-[0_0_0_2px_rgb(var(--mat-rgb)),0_0_0_3.5px_var(--fill-strong)]',
                 previewClassName,
               )}
             >

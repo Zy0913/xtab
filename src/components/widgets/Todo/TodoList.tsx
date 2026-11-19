@@ -38,7 +38,7 @@ export function TodoList() {
       />
 
       {/* Shaped like a row so the text lines up with the items below. */}
-      <div className="-mx-2 flex min-h-7 items-center gap-2 rounded-row px-2 has-[input:focus-visible]:outline has-[input:focus-visible]:outline-[3px] has-[input:focus-visible]:outline-[color:var(--focus-color)]">
+      <div className="-mx-2 flex min-h-7 items-center gap-2 rounded-row px-2 has-[input:focus-visible]:outline has-[input:focus-visible]:outline-[3px] has-[input:focus-visible]:outline-offset-[1px] has-[input:focus-visible]:outline-[color:var(--focus-color)]">
         <Plus size={18} strokeWidth={2} className="shrink-0 text-text-tertiary" aria-hidden />
         <input
           value={draft}

@@ -46,7 +46,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-fill hover:text-text-primary"
+                className="relative flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-text-secondary transition-colors after:absolute after:-inset-1.5 after:content-[''] hover:bg-fill hover:text-text-primary"
                 aria-label="关闭"
               >
                 <X size={12} strokeWidth={2.25} />

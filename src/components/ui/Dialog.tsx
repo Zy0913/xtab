@@ -85,11 +85,11 @@ export function Dialog({ open, onClose, title, children, className, shortcut }: 
       >
         <button
           type="button"
-          className="absolute right-3.5 top-3.5 flex h-6 w-6 items-center justify-center rounded-full bg-fill text-text-secondary transition-colors hover:bg-fill-strong hover:text-text-primary"
+          className="absolute right-3.5 top-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-fill text-text-secondary transition-colors hover:bg-fill-strong hover:text-text-primary"
           onClick={onClose}
           aria-label="关闭"
         >
-          <X size={13} strokeWidth={2.25} />
+          <X size={14} strokeWidth={2.25} />
         </button>
         {title && (
           <h2 className="mb-4 pr-9 text-callout font-semibold text-text-primary">{title}</h2>

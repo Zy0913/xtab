@@ -22,10 +22,10 @@ export function WallpaperThumb({ src, label, title, selected, onSelect, children
         aria-current={selected || undefined}
         title={title ?? label}
         className={cn(
-          'block aspect-video w-full overflow-hidden rounded-[8px] bg-fill outline outline-2 outline-offset-2 transition-[outline-color] duration-fast focus-visible:outline-[3px]',
+          'block aspect-video w-full overflow-hidden rounded-[8px] bg-fill transition-shadow duration-fast focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-[color:var(--focus-color)]',
           selected
-            ? 'outline-accent'
-            : 'outline-transparent hover:outline-[color:var(--fill-strong)] focus-visible:outline-[color:var(--focus-color)]',
+            ? 'shadow-[0_0_0_2px_rgb(var(--mat-rgb)),0_0_0_4px_var(--accent)]'
+            : 'hover:shadow-[0_0_0_2px_rgb(var(--mat-rgb)),0_0_0_3.5px_var(--fill-strong)]',
         )}
       >
         <img

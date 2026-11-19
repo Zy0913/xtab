@@ -136,7 +136,7 @@ export function CitySearch({ currentCity }: Props) {
         if (e.relatedTarget && !e.currentTarget.contains(e.relatedTarget as Node)) close(false)
       }}
     >
-      <div className="flex h-7 w-44 max-w-full items-center gap-1.5 rounded-field bg-fill pl-2 pr-1 has-[input:focus-visible]:outline has-[input:focus-visible]:outline-[3px] has-[input:focus-visible]:outline-[color:var(--focus-color)]">
+      <div className="flex h-7 w-44 max-w-full items-center gap-1.5 rounded-field bg-fill pl-2 pr-1 has-[input:focus-visible]:outline has-[input:focus-visible]:outline-[3px] has-[input:focus-visible]:outline-offset-[1px] has-[input:focus-visible]:outline-[color:var(--focus-color)]">
         <Search size={13} strokeWidth={2.25} className="shrink-0 text-text-secondary" aria-hidden />
         <input
           ref={inputRef}
@@ -163,7 +163,7 @@ export function CitySearch({ currentCity }: Props) {
           onClick={(e) => close(e.detail === 0)}
           aria-label="取消"
           title="取消"
-          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-text-secondary transition-colors duration-fast hover:bg-fill-strong hover:text-text-primary"
+          className="relative flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-text-secondary transition-colors duration-fast after:absolute after:-inset-1 after:content-[''] hover:bg-fill-strong hover:text-text-primary"
         >
           <X size={12} strokeWidth={2.5} aria-hidden />
         </button>
