@@ -19,6 +19,7 @@ import {
   centerLastRow,
   expandWidgetRows,
   generateStackedLayout,
+  layoutToSave,
   shortcutColumnsForWidth,
 } from './stackLayout'
 import type { Breakpoint } from './GridLayer'
@@ -112,12 +113,7 @@ export function DashboardGrid() {
     const moved =
       before.x !== after.x || before.y !== after.y || before.w !== after.w || before.h !== after.h
     if (!moved) return
-    setLayouts(
-      layouts.map((cur) => {
-        const next = current.find((n) => n.i === cur.i)
-        return next ? { ...cur, x: next.x, y: next.y, w: next.w, h: next.h } : cur
-      }),
-    )
+    setLayouts(layoutToSave(layouts, current, before, after))
   }
 
   const children = visible.map((item) => {

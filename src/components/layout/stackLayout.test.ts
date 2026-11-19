@@ -4,6 +4,7 @@ import {
   centerLastRow,
   expandWidgetRows,
   generateStackedLayout,
+  layoutToSave,
   shortcutColumnsForWidth,
 } from './stackLayout'
 
@@ -142,5 +143,49 @@ describe('expandWidgetRows', () => {
       { i: 'shortcuts', x: 0, y: 3, w: 12, h: 3, minH: 2 },
       { i: 'weather', x: 4, y: 6, w: 4, h: 3 },
     ])
+  })
+})
+
+describe('layoutToSave', () => {
+  const saved: WidgetLayout[] = [
+    { i: 'clock', x: 0, y: 0, w: 12, h: 2 },
+    { i: 'search', x: 0, y: 2, w: 12, h: 1 },
+    { i: 'shortcuts', x: 0, y: 3, w: 12, h: 2, minH: 2 },
+    { i: 'weather', x: 0, y: 5, w: 4, h: 3 },
+  ]
+  const find = (items: WidgetLayout[], id: string) => items.find((l) => l.i === id)!
+  /** The grid as shown, with `changed` where the user left it. */
+  const showing = (shown: WidgetLayout[], changed: WidgetLayout) =>
+    shown.map((l) => (l.i === changed.i ? changed : l))
+
+  it('does not keep the rows the shortcuts got to fit their tiles', () => {
+    // Two more rows for the tiles, then the weather is dragged aside.
+    const shown = expandWidgetRows(saved, 'shortcuts', 4)
+    const weather = find(shown, 'weather')
+    const dragged = { ...weather, x: 4 }
+    const next = layoutToSave(saved, showing(shown, dragged), weather, dragged)
+
+    expect(find(next, 'weather')).toMatchObject({ x: 4, w: 4, h: 3 })
+    // With fewer tiles the shortcuts are back to the rows they were given.
+    expect(find(expandWidgetRows(next, 'shortcuts', 2), 'shortcuts').h).toBe(2)
+  })
+
+  it('keeps the height the user gave a widget by resizing it', () => {
+    const shown = expandWidgetRows(saved, 'shortcuts', 4)
+    const shortcuts = find(shown, 'shortcuts')
+    const taller = { ...shortcuts, h: 5 }
+    const next = layoutToSave(saved, showing(shown, taller), shortcuts, taller)
+
+    expect(find(next, 'shortcuts').h).toBe(5)
+  })
+
+  it('keeps the saved height of a widget the user only made wider', () => {
+    const half = saved.map((l) => (l.i === 'shortcuts' ? { ...l, w: 6 } : l))
+    const shown = expandWidgetRows(half, 'shortcuts', 4)
+    const shortcuts = find(shown, 'shortcuts')
+    const wider = { ...shortcuts, w: 12 }
+    const next = layoutToSave(half, showing(shown, wider), shortcuts, wider)
+
+    expect(pick([find(next, 'shortcuts')])).toEqual([{ i: 'shortcuts', x: 0, y: 3, w: 12, h: 2 }])
   })
 })

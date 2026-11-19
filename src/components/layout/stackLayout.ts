@@ -124,3 +124,31 @@ export function expandWidgetRows(
     return item
   })
 }
+
+/** A widget where the grid shows it. */
+type Placed = Pick<WidgetLayout, 'x' | 'y' | 'w' | 'h'> & { i: string }
+
+/**
+ * The layout to save once the user has dragged or resized a widget, from the
+ * saved layout and the grid as shown. `before` and `after` are the widget the
+ * user handled.
+ *
+ * Every widget is saved where it is shown, but only the one the user made
+ * taller or shorter takes its height from the grid. Rows the grid added for
+ * content (expandWidgetRows) are not the user's, and saving them would keep
+ * a widget that tall after its content shrinks.
+ */
+export function layoutToSave(
+  saved: WidgetLayout[],
+  shown: Placed[],
+  before: Placed,
+  after: Placed,
+): WidgetLayout[] {
+  const resized = after.h !== before.h ? after.i : null
+  return saved.map((cur) => {
+    const next = shown.find((n) => n.i === cur.i)
+    if (!next) return cur
+    const h = cur.i === resized ? next.h : cur.h
+    return { ...cur, x: next.x, y: next.y, w: next.w, h }
+  })
+}
