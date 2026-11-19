@@ -11,8 +11,9 @@ import { WidgetHeader } from '@/components/layout/WidgetHeader'
 import { WidgetEmpty } from '@/components/layout/WidgetEmpty'
 import { cn } from '@/lib/cn'
 
-/** Indent per level and the room a folder's disclosure chevron takes. */
-const INDENT = 16
+/** Indent per level (capped for deep trees) and the room a folder's chevron takes. */
+const INDENT = 12
+const MAX_INDENT_DEPTH = 4
 const ROW_PAD = 8
 const CHEVRON = 20
 
@@ -51,6 +52,7 @@ const Row = memo(function Row({ node, depth = 0 }: { node: BookmarkNode; depth?:
   const toggleExpanded = useBookmarksUiStore((s) => s.toggleExpanded)
   const open = expandedIds.includes(node.id)
   const isFolder = !node.url
+  const visualDepth = Math.min(depth, MAX_INDENT_DEPTH)
 
   if (isFolder) {
     return (
@@ -60,7 +62,7 @@ const Row = memo(function Row({ node, depth = 0 }: { node: BookmarkNode; depth?:
           onClick={() => toggleExpanded(node.id)}
           aria-expanded={open}
           className="widget-row text-left"
-          style={{ paddingLeft: depth * INDENT + ROW_PAD }}
+          style={{ paddingLeft: visualDepth * INDENT + ROW_PAD }}
         >
           <ChevronRight
             size={12}
@@ -93,7 +95,7 @@ const Row = memo(function Row({ node, depth = 0 }: { node: BookmarkNode; depth?:
         rel="noopener noreferrer"
         title={node.url}
         className="widget-row"
-        style={{ paddingLeft: depth * INDENT + ROW_PAD + CHEVRON }}
+        style={{ paddingLeft: visualDepth * INDENT + ROW_PAD + CHEVRON }}
       >
         <BookmarkFavicon url={node.url!} title={node.title || node.url || ''} />
         <span className="truncate">{node.title || node.url}</span>
