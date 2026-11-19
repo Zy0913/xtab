@@ -27,8 +27,8 @@ export const PRESETS: WallpaperPreset[] = [
     thumb: DEFAULT_WALLPAPER,
   },
   {
-    id: 'sonoma-light',
-    name: '晨光',
+    id: 'galaxy',
+    name: '星系',
     url: u('photo-1506703719100-a0f3a48c0f86'),
     thumb: u('photo-1506703719100-a0f3a48c0f86', 400),
   },
@@ -45,8 +45,8 @@ export const PRESETS: WallpaperPreset[] = [
     thumb: u('photo-1507525428034-b723cf961d3e', 400),
   },
   {
-    id: 'mountain-mist',
-    name: '薄雾',
+    id: 'desert-road',
+    name: '公路',
     url: u('photo-1469854523086-cc02fe5d8800'),
     thumb: u('photo-1469854523086-cc02fe5d8800', 400),
   },
@@ -57,8 +57,8 @@ export const PRESETS: WallpaperPreset[] = [
     thumb: u('photo-1441974231531-c6227db76b6e', 400),
   },
   {
-    id: 'aurora',
-    name: '极光',
+    id: 'milky-way',
+    name: '银河',
     url: u('photo-1519681393784-d120267933ba'),
     thumb: u('photo-1519681393784-d120267933ba', 400),
   },
@@ -69,8 +69,8 @@ export const PRESETS: WallpaperPreset[] = [
     thumb: u('photo-1470071459604-3b5ec3a7fe05', 400),
   },
   {
-    id: 'autumn',
-    name: '秋色',
+    id: 'lookout',
+    name: '远眺',
     url: u('photo-1469474968028-56623f02e42e'),
     thumb: u('photo-1469474968028-56623f02e42e', 400),
   },
